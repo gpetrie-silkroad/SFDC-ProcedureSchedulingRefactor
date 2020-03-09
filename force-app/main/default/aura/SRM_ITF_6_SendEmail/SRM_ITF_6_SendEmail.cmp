@@ -1,0 +1,213 @@
+<aura:component controller="SRM_ITF_ServerController">
+	<!--_____________________________ Global Attributes_________________________________________________________ -->
+	<!-- Controll display state -->
+	<aura:attribute name="tempStatus" type="Integer"/>
+	<aura:attribute name="currentStatus" type="Integer"/>
+	<!-- controll email type -->
+	<aura:attribute name="emailType" type="Integer"/> <!-- 0: Send to Customer; 1 Send to SRM CUstomer Success; 3 autoemail to CS-->
+	<!-- Sharing Attributes -->
+	<aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+	<aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]"/>
+	<aura:attribute name="currentUser" type="User"/>
+	<aura:attribute name="isDesktop" type="Boolean" />
+
+	<!--_____________________________ Local Attributes _____________________________________________________________-->
+	<aura:attribute name="FromEmailAddress" type="String" default=""/>
+    <aura:attribute name="ToEmailAddress" type="String" default=""/>
+    <aura:attribute name="CCEmailAddress" type="String" default=""/>
+    <aura:attribute name="AttachPDFID" type="String" default=""/>
+    <aura:attribute name="EmailBody" type="String" default=""/>
+    <aura:attribute name="Subject" type="String" default=""/>
+    <aura:attribute name="IsSendingAttachment" type="Boolean" default="True"/>
+    <aura:attribute name="LoadingData" type="Boolean" default="True"/>
+    <aura:attribute name="WaitingWindow" type="Boolean" default="false"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+    <!-- Handle Email Addresses -->
+    <aura:attribute name="contactList" type="Contact[]"/>
+    <aura:attribute name="selectedList" type="Boolean[]"/>
+    <aura:attribute name="IsSelectedAllCOntact" type="Boolean" default="false"/>
+    <aura:attribute name="updatedselectedList" type="Boolean" default ="false"/>
+    <aura:attribute name="emailList" type="string[]"/>
+    <aura:attribute name="selectedEmails" type="string[]"/>
+
+    <aura:handler name="change" value="{!v.contactList}" action="{!c.updateEmailList}"/>
+    <aura:handler name="init" action="{!c.initializeEmail}" value="{!this}"/>
+    <aura:handler name="change" value="{!v.LoadingData}" action="{!c.continueInitial}"/>
+    <aura:handler name="change" value="{!v.IsSelectedAllCOntact}" action="{!c.handleSelectAllContact}"/>
+
+    <aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+
+	<center>
+		<aura:if isTrue="{!v.LoadingData}">
+			Please Wait. Loading Data.....
+			<aura:set attribute="else">
+
+				<div style="padding: 0.5vw; background-color: white; text-align: left; border-style: ridge;">
+					<table class="width:98%; overflow: hidden;">
+						<tr>
+							<th class="left"> From </th>
+							<td class="right"> 
+								<ui:inputText
+										value="{!v.currentUser.FirstName + ' ' + v.currentUser.LastName + ' - '+ v.currentUser.Email}"
+										disabled = "{!true}"/>
+							</td>
+						</tr>
+						<tr>
+						<th class="leftRequire">
+							<span style="color:red">*</span> To 
+						</th>
+
+						<aura:if isTrue="{!v.emailType == 2}">
+							<aura:if isTrue="{!v.isDesktop == 'True'}">
+								<td style = "padding: 7px">
+									<div style ="border-radius: .25rem; border-color: #a8b7c7; border: 1px solid rgb(221, 219, 218); padding: 5px;">
+										<b>Account contact with having an email address</b>
+							       		<table style ="border-radius: .25rem; border-color: #a8b7c7; border: 1px solid rgb(221, 219, 218); padding: 5px;">
+							       			<div style="height:200px; overflow:auto; width: 100%">
+								         		<tr style="color:white;background-color:grey">
+								         			<th style = "padding-left: 3px; text-align: center; width: 5%;">
+														<ui:inputCheckbox 
+											                    aura:id="SelectAllContact"
+											                    value="{!v.IsSelectedAllCOntact}"/>
+								         			</th>
+								            		<th style = "padding-left: 3px; text-align: left; width: 55%;">Email</th>
+								            		<th style = "padding-left: 3px; text-align: left; width: 40%;">Contact Name</th>
+								         		</tr>					         	
+									          	<aura:iteration items="{!v.contactList}" var="element" indexVar="index">
+									            	<c:SRM_ITF_61_DisplayContactInfo
+										                selectedList = "{!v.selectedList}"
+										                contact = "{!element}"
+										                index = "{!index}"
+										                updatedselectedList ="{!v.updatedselectedList}"
+									            	/>
+									          	</aura:iteration>         		
+							         		</div>
+							       		</table>
+							       		<div style="padding-top: 10px; font-weight: bold">
+							       			Other Email Address
+							       		</div>
+				       					<ui:inputText 
+												aura:id="Toaddress"
+												value="{!v.ToEmailAddress}"/>
+							       	</div>
+							    </td>
+							    <aura:set attribute="else">
+									<td style ="border-style: 1px solid-line">
+										<table>
+											<tr>
+												<th class="left"> Account Contact </th>
+												<td class="right" >
+													<ui:inputSelect multiple="true" aura:id="selectedEmails" Label="Select email from SFDC contact">
+														<aura:iteration items="{!v.emailList}" var="element">
+															<ui:inputSelectOption text="{!element}" label="{!element}"/>
+														</aura:iteration>
+													</ui:inputSelect>
+												</td>
+											</tr>
+											<tr>
+												<th class="left" > Other Contact </th>
+												<td class="right">
+													<ui:inputText 
+														aura:id="Toaddress"
+														value="{!v.ToEmailAddress}"/>
+												</td>
+											</tr>
+										</table>
+									</td>
+							    </aura:set>
+							</aura:if>
+							<aura:set attribute="else">
+								<td class="right">
+									<ui:inputText 
+										aura:id="Toaddress"
+										value="{!v.ToEmailAddress}"/>
+								</td>								
+							</aura:set>
+						</aura:if>
+
+						</tr>
+						<tr>
+							<th class="left"> CC </th>
+							<td class="right">
+								<ui:inputText
+									value="{!v.CCEmailAddress}"/>
+
+							</td>
+						</tr>
+						<tr>
+							<th class="left"> Subject </th>
+							<td class="right">
+								<ui:inputText
+									value="{!v.Subject}"/>
+							</td>
+						</tr> 
+						<tr>
+							<th class="left">
+							</th>
+							<td class="right">
+								<table>
+									<tr>
+										<td>
+											<ui:inputCheckbox value="{!v.IsSendingAttachment}"/>
+										</td>
+										<td>
+											Attach a copy of the Inventory Transfer Form
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>     		
+					</table>
+					<ui:inputTextArea
+							value="{!v.EmailBody}" 
+							class="inputTextAreaFormat"
+							rows="20"/>
+
+					<table style="background-color: white;">
+						<tr>
+							<td class="center" style="width: 45%; background-color: white">
+								<lightning:button class="slds-m-top--medium" onclick="{!c.cancel}" label="Cancel"/>
+							</td>
+							<td class="center" style="width: 45%; background-color: white;">
+								<lightning:button class="slds-m-top--medium" onclick="{!c.send}" label="Send"/>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</aura:set>
+		</aura:if>
+	</center>
+
+    <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+    <aura:if isTrue="{!v.WaitingWindow}">        
+        <!--###### MODAL BOX Start######--> 
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ###### MODAL BOX HEADER Start ######-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+                <!--###### MODAL BOX BODY Part Start######-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <!--###### MODAL BOX FOOTER Part Start ######-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+        <!--###### MODAL BOX Part END Here ######-->        
+    </aura:if>
+</aura:component>

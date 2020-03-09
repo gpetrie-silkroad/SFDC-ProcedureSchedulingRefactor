@@ -1,0 +1,24 @@
+.THIS {
+}
+.THIS p {
+        	color:#ff6347;
+            font-family:helvetica;
+        	font-size:35px;
+        }
+.THIS .h1 {
+        	color:#aa402e;
+            font-family:helvetica;
+            font-style:italic;
+        	font-size:15px;
+        }
+.THIS hr {
+        	border-color:#ff6347;
+        	border-width:3px;
+            border-style:solid;
+        }
+.THIS img.top{
+        	vertical-align: text-top;
+        }
+.THIS .custom-background {
+        	background:black; 
+        }

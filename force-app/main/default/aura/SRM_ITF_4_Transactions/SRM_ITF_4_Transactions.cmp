@@ -1,0 +1,208 @@
+<aura:component controller="SRM_ITF_ServerController">
+	<aura:attribute name="tempStatus" type="Integer"/>
+	<aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+    <aura:attribute name="possibleOwnerList" type="String[]" />
+    <aura:attribute name="tempITFTransaction" type="Inventory_Transfer_Form_Transaction__c" 
+        default="{ 'sobjectType': 'Inventory_Transfer_Form_Transaction__c'}"/>
+    <aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]" />
+    <aura:attribute name="customerPriceBook" type="PricebookEntry[]" />
+    <aura:attribute name="currentStatus" type="Integer"/>
+    <aura:attribute name="controllingTransactionTypePickList" type="Integer" default='0'/> 
+        <!--0: from CS ITF or edit
+          1: newITF from Account
+          2: newITF ITF from ITF object -->
+
+    <aura:handler name="ITFormTransaction" event="c:UpdateITForm" action="{!c.updateITFTransaction}"/>
+    <aura:handler name="ITFormTransactions" event="c:UpdateITForm" action="{!c.updateITFTransactions}"/>
+    <aura:handler name="deleteEvent" event="c:UpdateITForm" action="{!c.deleteEvent}"/>
+    <aura:attribute name="DisplayAddNewEditTransaction" type="Boolean" default="true"/>
+
+    <aura:handler name="change" value="{!v.tempStatus}" action="{!c.updateITFTransactions}"/>
+    <aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+
+    <!-- Initial Variables for lot Inventory Infos -->
+    <aura:attribute name="listItemNumForCustomerName" type="String" />
+    <aura:attribute name="listItemNumForCustomer" type="String[]" />    
+    <aura:attribute name="amLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="amLotInvenName" type="String" />
+    <aura:attribute name="tdsLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="tdsLotInvenName" type="String" />
+    <aura:attribute name="otherLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="otherLotInvenName" type="String" />
+
+    <aura:attribute name="WaitingWindow" type="Boolean" default="false"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+    
+    <!-- Send an event to root component to update ITForm -->
+    <aura:registerEvent name="updateITForm" type="c:UpdateITForm"/>
+
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <!-- <aura:handler name="change" value="{!v.ITForm}" action="{!c.updateITFdependant}"/> -->
+
+    <div style="font-weight: bold; font-size:250%; width:100%; text-align: center"> 
+        Inventory Transaction(s)
+    </div>
+    <div style = "width:98%">
+        <aura:if isTrue="{!and(greaterthan(v.ITFTransactions.length,1), v.DisplayAddNewEditTransaction == false)}">
+            <aura:if isTrue="{!lessthan(v.currentStatus,3)}">
+                <table>
+                    <tr>
+                        <td class="center2" style = "width:30%">
+                          <lightning:button label="Back" 
+                                            class="slds-m-top--medium"
+                                            variant="brand"
+                                            onclick="{!c.backButton}"/>                              
+                        </td>
+                        <td style = "width:40%">
+                        </td>
+                        <td class="center2" style = "width:30%">
+                          <lightning:button label="Next" 
+                                            class="slds-m-top--medium"
+                                            variant="brand"
+                                            onclick="{!c.nextButton}"/>
+                        </td>
+                    </tr> 
+                </table>
+                <aura:set attribute="else">
+                    <table>
+                        <tr>
+                            <td class="center2" style = "width:30%">
+                              <lightning:button label="Save" 
+                                                class="slds-m-top--medium"
+                                                variant="brand"
+                                                onclick="{!c.nextButton}"/>
+                            </td>
+                        </tr> 
+                    </table>                   
+                </aura:set>
+            </aura:if>
+        </aura:if>
+    </div>
+    <div style="padding-bottom: 1vw; padding-left: 1vw; padding-right: 1vw; background-color: white; text-align: left; border-style: ridge;">
+        <table style = "width=100%">
+            <aura:if isTrue="{!v.DisplayAddNewEditTransaction}">
+                <tr>
+                    <td class="center" style = "width:98%">
+                        <c:SRM_ITF_41_AddEditTransaction
+                            ITFormID="{!v.ITForm.Id}"
+                            possibleOwnerList = "{!v.possibleOwnerList}"
+                            tempITFTransaction = "{!v.tempITFTransaction}"
+                            DisplayAddNewEditTransaction = "{!v.DisplayAddNewEditTransaction}"
+                            listItemNumForCustomerName="{!v.listItemNumForCustomerName}"
+                            listItemNumForCustomer="{!v.listItemNumForCustomer}"
+                            amLotInven="{!v.amLotInven}"
+                            amLotInvenName="{!v.amLotInvenName}"
+                            tdsLotInven="{!v.tdsLotInven}"
+                            tdsLotInvenName="{!v.tdsLotInvenName}"
+                            otherLotInven="{!v.otherLotInven}"
+                            otherLotInvenName="{!v.otherLotInvenName}"
+                            ITForm="{!v.ITForm}"
+                            customerPriceBook="{!v.customerPriceBook}"/>                           
+                    </td>                    
+                </tr>
+                <aura:set attribute="else">
+                    <tr>
+ 						<aura:if isTrue="{!greaterthan(v.ITFTransactions.length,1)}">  
+                            <td class="center1" style = "width:30%">
+                          		<lightning:button 	label="Add a transaction" 
+                                            		class="slds-m-top--medium"
+                                            		variant="brand"
+                                            		onclick="{!c.addTransaction}"/>
+                        	</td>
+                        </aura:if>
+                    </tr>
+                    <tr>
+                        <td class="center" style = "width:98%; background-color: white;">
+                            <aura:iteration items="{!v.ITFTransactions}" var="transaction" indexVar="index">
+                                <c:SRM_ITF_42_DisplayTransaction
+                                    transaction="{!transaction}"
+                                    tempITFTransaction = "{!v.tempITFTransaction}"
+                                    index = "{!index}"
+                                    DisplayAddNewEditTransaction = "{!v.DisplayAddNewEditTransaction}"/>
+                            </aura:iteration>                      
+                        </td>
+                    </tr>  
+                    <tr>
+                        <td class="center1" style = "width:30%">
+                          <lightning:button label="Add a transaction" 
+                                            class="slds-m-top--medium"
+                                            variant="brand"
+                                            onclick="{!c.addTransaction}"/>
+                        </td>
+                    </tr>                   
+                </aura:set>
+            </aura:if>
+        </table>
+    </div>
+
+    <aura:if isTrue="{!v.DisplayAddNewEditTransaction == false}">
+        <div style = "width:98%">
+            <aura:if isTrue="{!lessthan(v.currentStatus,3)}">
+                <table>
+                    <tr>
+                        <td class="center1" style = "width:30%">
+                          <lightning:button label="Back" 
+                                            class="slds-m-top--medium"
+                                            variant="brand"
+                                            onclick="{!c.backButton}"/>                              
+                        </td>
+                        <td style = "width:40%">
+                        </td>
+                        <td class="center1" style = "width:30%">
+                          <lightning:button label="Next" 
+                                            class="slds-m-top--medium"
+                                            variant="brand"
+                                            onclick="{!c.nextButton}"/>
+                        </td>
+                    </tr> 
+                </table>
+                <aura:set attribute="else">
+                    <table>
+                        <tr>
+                            <td class="center1" style = "width:100%">
+                              <lightning:button label="Save" 
+                                                class="slds-m-top--medium"
+                                                variant="brand"
+                                                onclick="{!c.nextButton}"/>
+                            </td>
+                        </tr> 
+                    </table>                   
+                </aura:set>
+            </aura:if>
+        </div>
+    </aura:if>
+
+
+    <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+    <aura:if isTrue="{!v.WaitingWindow}">        
+        <!--###### MODAL BOX Start######--> 
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ###### MODAL BOX HEADER Start ######-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+                <!--###### MODAL BOX BODY Part Start######-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <!--###### MODAL BOX FOOTER Part Start ######-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+        <!--###### MODAL BOX Part END Here ######-->        
+    </aura:if>
+</aura:component>

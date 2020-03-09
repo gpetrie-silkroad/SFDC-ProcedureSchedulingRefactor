@@ -1,0 +1,52 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 12px;
+    background-color: #fafaf5;
+}
+
+.THIS table {
+    width: 100%;
+    padding:0; 
+    margin:0;
+}
+
+.THIS .small{
+	font-size: 150%;
+	color: black;
+	padding-top:none;
+	padding-bottom:none;
+}
+
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+}
+
+.THIS .flexibleScreen{
+	width: 100%;
+}
+
+.THIS .flexibleScreenMobile{
+	width: 100%;
+	font-size: 2.75vw;
+}
+
+.THIS .inputTextAreaFormat{
+	padding: 0.5vw;
+	text-align: left;
+	border: 1px solid black; 
+	background-color: #fafaf5;
+	width:100%;
+}
+
+/*Mobile Screen*/
+@media (max-aspect-ratio: 15/16) {
+	.THIS {
+    	font-size: 2.75vw;
+	}
+	.THIS .flexibleScreenMobile{
+		width: 100%;
+	}
+}

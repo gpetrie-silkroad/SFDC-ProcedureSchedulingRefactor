@@ -1,0 +1,39 @@
+<aura:component>
+<!-- =====================attributes from parent component============================ -->
+    <aura:attribute name="currentUser" type="User" default="{ 'sobjectType': 'User'}"/>
+    <aura:attribute name="userInventory" type="Lot_Inventory__c[]"/>
+    <aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]" /> <!-- return user iputs to parent components -->
+    <aura:attribute name="isDesktop" type="Boolean" />
+    <aura:attribute name="Reset" type="Boolean" />
+<!-- ====================End attributes from parent component======================== -->
+
+<!-- =========================Local attributes================================== -->
+	<aura:attribute name="userInventoryPickList" type="Inventory_Transfer_Form_Transaction__c[]"/>
+	<aura:attribute name="PossibleItemPickList" type="String[]"/>
+	<aura:attribute name="TriggerDisableProductLotChoice" type="Boolean" />
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="change" value="{!v.userInventory}" action="{!c.updateUserchoices}"/>
+	<aura:handler name="change" value="{!v.userInventoryPickList}" action="{!c.updateItemPickLists}"/>
+	<aura:handler name="change" value="{!v.Reset}" action="{!c.updateUserchoices}"/>
+<!-- ====================end of Calling controller================================ -->
+
+	<table>
+		<aura:iteration items="{!v.ITFTransactions}" var="transaction" indexVar="index">
+			<c:SRM_ITF_41_TransactionInput_lightversion
+					ITFTransactions = "{!v.ITFTransactions}"
+					userInventoryPickList = "{!v.userInventoryPickList}"
+					Index = "{!index}"
+					PossibleItemPickList = "{!v.PossibleItemPickList}"
+					TriggerDisableProductLotChoice = "{!v.TriggerDisableProductLotChoice}"/>
+		</aura:iteration>
+	</table>
+	<center style = "padding-bottom: 3px; padding-top: 3px">
+	  	<lightning:button 
+	      		label="Add an item"
+	      		variant="brand"
+	      		onclick="{!c.addNewTransaction}"/> 
+	</center>
+
+</aura:component>

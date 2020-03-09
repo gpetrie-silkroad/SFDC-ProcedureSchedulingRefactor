@@ -1,0 +1,108 @@
+.THIS {
+	padding:0; 
+    margin:0;
+    font-size: 150%;
+    background-color: white;
+    color: black;
+}
+
+
+/*Class style user input*/
+.THIS .slds-form--horizontal{
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+    background-color: white;
+}
+
+/*Class style header*/
+.THIS .slds-text-heading--medium{
+	padding-bottom: 4vw; 
+    margin:0;
+    font-size: 200%;
+    font-weight: bold;
+}
+
+.THIS .slds-theme--default{
+	background-color: white;
+}
+
+.THIS .form-element__help{
+	font-size: 80%;
+	margin: 0vw;
+}
+
+.THIS td.left{
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 45%; 
+	text-align: right;
+}
+
+.THIS td.leftRequire{
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 45%; 
+	text-align: right;
+	color:black;
+}
+
+.THIS td.right2{
+	padding-bottom: 1vw;
+	width: 55%; 
+	text-align: center;
+}
+
+.THIS td.right{
+	padding-bottom: 1vw;
+	width: 55%; 
+	text-align: left;
+}
+
+.THIS .smallbox{
+    font-size: 110%;
+    font-weight: bold;
+    text-align: left;
+    width: 95%;
+    max-width: 95%;
+}
+
+.THIS .smalfont{
+    font-size: 80%;
+    width: 85%;
+}
+
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+    width: 100%;
+}
+
+.THIS .slds-button2{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	width: 65%;
+	line-height: 100%;
+}
+
+.THIS .slds-button3{
+	font-size: 90%;
+	background-color: #0070D2;
+	color: white;
+	line-height: 100%;
+}
+
+.THIS .slds-button59{
+	font-size: 100%;
+	background-color: white;
+	color: black;
+	width: 100%;
+	line-height: 100%;
+	border: none;
+}
+
+.THIS .slds-button{
+	font-size: 100%;
+	line-height: 100%;
+}

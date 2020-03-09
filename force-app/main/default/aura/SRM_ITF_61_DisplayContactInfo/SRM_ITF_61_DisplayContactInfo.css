@@ -1,0 +1,12 @@
+.THIS td.SelectLine
+{
+	padding-left: 5px; 
+	text-align: left;
+	background-color: rgb(236, 235, 234);
+}
+
+.THIS td.UnSelectLine
+{
+	padding-left: 5px; 
+	text-align: left;
+}

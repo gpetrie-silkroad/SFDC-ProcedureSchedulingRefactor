@@ -1,6 +1,6 @@
 ({
     handleRecordUpdated: function(component, event, helper) {
-                 
+                  
         var eventParams = event.getParams(); 
 		 
         if(eventParams.changeType === "LOADED") {
@@ -34,7 +34,7 @@
             else{
                 component.set("v.tds2User_dis", true);
             }
-                
+                 
             helper.getTDSUsers2(component);
             helper.getProctorList(component);
             helper.getPhysPrimOpList(component);
@@ -99,6 +99,7 @@
                 if(haveSchedule){
                     alert("WARNING: If you save this Procedure Form with a Status of \n \"Procedure Turned Down,\" any associated event will be cancelled");
                     component.set("v.delEvent", true);
+                    helper.getEventLinks(component);
                 }
             }
             else if(selected == "Cancelled/Rescheduled"){
@@ -114,8 +115,10 @@
                 component.set("v.noRenderAddNewEventSave", true);
 
                 if(haveSchedule){
-                    alert("WARNING: If you save this Procedure Form with a Status of \n \"Cancelled/Rescheduled,\" any associated event will be cancelled");
-                }   
+                    alert("WARNING: If you save this Procedure Form with a Status of \n \"Procedure Turned Down,\" any associated event will be cancelled");
+                    component.set("v.delEvent", true);
+                    helper.getEventLinks(component);
+                }  
             }
             else{
                 component.set("v.noRenderBottom", false);
@@ -128,11 +131,21 @@
 
                 helper.fieldAccessSet(component);
                 helper.getTDSUsers2
+                if(haveSchedule){
+                    alert("WARNING: If you save this Procedure Form with a Status of \n \"Procedure Turned Down,\" any associated event will be cancelled");
+                    component.set("v.delEvent", true);
+                    helper.getEventLinks(component);
+                }
             }
         
             
             if( selected == "Converted to CEA" || selected == "Converted to TF-CAS" || selected == "Aborted" ){
                resForAbort.set("v.disabled", false); 
+                if(haveSchedule){
+                    alert("WARNING: If you save this Procedure Form with a Status of \n \"Procedure Turned Down,\" any associated event will be cancelled");
+                    component.set("v.delEvent", true);
+                    helper.getEventLinks(component);
+                }
             }
             else {
                 //resForAbort.set("v.disabled" , true);
@@ -286,7 +299,11 @@
         else{
             component.set('v.simpleRecord.TDS_Present__c', selectedTDSUser);
             var tdsId = component.get("v.simpleRecord.TDS_Present__c");
-        } 
+        }
+        
+        var x = component.get('v.simpleRecord.TDS_Present__c');
+        alert("For DX purposes TDS User Selected = [" + x + "]");
+        
 		helper.getTDSUsers2(component);
         helper.setNoSRM(component);
         
@@ -411,6 +428,7 @@
         var delEvent = component.get("v.delEvent");
         var proceedWithSave = true;
         
+        alert("HANDLE SAVE RECORD STARTED");
 
 // I S S U E     W A R N I N G     I F     E V E N T     W I L L    B E    D E L E T E D     A N D     G E T     U S E R     C O N F I R M A T I O N
         if(delEvent == true){
@@ -454,6 +472,50 @@
             var procedureType = component.get("v.simpleRecord.Procedure_Type__c");
             var procedureDate = component.get("v.simpleRecord.Procedure_Date__c");
             var procedureStatus = component.get("v.simpleRecord.Procedure_Completion__c");
+
+
+
+
+            if(procedureStatus == 'Scheduled'){
+                component.set("v.simpleRecord.Event_Attached__c", true);
+                component.set("v.simpleRecord.Event_ActivityDate__c", procedureDate);
+                
+                var lStartTime = component.get("v.startTime");
+                var lEndTime = component.get("v.endTime");
+                var lTimeZone = component.get("v.hospitalTimeZone");
+                var locInfo =component.get("v.locationInfo");
+                var oInfo = component.get("v.OtherInformation}");
+    
+    
+                component.set("v.simpleRecord.Event_Local_End_TIme__c", lEndTime);
+                component.set("v.simpleRecord.Event_Local_Start_Time__c", lStartTime);
+                component.set("v.simpleRecord.Event_Local_Time_Zone__c", lTimeZone);
+                component.set("v.simpleRecord.Event_Location_Info__c", locInfo);
+                component.set("v.simpleRecord.Event_Other_Information__c", oInfo);
+            }
+            else{
+                var nullVal;
+                component.set("v.simpleRecord.Event_Attached__c", false);
+                component.set("v.simpleRecord.Event_ActivityDate__c", nullVal);
+                
+                var lStartTime = component.set("v.startTime");
+                var lEndTime = component.set("v.endTime");
+                var lTimeZone = component.set("v.hospitalTimeZone");
+                var locInfo =component.set("v.locationInfo");
+                var oInfo = component.set("v.OtherInformation}");
+    
+                component.set("v.simpleRecord.Event_Local_End_TIme__c", lEndTime);
+                component.set("v.simpleRecord.Event_Local_Start_Time__c", lStartTime);
+                component.set("v.simpleRecord.Event_Local_Time_Zone__c", lTimeZone);
+                component.set("v.simpleRecord.nEvent_Location_Info__c", locInfo);
+                component.set("v.simpleRecord.Event_Other_Information__c", oInfo);
+    
+            }
+
+
+
+
+
             var reasonForAbort = component.get("v.simpleRecord.Reason_Aborted__c");
 
             var reasonForProcedureTurnDown = component.get("v.simpleRecord.Reason_for_Turning_Procedure_Down__c");
@@ -584,7 +646,7 @@
 
             var isError1 = false;
             
-
+ 
 // A B O R T E D             
             if(procedureStatus == "Aborted"  && profileName.Profile.Name != "System Administrator" && profileName.Profile.Name != "Clinical Affairs Team"){
                 var i = 0;
@@ -1075,6 +1137,8 @@
                         //alert("Save Status = [" + status + "]");
 
                         if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+
+                            alert("Procedure Form Save State - SAVE PF ONLY = [" + saveResult.state + "]");
                             
                             alert("Procedure Form Successfully Updated.");   
                             
@@ -1119,6 +1183,8 @@
                         // NOTE: If you want a specific behavior(an action or UI behavior) when this action is successful
                         // then handle that in a callback (generic logic when record is changed should be handled in recordUpdated event handler)
                         if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+
+                            alert("Procedure Form Save State handleSaveRecord = [" + saveResult.state + "]");
                             
                             alert("Procedure Form Successfully Updated.");   
                             
@@ -1169,6 +1235,7 @@
         // * * * * * * * * * * CONDUCT VALIDATION ON ENTRIES * * * * * * * * * * * * * *
         // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
                 //* * * COLLECT REQUIRED COMPONENTS IF SAVED WITH SCHEDULE ONLY
+        var procedureForm = component.get("v.simpleRecord");
         var nowDate = component.get("v.nowDate");
         var procedureType = component.get("v.simpleRecord.Procedure_Type__c");
 		var procedureDate = component.get("v.simpleRecord.Procedure_Date__c");
@@ -1231,11 +1298,13 @@
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
             // * * * * * * * * * * UPDATE EXISTING PROCEDURE FORM RECORD   * * * * * * * * * * * *
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
+            /*
             component.find("recordLoader").saveRecord($A.getCallback(function(saveResult) {
                 // NOTE: If you want a specific behavior(an action or UI behavior) when this action is successful
                 // then handle that in a callback (generic logic when record is changed should be handled in recordUpdated event handler)
                 if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+
+                    alert("Procedure Form Save State = [" + saveResult.state + "]");
                     
                     alert("Procedure Form Successfully Updated.");   
                     
@@ -1250,7 +1319,7 @@
                     alert('Procedure NOT Saved!  Refer to Debug Logs - Unknown');
                 }
             }));
-
+            */
             //var navEvt = $A.get("e.force:navigateToSObject");
             //navEvt.setParams({
             //"recordId" : accountId,
@@ -1352,21 +1421,11 @@
            //var simpleRecord = component.get("v.simpleRecord");
            var vendorCredentailCompany = component.get("v.vendorCredentailCompany");
            
-           var action = component.get("c.updateProcedureAppointment");
-           
-           var procedureFormRecordId = component.get("v.simpleRecord.Id");
-           var eventId = component.get("v.simpleRecord.EventIds__c");
-
-           var eventId;
-
-           var dmlAction = 'CREATE';
-
-           //alert("DML ACTION = [" + dmlAction + "]");
+           var action = component.get("c.createProcedureAppointment");
            
            var self = this;
            action.setParams({
-               procedureFormRecordId : procedureFormRecordId,
-               eventId : eventId,
+               procedureForm : procedureForm,
                procedureDate : procedureDate,
                timeZoneString : timeZoneString,
                startTime : startTime,
@@ -1388,13 +1447,42 @@
                primaryOpPhysicianId : primaryOpPhysicianId,
                otherInformation : otherInformation,
                vendorCredentailCompany : vendorCredentailCompany,
-               dmlAction : dmlAction
                });
            
            action.setCallback(this, function(actionResult) {
                component.set("v.eventId1", actionResult.getReturnValue());
                var state = actionResult.getState();
-               //alert("STATE = [" + state + "]");
+               alert("Schedule Save State SAVE WITH CREATE PF ONLY= [" + state + "]");
+
+               if(state == 'SUCCESS'){
+                    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+                    // * * * * * * * * * * UPDATE EXISTING PROCEDURE FORM RECORD   * * * * * * * * * * * *
+                    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+                    alert("Entering Procedure Form Save");
+            
+                    component.find("recordLoader").saveRecord($A.getCallback(function(saveResult) {
+                        // NOTE: If you want a specific behavior(an action or UI behavior) when this action is successful
+                        // then handle that in a callback (generic logic when record is changed should be handled in recordUpdated event handler)
+                        if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+
+                            alert("Procedure Form Save State = [" + saveResult.state + "]");
+                            
+                            alert("Procedure Form Successfully Updated.");   
+                            
+                        } else if (saveResult.state === "INCOMPLETE") {
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - INCOMPLETE');
+                            console.log("User is offline, device doesn't support drafts.");
+                        } else if (saveResult.state === "ERROR") {
+                            console.log('Problem saving record, error: ' + JSON.stringify(saveResult.error));
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - ERROR');
+                        } else {
+                            console.log('Unknown problem, state: ' + saveResult.state + ', error: ' + JSON.stringify(saveResult.error));
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - Unknown');
+                        }
+                    }));
+
+               }
                var x = component.get("v.eventId1");
                //alert("EVENT ID = [" + x +"]");
                
@@ -1504,7 +1592,7 @@
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
             // * * * * * * * * * * UPDATE EXISTING PROCEDURE FORM RECORD   * * * * * * * * * * * *
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
+/*
             component.find("recordLoader").saveRecord($A.getCallback(function(saveResult) {
                 // NOTE: If you want a specific behavior(an action or UI behavior) when this action is successful
                 // then handle that in a callback (generic logic when record is changed should be handled in recordUpdated event handler)
@@ -1530,7 +1618,7 @@
             "slideDevName": "detail"
             });
             navEvt.fire();
-
+*/
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
             // * * * * * * * * * * UPDATE EXISTING EVENT AND GET THE EVENT ID  * * * * * * * * * *
             // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -1662,7 +1750,46 @@
             action.setCallback(this, function(actionResult) {
 				component.set("v.eventId1", actionResult.getReturnValue());
                 var state = actionResult.getState();
-                //alert("STATE = [" + state + "]");
+
+//*******************************************************************************************************************************************************/                
+                alert("Schedule Save State UPDATE PF AND UPDATE EVENT = [" + state + "]");
+                
+                if(state == 'SUCCESS'){
+
+                    alert("Entering Procedure Form Save");
+
+                    component.find("recordLoader").saveRecord($A.getCallback(function(saveResult) {
+                        // NOTE: If you want a specific behavior(an action or UI behavior) when this action is successful
+                        // then handle that in a callback (generic logic when record is changed should be handled in recordUpdated event handler)
+                        alert("Procedure Form Save Result = [" + saveResult.state + "]");
+
+                        if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+                            
+                            var x = component.get('v.simpleRecord.TDS_Present__c');
+                            alert("For DX purposes TDS User Selected = [" + x + "]");
+
+                            alert("Procedure Form Successfully Updated.");   
+                            
+                        } else if (saveResult.state === "INCOMPLETE") {
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - INCOMPLETE');
+                            console.log("User is offline, device doesn't support drafts.");
+                        } else if (saveResult.state === "ERROR") {
+                            console.log('Problem saving record, error: ' + JSON.stringify(saveResult.error));
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - ERROR');
+                        } else {
+                            console.log('Unknown problem, state: ' + saveResult.state + ', error: ' + JSON.stringify(saveResult.error));
+                            alert('Procedure NOT Saved!  Refer to Debug Logs - Unknown');
+                        }
+                    }));
+        
+                    var navEvt = $A.get("e.force:navigateToSObject");
+                    navEvt.setParams({
+                    "recordId" : accountId,
+                    "slideDevName": "detail"
+                    });
+                    navEvt.fire();
+                }
+//*******************************************************************************************************************************************************/
                 var x = component.get("v.eventId1");
                 //alert("EVENT ID = [" + x +"]");
                 

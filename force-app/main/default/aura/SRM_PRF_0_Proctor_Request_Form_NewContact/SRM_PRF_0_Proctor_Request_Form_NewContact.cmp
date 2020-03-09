@@ -1,0 +1,921 @@
+<aura:component controller="SRM_PRF_ServerController" implements="flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction" access="global">
+	<aura:attribute name="PRF" type="Proctor_Form__c"  default="{'sobjectType': 'Proctor_Form__c'}"/>
+
+	<aura:attribute name="version" type="String" default = "v1.5.0"/>
+	<aura:attribute name="header" type="String" default = "Proctor Request Form" />
+
+	<aura:attribute name="PhysicianContact" type="Contact"/>
+  <aura:attribute name="SRMProctors" type="Contact[]"/>
+  <aura:attribute name="RecordTypes" type="RecordType[]"/>  
+	<aura:attribute name="AccountList" type="Account[]"/>
+  <aura:attribute name="ProctoringReason" type="String[]"/>
+  <aura:attribute name="userInfo" type="User"/>
+  <aura:attribute name="SRMTESLAUsers" type="User[]"/>
+  <aura:attribute name="selectedProctor" type="Boolean" default="false"/>
+  <aura:attribute name="selectedBoth" type="Boolean" default="false"/>  
+  <aura:attribute name="selectedTESLA" type="Boolean" default="false"/>
+  <aura:attribute name="devicetype" type="String" default=""/>
+  <aura:attribute name="missingRequestedPersonsMess" type="String" default="Please selected request Person type"/>
+  <aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+  <aura:attribute name="MissingRequestor" type="Boolean" default="False"/>
+  <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+  <aura:attribute name="StringHospitalCredentialing" type="String" default="N/A"/>
+  <aura:attribute name="TotalCases" type="Integer"/>
+  <aura:attribute name="Hours" type="String[]" default="['00','00','00']"/>
+  <aura:attribute name="Minutes" type="String[]" default="['00','00','00']"/>
+  <aura:attribute name="Periods" type="String[]" default="['AM','AM','AM']"/>
+  <aura:attribute name="SRMAttendees" type="String[]" default="['','','']"/>
+  <aura:attribute name="HourPickList" type="String[]" default="['00','01','02','03','04','05','06','07','08','09','10','11','12']"/>
+  <aura:attribute name="MinutePickList" type="String[]" default="['00','15','30','45']"/>
+
+  <!-- ================Initialize============================ -->
+ 	<!-- Get physician contact info and time from Salesforce Server  -->
+  <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+
+  <aura:handler name="change" value="{!v.selectedTESLA}" action="{!c.selectedTESLAChange}"/>
+  <aura:handler name="change" value="{!v.selectedProctor}" action="{!c.selectedProctorChange}"/>
+  <aura:handler name="change" value="{!v.selectedBoth}" action="{!c.selectedBothChange}"/>
+
+  <aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+
+  <aura:html tag="style">
+    .cuf-content {
+        padding: 0 1rem !important;
+        font-family: "Times New Roman", Aria, Architect;
+        font-size: 120%;
+    }
+    .slds-p-around--medium {
+        padding: 0rem !important;
+        font-family: "Times New Roman", Aria, Architect;
+        font-size: 120%;
+    }       
+    .slds-modal__content{
+        height:unset !important;
+        max-height:unset !important;
+        font-family: "Times New Roman", Aria, Architect;
+        font-size: 120%;
+    }
+  </aura:html>
+
+	<c:SRM_PRF_1_Header
+			version="{!v.version}"
+			header="{!v.header}"/>
+<!-- ==============UI for smartphone devices============ -->
+  <aura:if isTrue="{!v.devicetype == 'PHONE'}">
+    <span style="color:red">*</span> Required Fields
+    <table>
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Requested date:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputDate value="{!v.PRF.Request_Date__c}" disabled="True"/>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Requested by:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputText value="{!v.userInfo.LastName + ', ' + v.userInfo.FirstName}" disabled="True"/>  
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Requested Person:
+        </td>
+        <td>
+
+        </td>
+      </tr>
+      <tr>
+        <table>
+          <tr>
+            <td class="right">
+              <!-- <ui:inputCheckbox aura:id="checkbox" label="Select?" change="{!c.onCheck}"/> -->
+              Proctor&nbsp;&nbsp;
+            </td>
+            <td>
+              <ui:inputCheckbox
+                  aura:id="Proctor"
+                  value="{!v.selectedProctor}"/>              
+            </td>
+            <td class="right">
+              TESLA&nbsp;&nbsp;
+            </td>
+            <td>
+              <ui:inputCheckbox 
+                  aura:id="TESLA"
+                  value="{!v.selectedTESLA}"/>              
+            </td>
+            <td class="right">
+              Either&nbsp;&nbsp;
+            </td>
+            <td>
+              <ui:inputCheckbox 
+                  aura:id="Both"
+                  value="{!v.selectedBoth}"/>              
+            </td>
+          </tr>
+        </table>
+        <aura:if isTrue="{!or(v.selectedProctor,v.selectedBoth)}">
+          <aura:if isTrue="{!v.selectedBoth}">
+            Proctor:
+          </aura:if>
+          <ui:inputSelect 
+              aura:id="RequestProctor"  
+              value="{!v.PRF.Requested_Proctor__c}"
+              disabled="false">
+            <aura:iteration items="{!v.SRMProctors}" var="Proctor">
+                <ui:inputSelectOption 
+                    text='{!Proctor.Id}' 
+                    label="{!Proctor.LastName + ', ' + Proctor.FirstName + ' - '+ Proctor.Account.BillingState + ' - ' + Proctor.Account.BillingCity}"/>
+            </aura:iteration>
+          </ui:inputSelect>
+        </aura:if>
+
+        <aura:if isTrue="{!or(v.selectedTESLA,v.selectedBoth)}">
+          <aura:if isTrue="{!v.selectedBoth}">
+            TESLA:
+          </aura:if>
+          <ui:inputSelect 
+              aura:id="RequestTESLA"  
+              value="{!v.PRF.Requested_TESLA__c}"
+              disabled="false">
+            <aura:iteration items="{!v.SRMTESLAUsers}" var="element">
+                <ui:inputSelectOption 
+                    text='{!element.Id}' 
+                    label="{!element.Name + ' - ' + element.State + ' - ' + element.City}"/>
+            </aura:iteration>
+          </ui:inputSelect>
+        </aura:if>
+
+        <aura:if isTrue="{!v.MissingRequestor}">
+          <span class="help">
+            {!v.missingRequestedPersonsMess}
+          </span>
+        </aura:if>
+        
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Proctor Request Date:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputDate
+              aura:id="ProctorRequestDate"  
+              value="{!v.PRF.Proctor_Request_Date__c}"
+              disabled="false"
+              displayDatePicker="true"/>  
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Hospital Name:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputSelect 
+              aura:id="HospitalName"  
+              value="{!v.PRF.Hospital_Name__c}"
+              disabled="{!v.AccountList.length == 1}">
+            <aura:iteration items="{!v.AccountList}" var="Account">
+              <ui:inputSelectOption text='{!Account.Id}' label="{!Account.Name}"/>
+            </aura:iteration>
+          </ui:inputSelect>
+          <aura:if isTrue="{!v.AccountList.length > 1}">
+            <b>
+              The physician has more than one assigned hospital.<br/>
+              Please check hospital name before submit.
+            </b>
+          </aura:if>  
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>
+          Special Hospital Credentialing Required? 
+          <lightning:helptext
+            content="If hospital requires special credentialing, please choose 'yes' so the OMA team can be notified and prepare for the requirement." 
+          />
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputSelect 
+              aura:id="HospitalCredentialing"  
+              value="{!v.StringHospitalCredentialing}">
+            <ui:inputSelectOption text='N/A' label='N/A'/>
+            <ui:inputSelectOption text='Yes' label='Yes'/>
+            <ui:inputSelectOption text='No' label='No'/>
+          </ui:inputSelect> 
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Physician to be proctored:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputText value="{!v.PhysicianContact.LastName + ', ' + v.PhysicianContact.FirstName}" disabled="True"/>    
+        </td>
+      </tr>
+
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Reason for Proctoring:
+          <lightning:helptext
+            content="'Exception to TEST Drive' reason can't be chosen for TESLA request." 
+          />
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+          <ui:inputSelect 
+              aura:id="ReasonProctoring"  
+              value="{!v.PRF.Reason_for_Proctoring__c}"
+              disabled="false">
+            <aura:iteration items="{!v.ProctoringReason}" var="Reason">
+                <ui:inputSelectOption text='{!Reason}' label="{!Reason}"/>
+            </aura:iteration>
+          </ui:inputSelect>  
+        </td>
+      </tr>
+
+      <aura:if isTrue="{!or(v.selectedTESLA,v.selectedBoth)}">
+        Note: "Exception to TEST Drive" is available for request <b>a proctor only</b>.
+      </aura:if>
+
+      <tr>
+        <td class="top">
+          Other Important information - Please state here:
+        </td>
+      </tr>
+      <tr>
+        <td class="bottom">
+            <ui:inputTextArea aura:id="comments" value="{!v.PRF.Other_Important_Information__c}" rows="3" maxlength="250"/>
+            <aura:if isTrue="{!v.PRF.Other_Important_Information__c.length > 200}">
+                <span style="font-size:75%; margin: none; padding:none">
+                    (Max: 250 chars, Left: {!(250-v.PRF.Other_Important_Information__c.length)} char(s))
+                </span>
+                <br/>
+            </aura:if>
+        </td>
+      </tr>
+    </table>
+
+    <div style = "width: 100%; border-width:1px; border-style:dashed;"></div>
+
+    <div style = "width: 100%; text-align: center; size: 120%;">
+      TCAR Cases Info
+    </div>
+    <table>
+      <tr>
+        <td class="top">
+          <span style="color:red">*</span>Number of Cases:
+        </td>
+        <td class="bottom">
+          <ui:inputSelect 
+              aura:id="ProctorNumberCases"  
+              value="{!v.TotalCases}">
+            <ui:inputSelectOption text='0' label='0'/>
+            <ui:inputSelectOption text='1' label='1'/>
+            <ui:inputSelectOption text='2' label='2'/>
+            <ui:inputSelectOption text='3' label='3'/>    
+          </ui:inputSelect>
+        </td>
+      </tr>
+    </table>
+
+    <aura:if isTrue="{!v.TotalCases > 0}">
+      <table>
+        <tr>
+          <th class="top">
+            Case #1:
+          </th>
+        </tr>
+        <tr>
+          <td class="bottomLine">
+            <table>
+              <tr>
+                <td class="middle">
+                  <span style="color:red">*</span>Start time:
+                  <lightning:helptext content="Example input time: 12:45 PM"/>
+                </td>
+              </tr>
+              <tr>
+                <td class="middle">
+                  <ui:inputSelect 
+                      aura:id="StartTimeHour0"  
+                      value="{!v.Hours[0]}"
+                      class = "input2">
+                    <aura:iteration items="{!v.HourPickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;:&nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimeMinute0"  
+                      value="{!v.Minutes[0]}"
+                      class = "input2">
+                    <aura:iteration items="{!v.MinutePickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimePeriod0"  
+                      value="{!v.Periods[0]}"
+                      class = "input2">
+                    <ui:inputSelectOption text='AM' label='AM'/>
+                    <ui:inputSelectOption text='PM' label='PM'/>
+                  </ui:inputSelect>                  
+                </td>
+              </tr>
+              <tr>
+                <td class="middle">
+                  SRM Attendees - Comments
+                </td>
+              </tr>
+              <tr>
+                <td class="middle">
+                  <ui:inputTextArea aura:id="commentCase0" value="{!v.SRMAttendees[0]}" rows="2" maxlength="200"/>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <aura:if isTrue="{!v.TotalCases > 1}">
+          <tr>
+            <th class="top">
+              Case #2:
+            </th>
+          </tr>
+          <tr>
+            <td class="bottomLine">
+              <table>
+                <tr>
+                  <td class="middle"> 
+                    Start time:
+                    <lightning:helptext content="Example input time: 12:45 PM"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                    <ui:inputSelect 
+                        aura:id="StartTimeHour1"  
+                        value="{!v.Hours[1]}"
+                        class = "input2">
+                      <aura:iteration items="{!v.HourPickList}" var="element">
+                        <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                      </aura:iteration>            
+                    </ui:inputSelect>
+                    &nbsp;&nbsp;:&nbsp;&nbsp;
+                    <ui:inputSelect 
+                        aura:id="StartTimeMinute1"  
+                        value="{!v.Minutes[1]}"
+                        class = "input2">
+                      <aura:iteration items="{!v.MinutePickList}" var="element">
+                        <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                      </aura:iteration>            
+                    </ui:inputSelect>
+                    &nbsp;&nbsp;
+                    <ui:inputSelect 
+                        aura:id="StartTimePeriod1"  
+                        value="{!v.Periods[1]}"
+                        class = "input2">
+                      <ui:inputSelectOption text='AM' label='AM'/>
+                      <ui:inputSelectOption text='PM' label='PM'/>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                    SRM Attendees - Comments
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                    <ui:inputTextArea aura:id="commentCase1" value="{!v.SRMAttendees[1]}" rows="2" maxlength="200"/>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </aura:if>
+
+        <aura:if isTrue="{!v.TotalCases > 2}">
+          <tr>
+            <th class="top">
+              Case #3:
+            </th>
+          </tr>
+          <tr>
+            <td class="bottomLine">
+              <table>
+                <tr>
+                  <td class="middle"> 
+                    Start time:
+                    <lightning:helptext content="Example input time: 12:45 PM"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                    <ui:inputSelect 
+                        aura:id="StartTimeHour2"  
+                        value="{!v.Hours[2]}"
+                        class = "input2">
+                      <aura:iteration items="{!v.HourPickList}" var="element">
+                        <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                      </aura:iteration>            
+                    </ui:inputSelect>
+                    &nbsp;&nbsp;:&nbsp;&nbsp;
+                    <ui:inputSelect 
+                        aura:id="StartTimeMinute2"  
+                        value="{!v.Minutes[2]}"
+                        class = "input2">
+                      <aura:iteration items="{!v.MinutePickList}" var="element">
+                        <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                      </aura:iteration>            
+                    </ui:inputSelect>
+                    &nbsp;&nbsp;
+                    <ui:inputSelect 
+                        aura:id="StartTimePeriod2"  
+                        value="{!v.Periods[2]}"
+                        class = "input2">
+                      <ui:inputSelectOption text='AM' label='AM'/>
+                      <ui:inputSelectOption text='PM' label='PM'/>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                    SRM Attendees - Comments
+                  </td>
+                </tr>
+                <tr>
+                  <td class="middle">
+                      <ui:inputTextArea aura:id="commentCase2" value="{!v.SRMAttendees[2]}" rows="2" maxlength="200"/>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </aura:if>
+      </table>
+    </aura:if>
+
+    <div style = "padding-bottom: 0.5rem; padding-top: 0.5rem;">
+      <table>
+        <tr class="tr1">
+          <lightning:button 
+              label="Submit The Proctor Request Form" 
+              class="slds-m-top-medium"
+              variant="brand"
+              onclick="{!c.SubmitProctorForm}"/>
+        </tr>
+      </table>
+    </div> 
+<!-- ==============End of UI for smartphone devices============ -->
+
+<!-- ==============UI for PC and Tablet devices============ -->
+    <aura:set attribute="else">
+      <span style="color:red">*</span> Required Fields
+      <table>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Requested date
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+            <ui:inputDate value="{!v.PRF.Request_Date__c}" disabled="True"/>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Requested by
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+            <ui:inputText value="{!v.userInfo.LastName + ', ' + v.userInfo.FirstName}" disabled="True"/>        
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Requested Person
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+
+            <table>
+              <tr>
+                <td class="right">
+                  Proctor&nbsp;&nbsp;
+                </td>
+                <td>
+                  <ui:inputCheckbox
+                      aura:id="Proctor"
+                      value="{!v.selectedProctor}"/>              
+                </td>
+                <td class="right">
+                  TESLA&nbsp;&nbsp;
+                </td>
+                <td>
+                  <ui:inputCheckbox 
+                      aura:id="TESLA"
+                      value="{!v.selectedTESLA}"/>              
+                </td>
+                <td class="right">
+                  Either&nbsp;&nbsp;
+                </td>
+                <td>
+                  <ui:inputCheckbox 
+                      aura:id="Both"
+                      value="{!v.selectedBoth}"/>              
+                </td>
+              </tr>
+            </table>
+
+            <table>
+              <aura:if isTrue="{!or(v.selectedProctor,v.selectedBoth)}">
+                <tr>
+                  <aura:if isTrue="{!v.selectedBoth}">
+                    <td>
+                      Proctor:
+                    </td>                  
+                  </aura:if>
+                  <td>
+                    <ui:inputSelect 
+                        aura:id="RequestProctor"  
+                        value="{!v.PRF.Requested_Proctor__c}"
+                        disabled="false">
+                      <aura:iteration items="{!v.SRMProctors}" var="Proctor">
+                          <ui:inputSelectOption 
+                              text='{!Proctor.Id}' 
+                              label="{!Proctor.LastName + ', ' + Proctor.FirstName + ' - '+ Proctor.Account.BillingState + ' - ' + Proctor.Account.BillingCity}"/>
+                      </aura:iteration>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+              </aura:if>
+              <aura:if isTrue="{!or(v.selectedTESLA,v.selectedBoth)}">
+                <tr>
+                  <aura:if isTrue="{!v.selectedBoth}">
+                    <td>
+                      TESLA:
+                    </td>
+                  </aura:if>
+                  <td>
+                    <ui:inputSelect 
+                        aura:id="RequestTESLA"  
+                        value="{!v.PRF.Requested_TESLA__c}"
+                        disabled="false">
+                      <aura:iteration items="{!v.SRMTESLAUsers}" var="element">
+                          <ui:inputSelectOption 
+                              text='{!element.Id}' 
+                              label="{!element.Name + ' - ' + element.State + ' - ' + element.City}"/>
+                      </aura:iteration>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+              </aura:if>
+            </table>
+
+            <aura:if isTrue="{!v.MissingRequestor}">
+              <span class="help">
+                {!v.missingRequestedPersonsMess}
+              </span>
+            </aura:if>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Proctor Request Date
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+            <ui:inputDate
+                aura:id="ProctorRequestDate"  
+                value="{!v.PRF.Proctor_Request_Date__c}"
+                disabled="false"
+                displayDatePicker="true"/>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span style="color:red">*</span>Hospital Name
+          </td>
+          <td>
+            :
+          </td>
+          <td>
+            <ui:inputSelect 
+                aura:id="HospitalName"  
+                value="{!v.PRF.Hospital_Name__c}"
+                disabled="{!v.AccountList.length == 1}">
+              <aura:iteration items="{!v.AccountList}" var="Account">
+                  <ui:inputSelectOption text='{!Account.Id}' label="{!Account.Name}"/>
+              </aura:iteration>
+            </ui:inputSelect>
+            <aura:if isTrue="{!v.AccountList.length > 1}">
+              <b>
+                The physician has more than one assigned hospital.<br/>
+                Please check hospital name before submit.
+              </b>
+            </aura:if>
+          </td>
+        </tr>
+      </table>
+
+      <table style = "table-layout:unset;">
+        <tr>
+          <td>
+            <span style="color:red">*</span>
+            Special Hospital Credentialing Required? 
+              <lightning:helptext
+                content="If hospital requires special credentialing, please choose 'yes' so the OMA team can be notified and prepare for the requirement." 
+              />
+          </td>
+          <td style="text-align: left;">
+            <ui:inputSelect 
+                aura:id="HospitalCredentialing"  
+                value="{!v.StringHospitalCredentialing}">
+              <ui:inputSelectOption text='N/A' label='N/A'/>
+              <ui:inputSelectOption text='Yes' label='Yes'/>
+              <ui:inputSelectOption text='No' label='No'/>
+            </ui:inputSelect>
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Physician to be proctored
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+            <ui:inputText value="{!v.PhysicianContact.LastName + ', ' + v.PhysicianContact.FirstName}" disabled="True"/>  
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span style="color:red">*</span>Reason for Proctoring
+          </td>
+          <td>
+            : 
+          </td>
+          <td>
+            <ui:inputSelect 
+                aura:id="ReasonProctoring"  
+                value="{!v.PRF.Reason_for_Proctoring__c}"
+                disabled="false">
+              <aura:iteration items="{!v.ProctoringReason}" var="Reason">
+                  <ui:inputSelectOption text='{!Reason}' label="{!Reason}"/>
+              </aura:iteration>
+            </ui:inputSelect>
+            <aura:if isTrue="{!or(v.selectedTESLA,v.selectedBoth)}">
+              Note: "Exception to TEST Drive" is available for request <b>a proctor only</b>.
+            </aura:if>
+          </td>
+        </tr>           
+      </table>
+      Other Important information - Please state here: <br/>
+      <ui:inputTextArea aura:id="comments" value="{!v.PRF.Other_Important_Information__c}" rows="3" maxlength="250"/>
+      <aura:if isTrue="{!v.PRF.Other_Important_Information__c.length > 200}">
+          <span style="font-size:75%; margin: none; padding:none">
+              (Max: 250 chars, Left: {!(250-v.PRF.Other_Important_Information__c.length)} char(s))
+          </span>
+          <br/>
+      </aura:if>
+
+      <div style = "width: 100%; border-width:1px; border-style:dashed;"></div>
+      <div style = "width: 100%; text-align: center; size: 120%;">
+        TCAR Cases Info
+      </div>
+      <table style = "width: 50%;">
+        <tr>
+          <td>
+            <span style="color:red">*</span>Number of Cases
+          </td>
+          <td>
+            : 
+          </td>
+          <td style = "text-align: left;">
+            <ui:inputSelect 
+                aura:id="ProctorNumberCases"  
+                value="{!v.TotalCases}">
+              <ui:inputSelectOption text='0' label='0'/>
+              <ui:inputSelectOption text='1' label='1'/>
+              <ui:inputSelectOption text='2' label='2'/>
+              <ui:inputSelectOption text='3' label='3'/>
+
+            </ui:inputSelect>
+          </td>
+        </tr>
+      </table>
+      <table>
+        <aura:if isTrue="{!v.TotalCases > 0}">      
+            <tr>
+              <th style = "vertical-align: top;">
+                Case #1:
+              </th>
+              <td style = "width: 85%; border-width:1px; border-style:dotted; padding-right: 0.5rem; padding-left: 0.5rem;">
+                <span style="color:red">*</span>Start time
+                <ui:inputSelect 
+                    aura:id="StartTimeHour0"  
+                    value="{!v.Hours[0]}"
+                    class = "input1">
+                  <aura:iteration items="{!v.HourPickList}" var="element">
+                    <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                  </aura:iteration>            
+                </ui:inputSelect>
+                &nbsp;&nbsp;:&nbsp;&nbsp;
+                <ui:inputSelect 
+                    aura:id="StartTimeMinute0"  
+                    value="{!v.Minutes[0]}"
+                    class = "input1">
+                  <aura:iteration items="{!v.MinutePickList}" var="element">
+                    <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                  </aura:iteration>            
+                </ui:inputSelect>
+                &nbsp;&nbsp;
+                <ui:inputSelect 
+                    aura:id="StartTimePeriod0"  
+                    value="{!v.Periods[0]}"
+                    class = "input1">
+                  <ui:inputSelectOption text='AM' label='AM'/>
+                  <ui:inputSelectOption text='PM' label='PM'/>
+                </ui:inputSelect>
+                <lightning:helptext content="Example input time: 12:45 PM"/>
+                <br/>
+                SRM Attendees - Comments
+                <ui:inputTextArea aura:id="commentCase0" value="{!v.SRMAttendees[0]}" rows="2" maxlength="200"/>
+              </td>
+            </tr>
+
+            <aura:if isTrue="{!v.TotalCases > 1}">
+              <tr>
+                <th style = "vertical-align: top;">
+                  Case #2:
+                </th>
+                <td style = "width: 85%; border-width:1px; border-style:dotted; padding-right: 0.5rem; padding-left: 0.5rem;">
+                  Start time
+                  <ui:inputSelect 
+                      aura:id="StartTimeHour1"  
+                      value="{!v.Hours[1]}"
+                      class = "input1">
+                    <aura:iteration items="{!v.HourPickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;:&nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimeMinute1"  
+                      value="{!v.Minutes[1]}"
+                      class = "input1">
+                    <aura:iteration items="{!v.MinutePickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimePeriod1"  
+                      value="{!v.Periods[1]}"
+                      class = "input1">
+                    <ui:inputSelectOption text='AM' label='AM'/>
+                    <ui:inputSelectOption text='PM' label='PM'/>
+                  </ui:inputSelect>
+                  <lightning:helptext content="Example input time: 12:45 PM"/>
+                  <br/>
+                  SRM Attendees - Comments
+                  <ui:inputTextArea aura:id="commentCase1" value="{!v.SRMAttendees[1]}" rows="2" maxlength="200"/>
+                </td>
+              </tr>        
+            </aura:if>
+
+            <aura:if isTrue="{!v.TotalCases > 2}">
+              <tr>
+                <th style = "vertical-align: top;">
+                  Case #3:
+                </th>
+                <td style = "width: 85%; border-width:1px; border-style:dotted; padding-right: 0.5rem; padding-left: 0.5rem;">
+                  Start time
+                  <ui:inputSelect 
+                      aura:id="StartTimeHour2"  
+                      value="{!v.Hours[2]}"
+                      class = "input1">
+                    <aura:iteration items="{!v.HourPickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;:&nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimeMinute2"  
+                      value="{!v.Minutes[2]}"
+                      class = "input1">
+                    <aura:iteration items="{!v.MinutePickList}" var="element">
+                      <ui:inputSelectOption text='{!element}' label='{!element}'/>
+                    </aura:iteration>            
+                  </ui:inputSelect>
+                  &nbsp;&nbsp;
+                  <ui:inputSelect 
+                      aura:id="StartTimePeriod2"  
+                      value="{!v.Periods[2]}"
+                      class = "input1">
+                    <ui:inputSelectOption text='AM' label='AM'/>
+                    <ui:inputSelectOption text='PM' label='PM'/>
+                  </ui:inputSelect>
+                  <lightning:helptext content="Example input time: 12:45 PM"/>
+                  <br/>
+                  SRM Attendees - Comments
+                  <ui:inputTextArea aura:id="commentCase2" value="{!v.SRMAttendees[2]}" rows="2" maxlength="200"/>
+                </td>
+              </tr>        
+            </aura:if>
+
+        </aura:if>
+      </table>
+
+      <div style = "padding-bottom: 0.5rem; padding-top: 0.5rem;">
+        <table>
+          <tr class="tr1">
+            <lightning:button 
+                label="Submit The Proctor Request Form" 
+                class="slds-m-top-medium"
+                variant="brand"
+                onclick="{!c.SubmitProctorForm}"/>
+          </tr>
+        </table>
+      </div>
+    </aura:set>
+  </aura:if>
+<!-- ==============End of UI for PC and Tablet devices============ -->
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+  <aura:if isTrue="{!v.WaitingWindow}">
+      <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+          <div class="slds-modal__container">
+              <!-- ================Header Message============================-->
+              <header class="slds-modal__header">
+                  <lightning:buttonIcon iconName="utility:close"
+                                        onclick="{!c.closeWaitingPopUp}"
+                                        alternativeText="close"
+                                        variant="bare-inverse"
+                                        class="slds-modal__close"/>
+                  <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+              </header>
+
+
+              <!-- ================Body Message============================-->
+              <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                  <p>
+                      {!v.waitingMessage}
+                  </p>
+
+              </div>
+              <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                  <div class="slds-spinner__dot-a"></div>
+                  <div class="slds-spinner__dot-b"></div>
+              </div>
+
+              <!-- ================Footer Message============================-->
+              <footer class="slds-modal__footer">
+                  <lightning:button variant="neutral" 
+                                    label="Cancel"
+                                    title="Cancel"
+                                    onclick="{!c.closeWaitingPopUp}"/>
+              </footer>
+          </div>
+      </section>
+      <div class="slds-backdrop slds-backdrop_open"></div>
+  </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->
+	
+</aura:component>

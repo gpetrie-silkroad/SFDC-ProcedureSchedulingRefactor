@@ -1,0 +1,108 @@
+<aura:component controller="SRM_TSAudit_ServerController">
+<!-- =====================attributes from parent componnet============================ -->
+	<aura:attribute name="selectedList" type="Boolean[]"/>
+	<aura:attribute name="TSCCReport" type="Trunk_Stock_Cycle_Count_Report__c"/>
+	<aura:attribute name="index" type="Integer"/>
+	<aura:attribute name="updatedselectedList" type="Boolean" default ="false"/>
+	<aura:attribute name="URLOrigin" type="String"/>
+<!-- ====================End attributes from parent componnet======================= -->
+
+<!-- =========================Local attributes================================== -->
+	<aura:attribute name="selected" type="Boolean"/>
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="init" value="{!this}" action="{!c.updatedSelectedfromParent}"/>
+	<aura:handler name="change" value="{!v.updatedselectedList}" action="{!c.updatedSelectedfromParent}"/>
+	<aura:handler name="change" value="{!v.selected}" action="{!c.updatedSelectedList}"/>
+	<aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+<!-- ====================end of Local attributes================================ -->
+
+	<tr>
+		<td style = "padding-left: 1vw; text-align: center">
+			<ui:inputCheckbox 
+                    aura:id="ReplenishCheckbox"
+                    value="{!v.selected}"/>
+		</td>
+		<td style = "padding-left: 1vw; text-align: center">
+			<lightning:buttonMenu 
+					aura:id="menu" 
+					label = "Actions"
+					alternativeText="Show menu"
+					onselect="{! c.handleSelect }">
+				<aura:if isTrue ="{!v.TSCCReport.Submitted__c}">
+				    <lightning:menuItem
+				            label = "View Detail"
+				            value = "OpenTSAReport"/>
+				    <lightning:menuItem
+				            label="Reset the count"
+				            value = "ResetTSAReport"/>
+<!-- 				    <aura:set attribute="else">
+				    	<lightning:menuItem
+					            label="Do Cycle Count"
+					            value = "OpenTSAReport"/>
+					</aura:set> -->
+			    </aura:if>
+<!-- 			    <lightning:menuItem
+			            label="Delete"
+			            value = "DeleteTSAReport"/> -->
+			</lightning:buttonMenu>
+		</td>
+		<td style = "padding-left: 1vw; text-align: left">
+			<aura:if isTrue ="{!v.TSCCReport.Submitted__c}">
+				<a href="{! v.URLOrigin + '/lightning/r/Trunk_Stock_Cycle_Count_Report__c/' + v.TSCCReport.Id + '/view'}">
+					{!v.TSCCReport.Name__c}
+				</a>
+				<aura:set attribute="else">
+					{!v.TSCCReport.Name__c}
+				</aura:set>
+			</aura:if>
+		</td>
+
+		<aura:if isTrue ="{!v.TSCCReport.Status__c == 'Completed'}">
+			<td style = "padding-left: 1vw; text-align: left; background-color: #6be157">
+				{!v.TSCCReport.Status__c}
+			</td>
+			<td style = "padding-left: 1vw; text-align: left; background-color: #6be157">
+				<ui:outputNumber value="{!v.TSCCReport.Completed_Percentage__c}" format=".00"/> %			
+			</td>			
+		</aura:if>
+		<aura:if isTrue ="{!v.TSCCReport.Status__c == 'Not Submitted'}">
+			<td style = "padding-left: 1vw; text-align: left; background-color: red">
+				{!v.TSCCReport.Status__c}
+			</td>
+			<td style = "padding-left: 1vw; text-align: left; background-color: red">
+				<ui:outputNumber value="{!v.TSCCReport.Completed_Percentage__c}" format=".00"/> %			
+			</td>							
+		</aura:if>
+		<aura:if isTrue ="{!or(v.TSCCReport.Status__c == 'Auditing', v.TSCCReport.Status__c == 'Reconciling')}">
+			<td style = "padding-left: 1vw; text-align: left; background-color: yellow">
+				{!v.TSCCReport.Status__c}
+			</td>
+			<td style = "padding-left: 1vw; text-align: left; background-color: yellow">
+				<ui:outputNumber value="{!v.TSCCReport.Completed_Percentage__c}" format=".00"/> %			
+			</td>							
+		</aura:if>
+
+		<td style = "text-align: center">
+			<ui:outputDate value="{!v.TSCCReport.Count_Date__c}"/>			
+		</td>
+
+		<td style = "padding-left: 1vw; text-align: left">
+			{!v.TSCCReport.Reviewer__c}
+		</td>
+		<td style = "padding-left: 1vw; text-align: center">
+			<ui:outputDate value="{!v.TSCCReport.Review_Date__c}"/>			
+		</td>
+		<td style = "padding-left: 1vw; text-align: left">
+			<ui:outputNumber value="{!v.TSCCReport.Total_Lot_Discrepancies__c}" format="0"/>			
+		</td>
+		<td style = "padding-left: 1vw; text-align: left">
+			<ui:outputNumber value="{!v.TSCCReport.Total_Unit_Discrepancies__c}" format="0"/>			
+		</td>
+		<td style = "padding-left: 1vw; text-align: left; word-wrap: break-word;">
+			{!v.TSCCReport.Note__c}			
+		</td>
+
+	</tr>
+</aura:component>

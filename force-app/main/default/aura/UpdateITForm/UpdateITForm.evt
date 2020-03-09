@@ -1,0 +1,5 @@
+<aura:event type="APPLICATION" description="ITF Components">
+	<aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+	<aura:attribute name="ITFormTransaction" type="Inventory_Transfer_Form_Transaction__c"/>
+
+</aura:event>

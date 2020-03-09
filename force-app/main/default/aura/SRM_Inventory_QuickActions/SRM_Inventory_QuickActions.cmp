@@ -1,0 +1,14 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction" access="global">
+	
+	<lightning:navigation aura:id="navService"/>
+	
+	<center>
+	    <lightning:buttonGroup>
+	        <lightning:button label="ITF: Rep to Rep" onclick="{!c.RepToRepClick}"/>
+	        <!-- <lightning:button label="ITF: Demo" onclick="{!c.DemoClick}" disabled="false"/> -->
+			<!-- <lightning:button label="Trunk Stock Return Form" onclick="{!c.ReturnClick}"/> -->
+			<lightning:button label="Current Trunk Stock Audit" onclick="{!c.TSAClick}"/>
+	    </lightning:buttonGroup>		
+	</center>
+
+</aura:component>

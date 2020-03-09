@@ -1,0 +1,79 @@
+/*for DESKTOP/TABLET UI*/
+.THIS table.table1{
+	width: 98%; 
+	border: 1px solid black;
+	border-collapse: collapse;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS tr.tr1{
+	width: 100%; 
+	border: 1px solid black;
+	border-collapse: collapse;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS td.td1
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: left;
+	padding-left: 2vw;
+}
+
+.THIS th.th1
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: center;
+	font-weight: bold;
+	text-align: left;
+	padding-left: 2vw;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+/*for Phone ui*/
+.THIS table.table2{
+	width: 98%; 
+	border: 1px solid black;
+	border-collapse: collapse;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS tr.tr2{
+	width: 100%; 
+	border: 1px solid black;
+	border-collapse: collapse;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS td.td2
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: left;
+	padding-left: 2vw;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS th.th2
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: center;
+	font-weight: bold;
+	text-align: left;
+	padding-left: 2vw;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}

@@ -1,0 +1,76 @@
+<aura:component controller="SRM_ITF_ServerController">
+	<aura:attribute name="transaction" type="Inventory_Transfer_Form_Transaction__c"/>
+	<aura:attribute name="index" type="Integer"/>
+    <aura:attribute name="DisplayAddNewEditTransaction" type="Boolean"/>
+    <aura:attribute name="tempITFTransaction" type="Inventory_Transfer_Form_Transaction__c"/>
+
+	<aura:registerEvent name="deleteEvent" type="c:UpdateITForm"/>
+
+    <br/>
+	<fieldset class="slds-box" style="width: 100%">
+		<legend id="ITFDetail" class="slds-text-heading--medium slds-p-vertical--medium smallbox">
+            Product #{!v.index+1}
+        </legend>
+        <table>
+        	<tr>
+        		<td class="left5"> Inventory Owner: </td>
+        		<td class="right5"> {!v.transaction.Inventory_Owner__c}</td>
+        	</tr>
+            <tr>
+                <td class="left5"> Product #: </td>
+                <td class="right5"> {!v.transaction.Product_Number__c}</td>
+            </tr>             
+        	<tr>
+        		<td class="left5"> Lot #: </td>
+        		<td class="right5"> {!v.transaction.Lot_number__c}</td>
+        	</tr> 
+        	<tr>
+        		<td class="left5"> Qty: </td>
+        		<td class="right5"> {!v.transaction.Quantity__c} ({!v.transaction.UOM__c})</td>
+        	</tr>
+        	<tr>
+        		<td class="left5"> Unit Price: </td>
+        		<td class="right5"> 
+                    <ui:outputCurrency value="{!v.transaction.Price__c}" format="$##,##,###,##0.00"/>
+                </td>
+        	</tr>
+<!--         	<tr>
+        		<td class="left5"> Extended Price: </td>
+        		<td class="right5">
+                    <ui:outputCurrency value="{!v.transaction.Extended_Price__c}" format="$##,##,###,###.00"/>
+                </td>
+        	</tr> -->
+<!--             <tr>
+                <td class="left5"> Replenish: </td>
+                <td class="right5"> 
+                    <aura:if isTrue="{!v.transaction.Replenish__c}">
+                        Yes
+                        <aura:set attribute="else">
+                            No
+                        </aura:set>
+                    </aura:if>
+                </td>
+            </tr> -->
+            <aura:if isTrue="{!and(v.transaction.Note__c != null, v.transaction.Note__c != '')}">
+                <tr>
+                    <td class="left5"> Note: </td>
+                    <td class="right5"> {!v.transaction.Note__c}</td>
+                </tr>
+            </aura:if>                      
+        	<tr>
+                <td class="center5"> 
+                    <lightning:button 
+                            label="Edit"
+                            variant="brand"
+                            onclick="{!c.EditTransaction}"/>
+                </td>
+        		<td class="center5"> 
+                    <lightning:button 
+                            label="Delete"
+                            variant="brand"
+                            onclick="{!c.DeleteTransaction}"/>
+        		</td>
+        	</tr>         	         	       	       	
+        </table>
+	</fieldset>
+</aura:component>

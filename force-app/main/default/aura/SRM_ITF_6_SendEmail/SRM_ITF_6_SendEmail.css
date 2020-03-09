@@ -1,0 +1,81 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+}
+
+.THIS th.left{
+	text-align: right;
+	padding: 0.5vw;
+	font-size: 100%;
+	overflow: hidden;
+	width:15%;
+	vertical-align: top;
+}
+
+.THIS th.leftRequire{
+	text-align: right;
+	padding: 0.5vw;
+	font-size: 100%;
+	color:black;
+	overflow: hidden;
+	width:15%;
+	vertical-align: top;
+}
+
+.THIS td.right{
+	text-align: left;
+	padding: 0.5vw;
+	font-size: 100%;
+	overflow: hidden;
+	width:78%;
+}
+
+.THIS td.center{
+	text-align: center;
+	width: 45%;
+	font-size: 100%;
+	overflow: hidden;
+}
+
+/*.THIS .slds-button{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	width: 50%;
+	height: 100%;
+}*/
+/*Class style user input*/
+.THIS .slds-form--horizontal{
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+    background-color: white;
+}
+
+.THIS .form-element__help{
+	font-size: 80%;
+	margin: 0vw;
+}
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+    display: inline;
+}
+
+.THIS .inputTextAreaFormat{
+	line-height: 100%;
+}
+
+.THIS .form-element__help{
+	font-size: 80%;
+	margin: 0vw;
+}
+
+.THIS .slds-button{
+	font-size: 90%;
+	background-color: #0070D2;
+	color: white;
+	line-height: 100%;
+}

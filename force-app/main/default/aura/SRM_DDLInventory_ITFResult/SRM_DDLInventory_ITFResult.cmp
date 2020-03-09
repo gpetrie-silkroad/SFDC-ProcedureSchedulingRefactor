@@ -1,0 +1,141 @@
+<aura:component controller = "SRM_DDLInventory_ServerController">
+	<!-- ================Global Attribute============================ -->
+	<aura:attribute name="LotNo" type="String" default=""/>
+	<aura:attribute name="LocationRepName" type="String" default=""/> 
+	<aura:attribute name="LocationID" type="String" default=""/>
+	<aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+	<aura:attribute name="activeSections" type="List"/>
+	<aura:attribute name="devicetype" type="String" default="DESKTOP"/>
+
+	<!-- ================Local Attribute========================== -->
+	<aura:attribute name="listITF" type="Inventory_Transfer_Form_Transaction__c[]" default=""/> 
+
+	<!-- ================Trigger============================ -->
+	<aura:handler name="init" action="{!c.updateITFResult}" value="{!this}"/>
+    <aura:handler name="change" value="{!v.UpdateTrigger}" action="{!c.updateITFResult}"/>
+
+    <!--==================================DeskTop View===================== -->
+    <aura:if isTrue="{!v.devicetype == 'DESKTOP'}">
+		<table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+			<tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					Transfer Date
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Is Transacted
+				</th>
+				<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					ITF Name
+				</th>  			
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Product #
+				</th>
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					Lot #
+				</th> 
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Qty
+				</th>
+				<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Inventory Owner
+				</th>
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center">
+					Transacted Date
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					BO #
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					ITF Status
+				</th>
+
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Reviewer
+				</th>
+			</tr>
+
+			<aura:iteration items="{!v.listITF}" var="element" indexVar="index">
+				<tr>
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+						<ui:outputDAte value = "{!element.Inventory_Transfer_Form__r.Transfer_Date__c}" format="MM/dd/yyyy"/>
+					</td>  
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+	    				<aura:if isTrue="{!element.IsTransactionComplete__c}">
+	    					Yes
+	    					<aura:set attribute="else">
+	    						<span style = "background-color: yellow; font-size: 120%; color: red; font-weight: bold;">
+	    							No
+	    						</span>
+	    					</aura:set>
+	    				</aura:if>
+					</td>			
+					<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Inventory_Transfer_Form__r.Name}
+					</td>
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Product_Number__c}
+					</td> 
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						{!element.Lot_number__c}
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Quantity__c} ({!element.UOM__c})
+					</td>
+					<td style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Inventory_Owner__c}
+					</td>
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						<ui:outputDAte value = "{!element.Transfer_Date_System__c}" format="MM/dd/yyyy"/>		
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Bill_Only_Number__c}
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.ITF_Status__c}
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Transacted_By__c}
+					</td>
+				</tr>
+			</aura:iteration>
+		</table>  
+
+    <!-- =====================Phone/Tablet View================================== -->
+    	<aura:set attribute="else">
+    		<table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+    			<tr>
+	    			<th style = "width: 55%;"> General Info</th>
+	    			<th style = "width: 45%;"> Transacted Info </th>
+	    		</tr>
+	    		<aura:iteration items="{!v.listITF}" var="element" indexVar="index">
+		    		<tr>
+		    			<td>
+		    				{!element.Inventory_Transfer_Form__r.Name} <br/>
+		    				{!element.Product_Number__c}<br/>
+		    				Lot #: {!element.Lot_number__c}<br/>
+		    				Owner: {!element.Inventory_Owner__c}<br/>
+		    				ITF status: {!element.ITF_Status__c} <br/>
+		    				Customer Success: {!element.Transacted_By__c}
+		    			</td>
+		    			<td>
+		    				Qty: {!element.Quantity__c} ({!element.UOM__c})<br/>
+		    				Transferred Date: <ui:outputDAte value = "{!element.Inventory_Transfer_Form__r.Transfer_Date__c}" format="MM/dd/yyyy"/><br/>
+		    				Transacted Date: <ui:outputDAte value = "{!element.Transfer_Date_System__c}" format="MM/dd/yyyy"/> <br/>
+		    				Transacted: 
+		    				<aura:if isTrue="{!element.IsTransactionComplete__c}">
+		    					Yes
+		    					<aura:set attribute="else">
+		    						No
+		    					</aura:set>
+		    				</aura:if>
+		    				<br/>
+		    				BO#: {!element.Bill_Only_Number__c}
+		    			</td>
+		    		</tr>
+	    		</aura:iteration>
+    		</table>  		
+    	</aura:set>    	
+    </aura:if>
+
+
+</aura:component>

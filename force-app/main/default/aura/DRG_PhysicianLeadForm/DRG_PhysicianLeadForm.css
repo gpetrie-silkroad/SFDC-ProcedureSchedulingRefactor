@@ -1,0 +1,151 @@
+.THIS {
+}
+
+.THIS .slds-section__title{
+    background-color: YellowGreen;
+    color: white
+}
+
+
+.THIS .slds-modal__header{
+    background-color: purple;
+    color: white
+}
+
+.THIS .superTable{
+    vertical-align: top;
+    font-weight:bold;
+}
+
+.THIS .superTableRed{
+    vertical-align: top;
+    font-weight:bold;
+    color:red;
+}
+
+.THIS .superTableRedCenter{
+    vertical-align: middle;
+    font-weight:bold;
+    color:red;
+}
+
+.THIS .superTableBlueCenter{
+    vertical-align: middle;
+    font-weight:bold;
+    color:blue;
+}
+
+.THIS .superTableRedCenterRight{
+    vertical-align: middle;
+    text-align: right;
+    font-weight:bold;
+    color:red;
+}
+
+.THIS .superTableBlueCenterRight{
+    vertical-align: middle;
+    text-align: right;
+    font-weight:bold;
+    color:blue;
+}
+
+.THIS .superTableBlue{
+    vertical-align: top;
+    font-weight:bold;
+    color:blue;
+}
+
+.THIS .divBold{
+    font-weight: bold;
+}
+
+.THIS .divItalic{
+    font-style: italic;
+}
+
+.THIS .divBlue{
+    color: blue;
+}
+
+
+.THIS .subtable {
+    border: 1px solid black;
+    padding: 8px;
+    height:100%;
+    display: block;
+    vertical-align: top;
+
+}
+
+.THIS hr{
+            border-color: black;
+            border-width: 1px;
+            border-style: solid;
+            height: 2px;
+}
+
+.THIS h1{
+    font-weight: 900;
+    color: black;
+}
+
+.THIS .italicBlue {
+    color: Blue;
+    font-style: italic;
+}
+
+.THIS .subtableSmall {
+    border: 1px solid black;
+    padding: 8px; 
+    height:100%;
+    display: block;
+    vertical-align: top;
+
+
+}
+
+.THIS .subtableMedium {
+    border: 1px solid black;
+    padding: 8px;  
+    overflow: auto;
+    display: block;
+    vertical-align: top;
+
+}
+
+.THIS .subtableheader{
+    border: 1px solid black;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: right;
+    background-color: #4CAF50;
+    color: white;
+    vertical-align: top;
+}
+
+
+
+.THIS  table.stripe tr:nth-child(1n+2) {background: #e6e600}
+.THIS  table.stripe tr:nth-child(2n+2) {background: #FFF}
+
+
+.THIS .alignRight{
+    align: right;
+    text-align: right;
+    vertical-align: top;
+
+}
+
+
+.THIS .alignCenter{
+    align: center;
+    text-align: center;
+    vertical-align: top;
+
+}
+
+.THIS .alignLeft{
+    align: left;
+    text-align: left;
+    vertical-align: top;
+}

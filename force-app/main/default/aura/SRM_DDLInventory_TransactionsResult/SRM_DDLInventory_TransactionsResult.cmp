@@ -1,0 +1,218 @@
+<aura:component controller = "SRM_DDLInventory_ServerController">
+	<!-- ================Global Attribute============================ -->
+	<aura:attribute name="LocationID" type="String" default=""/>
+	<aura:attribute name="LotNo" type="String" default=""/>
+	<aura:attribute name="LocationRepName" type="String" default=""/>
+	<aura:attribute name="TranReason" type="String" default=""/>
+	<aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+	<aura:attribute name="Viewmode" type="Integer"/>
+			<!-- 	0: directly access 
+					1: access via TSAudit - CS View
+					2: access via TSAudit - rep/tds view -->
+	<aura:attribute name="devicetype" type="String" default="DESKTOP"/>
+	<aura:attribute name="submittedDate" type= "Date" />
+
+	<!-- ==================Local Attribute============================ -->
+	<aura:attribute name="ListTransactionResult" type="Transaction__c[]" />
+	<aura:attribute name="waitingState" type="Boolean" default="false"/>
+	<aura:attribute name="ListOnHandQty" type="Integer[]" />
+	<aura:attribute name="ListTransactionResultLite" type="Transaction__c[]" />
+	<aura:attribute name="ListOnHandQtyLite" type="Integer[]"/>
+	<aura:attribute name="TotalQty" type="Integer" default="0"/>
+	<aura:attribute name="TotalQtyLite" type="Integer" default="0"/>
+	<aura:attribute name="UpdateListTranLite" type="Boolean" default="false"/>
+	<aura:attribute name="IsChange" type="Boolean" default="false"/>
+	<aura:attribute name="Viewall" type="Boolean" default="false"/>
+
+	<!-- ================Trigger============================ -->
+	<aura:handler name="init" action="{!c.initial}" value="{!this}"/><!-- Get lists of item and Location from Salesforce Server  -->
+    <aura:handler name="change" value="{!v.UpdateTrigger}" action="{!c.updateTransactionResult}"/>
+    <aura:handler name="change" value="{!v.ListTransactionResult}" action="{!c.updateOnHandQty}"/>
+    <aura:handler name="change" value="{!v.UpdateListTranLite}" action="{!c.UpdatingListTranLite}"/>
+
+    <div style="text-align: left; padding-left: 3vw">
+    	Location: {!v.LocationID} &nbsp; {!v.LocationRepName} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Lot#: {!v.LotNo} <br/>
+    	<aura:if isTrue="{! and(v.TranReason !='', v.TranReason != null, v.TranReason != undefined)}">
+    		Reason:{!v.TranReason} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    	</aura:if>
+    	<aura:if isTrue="{! and(v.submittedDate != null, v.submittedDate != undefined)}">
+    		Submited Date: <ui:outputDAte value = "{!v.submittedDate}" format="MM/dd/yyyy"/>
+    	</aura:if>
+    </div>
+
+    <aura:if isTrue="{!or(v.Viewmode == 0, v.Viewmode == 1)}">
+    	<center>
+    		<button onclick="{!c.switchView}">Switch View All/Rep View</button>
+    		<aura:if isTrue="{!notequals(v.TotalQty,v.TotalQtyLite)}">
+    			<br/>
+    			<span style="color: blue">Please recheck Hidden/Displayed field - total quantities are different between 2 views ({!v.TotalQty} - {!v.TotalQtyLite})</span>
+    		</aura:if>
+    	</center>
+    	<br/>
+    </aura:if>
+
+    <aura:if isTrue="{!v.waitingState}">
+    	<!-- ================================Waiting State=============================================================================== -->
+    	<center>
+    		Searching, Please Wait...
+    		<div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">			    
+			    <div class="slds-spinner__dot-a"></div>
+			    <div class="slds-spinner__dot-b"></div>
+			</div>
+		</center>
+    	<!-- ================================End of Waiting State=============================================================================== -->
+
+    	<aura:set attribute="else">	
+		<!-- ================================View all UI=============================================================================== -->
+		 	<aura:if isTrue="{!v.Viewall}">
+				<table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+					<tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;"> 			
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Transfer Date
+						</th>
+						<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+							Qty received
+						</th> 
+						<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							Qty used
+						</th>
+						<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							Qty On Hand
+						</th>
+						<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							Ref #
+						</th>
+						<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Ship To/Delivery To
+						</th>
+						<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Reason
+						</th>
+						<th style = "width: 20%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Note
+						</th>
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Transacted By
+						</th>
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							Item #
+						</th>
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							Lot #
+						</th>
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+							Batch #
+						</th> 
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+							Location
+						</th>
+						<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+							Hidden/Display
+						</th> 
+					</tr>
+
+					<aura:iteration  items="{!v.ListTransactionResult}" var="transaction" indexVar="index">
+						<c:SRM_DDLI_TranResult_tran
+							transaction = "{!transaction}" 
+							ListOnHandQty = "{!v.ListOnHandQty}" 
+							index = "{!index}"  
+							viewAll = "true"
+							IsChange = "{!v.IsChange}"
+							submittedDate = "{!v.submittedDate}"/>
+					</aura:iteration>
+				</table>
+		<!-- ================================End of View all UI============================================================================== -->
+
+
+
+
+
+		<!-- ================================Rep View UI===================================================================================== -->
+				<aura:set attribute="else">
+					<!-- ==============================Desktop/Tablet View=============================== -->
+					<table>
+						<aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+							<tr>
+								<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+									Transfer Date
+								</th>
+								<th style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+									Qty Received
+								</th> 
+								<th style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center">
+									Qty Used
+								</th>
+								<th style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center">
+									Qty On Hand
+								</th>
+								<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+									Ref #
+								</th>
+								<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+									Ship To/Delivery To
+								</th>
+								<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+									Reason
+								</th>
+								<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+									Note
+								</th>
+							</tr>
+			
+							<!-- ==============================Phone View=============================== -->
+							<aura:set attribute="else">
+								<tr>
+									<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+										Transaction Info
+									</th>
+									<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+										Supported Info
+									</th>
+								</tr>
+							</aura:set>
+						</aura:if>
+						<aura:iteration  items="{!v.ListTransactionResultLite}" var="transaction" indexVar="index">
+							<c:SRM_DDLI_TranResult_tran
+									transaction = "{!transaction}" 
+									ListOnHandQty = "{!v.ListOnHandQtyLite}" 
+									index = "{!index}"  
+									viewAll = "false"
+									IsChange = "{!v.IsChange}"
+									submittedDate = "{!v.submittedDate}"
+									devicetype = "{!v.devicetype}"/>
+						</aura:iteration>
+					</table>
+				</aura:set>
+		<!-- =============================End of Rep View UI================================================================================= -->
+			</aura:if>
+		</aura:set>
+	</aura:if>
+
+
+	<aura:if isTrue="{!and(v.submittedDate != null, v.submittedDate != undefined)}">
+		<div style = "text-align: left; width: 100%">
+    		<span style = "background-color: green"> &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    		Don't count for this trunk stock audit. <br/>
+    		Note: Unit of measure for all transactions is each.
+    	</div>
+    </aura:if>
+
+    <aura:if isTrue="{!v.Viewall}">
+    	<br/>
+	    <center>
+		    <table style = "width: 100%; border: 0px solid black; padding: 2vw">
+		    	<tr>
+		    		<td style = "width: 30%; border: 0px solid black; text-align: center;"/>
+		    		<td style = "width: 40%; border: 0px solid black; text-align: center;">
+		    			<button class="slds-button slds-button--brand" onclick="{!c.downloadCsv}">Download As CSV</button>
+		    		</td>
+		    		<td style = "width: 30%; border: 0px solid black; text-align: center;">
+						<aura:if isTrue="{!v.IsChange}">
+							<button class="slds-button slds-button--brand" onclick="{!c.saveTransaction}">Save Transactions</button>
+						</aura:if>
+		    		</td>    
+				</tr>
+			</table>
+		</center>
+    </aura:if>
+</aura:component>

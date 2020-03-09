@@ -1,0 +1,311 @@
+<apex:page controller="OrderConfirmationPDFCopy_Controller" renderAs="Advanced_PDF" showHeader="false" sidebar="false" applyBodyTag="false">
+    <head>
+        <style type="text/css" media="print">
+            @page{
+                margin-bottom: 7%;
+                margin-right: 2%;   
+                margin-left: 2%; 
+                margin-top: 17%;
+                @top-center {content: element(header);}
+                @bottom-right {content: element(footerRight);}
+                @bottom-left {content: element(footerleft);}
+                size:landscape;
+            }             
+            div.header{
+                position: running(header);
+            }            
+            div.footerRight {
+                padding-top: 10px;
+                position: running(footerRight);
+                width:100%;
+                text-align: right;
+            }            
+            div.footerLeft {
+                padding-top: 10px;
+                position: running(footerLeft);
+                width:100%;
+                text-align: left;
+            } 
+            .pagenumber:before {
+                content: counter(page);
+            }
+            .pagecount:after {
+                content: counter(pages);
+            }
+        
+            body{
+                background-color: white;
+                font-size: 15px;
+            } 
+            div.pad{
+                text-align: center;
+                font-size: 14px;
+                overflow: hidden;
+                width:100%;
+            }             
+            mark{
+                background-color: yellow;
+                color: black;
+                font-weight: bold;
+                font-size: 17px;
+            } 
+            mark1{
+                background-color: white;
+                font-size: 15px;
+            }             
+            mark2{
+                color: #00008B;
+                font-weight: bold;
+                font-size: 17px;
+            }
+        </style>
+    </head>
+
+    <div class = "header">		
+        <table style="table-layout: fixed; width: 100%; padding-left: 10pt;">
+            <tr style="width: 100%">
+                <td style = "width: 30%; vertical-align:top; ">
+                    <img 
+                        src="{!LogoLink}"
+                        style="background-color: white;"
+                        width = "200pt"
+                        alt="SRM Logo"/>
+                </td>
+                <td style = "width: 30%; vertical-align:top">
+                    <b>Silk Road Medical, Inc.</b><br/>
+                    <address>
+                        1213 INNSBRUCK DR<br/>
+                        SUNNYVALE, CA 94089<br/>
+                        United States
+                    </address>
+                </td>
+                <td style = "width: 40%; vertical-align:top">
+                    <table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+                        <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+                            <td style = "padding-left: 10pt; width: 5%; border: 1px solid black; border-collapse: collapse;">
+                                Order Number<br/>
+                                <b>{!Order.IQMS_ORDER_NO__c}</b>
+                            </td>
+                            <td style = "padding-left: 10pt; width: 5%; border: 1px solid black; border-collapse: collapse;">
+                                Purchase Order<br/>
+                                <b>{!Order.PO_Number__c}</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style = "padding-left: 10pt; width: 5%; border: 1px solid black; border-collapse: collapse;">
+                                Order Date<br/>
+                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                    <apex:param value="{!Order.Order_Date__c}" />
+                                </apex:outputText>                                
+                            </td>											
+                            <td style = "padding-left: 10pt; width: 5%; border: 1px solid black; border-collapse: collapse;">
+                                Print Date<br/>
+                                {!Today}
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <br/>
+        <center>
+            <span style='font-size:28.0pt;color:#16325C'>
+                {!ordertype}Sales Order Confirmation
+            </span>
+        </center>
+    </div>
+
+    <table style="table-layout: fixed; width: 100%">
+        <tr style = "width: 100%;">
+            <td style = "width: 10%;">
+            </td>
+            <td style = "width: 35%;">
+                Sold To:
+                <div style="border: 1px dotted black; font-weight: bold; padding: 5px;">
+                    {!Order.Account.Name} <br/>
+                    {!Order.BillingStreet} <br/>
+                    {!Order.BillingCity}, {!Order.BillingState} {!Order.BillingPostalCode} <br/>
+                    {!Order.BillingCountry} <br/>
+                </div>
+            </td>
+            <td style = "width: 10%;">
+            </td>									
+            <td style = "width: 35%;">
+                Ship To:
+                <div style="border: 1px dotted black; font-weight: bold; padding: 5px;">
+                    {!Order.Account.Name} <br/>
+                    {!Order.ShippingStreet} <br/>
+                    {!Order.ShippingCity}, {!Order.ShippingState} {!Order.ShippingPostalCode} <br/>
+                    {!Order.ShippingCountry} <br/>
+                </div>
+            </td>
+            <td style = "width: 10%;">
+            </td>
+        </tr>
+    </table>
+
+    <br/>
+    <table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+        <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Customer Number: {!Order.Account.AccountNumber}
+            </td>
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Ship Via: <b>{!Order.Ship_Via__c}</b>
+            </td>
+        </tr>
+        <tr>
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Customer Name: {!Order.Account.Name}
+            </td>											
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Credit Terms: <b>{!Order.Credit_Terms__c}</b>
+            </td>
+        </tr>
+        <tr>
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Salesperson: {!Order.Account.Area_Manager_User__r.Name}
+            </td>
+            <td style = "padding-left: 10pt; width: 50%; border: 1px solid black; border-collapse: collapse;">
+                Currency: USD
+            </td>									
+        </tr>
+    </table>
+
+    <br/>
+<!-- Regular Order Confirmation -->
+    <apex:outputPanel rendered="{! ordertype =='' }">
+        <table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+            <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+                <th style = "width: 1%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Line
+                </th>
+                <th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Item Number 
+                </th>
+                <th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Description
+                </th>                
+                <th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Promise Date
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Qty Ordered
+                </th>
+                <th style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    UOM
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Price 
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Extended Price 
+                </th>
+            </tr>
+            <apex:repeat value="{!OrderItemList}" var="element">
+                <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">                
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.QAD_sod_line__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Product2.Item_Number__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Product2.Description}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        <apex:outputPanel rendered="{!element.Promise_Date__c == null}">
+                            N/A
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!element.Promise_Date__c != null}">
+                            <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                <apex:param value="{!element.Promise_Date__c}" />
+                            </apex:outputText>                              
+                        </apex:outputPanel>                        
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Quantity}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Unit_of_Measure__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: right">
+                        $ {!element.UnitPrice}&nbsp;
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: right">
+                        $ {!element.TotalPrice}&nbsp;
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+<!-- End of Regular Order Confirmation -->
+
+<!-- Bill Only/GHX Order Confirmation -->
+    <apex:outputPanel rendered="{! ordertype !='' }">
+        <table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+            <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+                <th style = "width: 1%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Line
+                </th>
+                <th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Item Number 
+                </th>
+                <th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Description
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Qty Ordered
+                </th>
+                <th style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    UOM
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Price 
+                </th>
+                <th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    Extended Price 
+                </th>
+            </tr>
+            <apex:repeat value="{!OrderItemList}" var="element">
+                <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">                
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.QAD_sod_line__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Product2.Item_Number__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Product2.Description}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Quantity}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                        {!element.Unit_of_Measure__c}
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: right">
+                        $ {!element.UnitPrice}&nbsp;
+                    </td>
+                    <td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: right">
+                        $ {!element.TotalPrice}&nbsp;
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+<!-- End of Bill Only/GHX Order Confirmation -->
+
+    <br/>
+    <div style="width:100%; text-align: right; background-color: #f8c77e;">
+        Total Amount: <b>$ {!Order.TotalAmount}</b>&nbsp;&nbsp;&nbsp;
+    </div>
+    
+    <!-- Footer -->
+    <div class="footerRight">
+        <div>
+            Page <span class="pagenumber"/> of <span class="pagecount"/>
+        </div>
+    </div>
+    <!-- End of Footer -->
+</apex:page>

@@ -1,0 +1,256 @@
+<apex:component access="global"
+        controller="SRM_ITF_TSR_Controller">
+    
+    <apex:attribute name="attITFID"
+            description="Attribute on the component."
+            type="String"
+            assignTo="{!iTFID}"/>
+    <head>
+        <style type="text/css" media="print">
+            @page{
+                size: A4 landscape;
+                margin-top: 110px;
+                margin-bottom: 50px;
+                @top-left {content: element(headerLeft);}
+                @top-right {content: element(headerRight);}
+                @bottom-right {content: element(footerRight);}
+            }  
+            .pagenumber:before {
+                content: counter(page);
+            }
+            .pagecount:after {
+                content: counter(pages);
+            }
+            div.footerRight {
+                padding-top: 10px;
+                position: running(footerRight);
+                width:100%;
+                text-align: right;
+            } 
+            div.headerLeft{
+                position: running(headerLeft);
+                text-align:left;
+                width: 100%;
+                padding-bottom:10px;
+                padding-top:20px;
+            }   
+            div.headerRight{
+                position: running(headerRight);
+                text-align: right;
+                padding-right: 20px;
+                padding-top:20px;
+                font-weight:bold; 
+                font-size: 250%; 
+                vertical-align:middle;
+            }
+
+            td.td1{
+                padding-left: 4px;
+                padding-top: 2px;
+                padding-bottom: 2px;
+                font-size: 120%; 
+                font-weight: bold;
+                text-align:left;
+                width: 16%;
+                background: white;
+                border-bottom: 1px solid black;
+                border-left: 1px solid black;
+                border-top: 1px solid black;
+            }
+            td.td2{
+                padding-left: 15px;
+                padding-top: 2px;
+                padding-bottom: 2px;
+                font-size: 120%;
+                text-align:left;
+                width: 34%;
+                background:#d8d5d5;
+                border-bottom: 1px solid black;
+                border-right: 1px solid black;
+                border-top: 1px solid black;
+            }
+            tr.trClassic{
+                border: 1px solid black;
+                border-collapse: collapse;
+                border: 2px solid black;
+            }
+            th.th21{
+                text-align:center;
+                border: 1px solid black;
+                width: 10%;
+            }
+            th.th22{
+                border: 1px solid black;
+                text-align:center;
+                width: 25%;
+            }
+            th.th23{
+                border: 1px solid black;
+                text-align:center;
+                width: 10%;
+            }
+            th.th24{
+                border: 1px solid black;
+                text-align:center;
+                width: 10%;
+            }
+            th.th25{
+                border: 1px solid black;
+                text-align:center;
+                width: 25%;
+            }
+            th.th26{
+                border: 1px solid black;
+                text-align:center;
+                width: 25%;
+            }
+            td.td20{
+                border: 1px solid black;
+                text-align: center;
+            }            
+            body{
+                background-color: white;
+                font-size: 14px;
+                font-family: Arial;
+            } 
+        </style>
+    </head>
+
+    <!-- Header: Title of the form -->
+    <div class = "headerLeft">
+        <img
+                id = "SRMLogo" 
+                src = "{!LogoLink}" 
+                height = "50px" 
+                alt = "Silkroad Medical Logo"
+        />
+    </div>
+    <div class = "headerRight">
+        Trunk Stock Return Form<br/>
+        <span style="font-size: 55%">
+            <u>Saleforce Reference #:</u>
+            <b style = "background-color: yellow;">{!v.Primary_Bill_Only_Number__c}</b>
+        </span>
+    </div>
+    <!-- End of Header: Title of the form -->
+
+
+    <table style="width: 100%; border: 2px solid black; border-collapse: collapse;">
+        <tr class="trClassic">
+            <td class="td1">
+                Date:
+            </td>
+            <td class="td2">
+                <apex:outputText value="{0,date,MM/dd/yy}">
+                    <apex:param value="{!v.Transfer_Date__c}"/> 
+                </apex:outputText>                        
+            </td>
+            <td class="td1">
+                Transaction Type:
+            </td>
+            <td class="td2">
+                Trunk Stock Return - Ref#: <b>{!v.Primary_Bill_Only_Number__c}</b>
+            </td>
+        </tr>
+        <tr class="trClassic">
+            <td class="td1">
+                Requested By:
+            </td>
+            <td class="td2">
+                {!v.Owner.Name}                
+            </td>
+            <td class="td1">
+                From Location:
+            </td>
+            <td class="td2">
+                {!fromLocation}   
+            </td>
+        </tr>
+        <tr class="trClassic">
+            <td class="td1">
+                Department
+            </td>
+            <td class="td2">
+                Sales                       
+            </td>
+            <td class="td1">
+                To Location:
+            </td>
+            <td class="td2">
+                12 - site: 1000
+            </td>
+        </tr>
+        <tr class="trClassic">
+            <td class="td1">
+                Approved By
+            </td>
+            <td class="td2">
+                Customer Success                      
+            </td>
+            <td class="td1">
+                GL Account:
+            </td>
+            <td class="td2">
+                N/A
+            </td>
+        </tr>            
+    </table>
+    <br/>
+    <table style="width: 100%; border: 2px solid black; border-collapse: collapse;">
+        <tr class="trClassic">
+            <th class = "th21">
+                Item Number
+            </th>
+            <th class = "th22">
+                Description                
+            </th>
+            <th class = "th23">
+                Lot/Serial
+            </th>
+            <th class = "th24">
+                Quantity
+            </th>
+            <th class = "th25">
+                Remarks
+            </th>
+            <th class = "th26">
+                Quantity Issued<br/>
+                (Material Use Only)
+            </th>
+        </tr>
+        <apex:repeat value="{!iTFTransactions}" var="transaction">
+            <tr class="trClassic">
+                <td class= "td20">
+                    {!transaction.product_number__c}
+                </td>
+                <td class= "td20">
+                    {!transaction.Product__c}
+                </td>
+                <td class= "td20">
+                    {!transaction.Lot_number__c}
+                </td>
+                <td class= "td20">
+                    {!transaction.Quantity__c}
+                </td>
+                <td class= "td20">
+
+                </td>
+                <td class= "td20">
+
+                </td>
+            </tr>
+        </apex:repeat>
+
+    </table>
+
+    <br/>
+    <b>Note: Customer Success Team only transacts the trunk stock return form on the QAD system when the requester confirms the return date on Salesforce.</b>
+
+    <!-- Footer -->
+    <div class="footerRight">
+        <div>
+            Page <span class="pagenumber"/> of <span class="pagecount"/>
+        </div>
+    </div>
+    <!-- End of Footer -->
+</apex:component>

@@ -1,0 +1,2418 @@
+<aura:component controller="Procedure_LightningController" implements="flexipage:availableForAllPageTypes,lightning:actionOverride,force:hasRecordId" access="global">
+
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <aura:dependency resource="markup://force:navigateToURL" type="EVENT"/>
+    
+    <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%% ATTRIBUTE DECLARATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+    <aura:attribute name="newProcedureForm" type="Procedure_Form__c"
+      							default="{ 'sobjectType': 'Procedure_Form__c', 'Name': '', 'Account__c': ''}"/>
+
+	<aura:attribute name="procedureForms" type="Procedure_Form__c[]"/>
+    
+    <aura:attribute name="currentDate" type="Date" />
+    <aura:attribute name="currentDateTime" type="DateTime" />
+    
+    <aura:attribute name="accounts" type="Account[]" />
+    <aura:attribute name="account" type="Account"/>
+    <aura:attribute name="physicians" type="Contact[]" />
+    <aura:attribute name="proctors" type="Contact[]" />
+    <aura:attribute name="stenters" type="Contact[]" />
+    <aura:attribute name="cutdown" type="Contact[]" />
+
+    <aura:attribute name="disUsers" type="User[]" />
+    <aura:attribute name="amUsers" type="User[]" />
+    <aura:attribute name="adUsers" type="User[]" />
+    <aura:attribute name="tdsUsers" type="User[]" />
+    <aura:attribute name="tdsUsers2" type="User[]" />
+    <aura:attribute name="qualUsers" type="User[]" />
+    <aura:attribute name="nullId" type="String" />
+    
+    <aura:attribute name="selectedAccount" type="String" />
+    <aura:attribute name="selectedAccountName" type="String" />
+    <aura:attribute name="selectedPrimaryPhysicianOperator" type="Contact"/>
+    <aura:attribute name="selectedStenter" type="Contact"/>
+    <aura:attribute name="selectedSRMProctor" type="Contact"/>
+    <aura:attribute name="selectedCutdown" type="Contact"/>
+    <aura:attribute name="addlPhys1" type="Contact" default="{'sobjectType' : 'Contact', 'Name': '', 'Account__c': ''}"/>
+    <aura:attribute name="addlPhys2" type="Contact" default="{'sobjectType' : 'Contact', 'Name': '', 'Account__c': ''}"/>
+
+
+    <aura:attribute name="currentUser" type="User" />
+
+    <aura:attribute name="amUser" type="User" />
+    <aura:attribute name="tdsUser" type="User" />
+    <aura:attribute name="tdsUser2" type="User" />
+    <aura:attribute name="adUser" type="User" />
+    <aura:attribute name="qualUser" type="User" />
+
+    <aura:attribute name="amUser_dis" type="Boolean" default="false" />
+    <aura:attribute name="tdsUser_dis" type="Boolean" default="false" />
+    <aura:attribute name="tdsUser2_dis" type="Boolean" default="false" />
+    <aura:attribute name="adUser_dis" type="Boolean" default="false" />
+    <aura:attribute name="qualUser_dis" type="Boolean" default="false" />
+    <aura:attribute name="otherSrmUser_dis" type="Boolean" default="false" />
+
+
+
+    <aura:attribute name="nowTime" type="String" />
+    
+    <aura:attribute name="disableTds2" type="Boolean" default="true" />
+    <aura:attribute name="isLEX" type="Boolean" />
+    <aura:attribute name="Desc" type="String" />
+    <aura:attribute name="Name" type="String" />
+
+    <aura:attribute name="reasonForAbort_dis" type="Boolean" default="true" />
+    <aura:attribute name="noSRM" type="Boolean" default="false" />
+    <aura:attribute name="noSrmPres_dis" type="Boolean" default="false" />
+    <aura:attribute name="stentorAndCutdownRequired" type="Boolean" default="true" />
+
+    <aura:attribute name="noPreCaseId" type="String" default="off" />
+    <aura:attribute name="preCaseId" type="String" default="SRM-" />
+    <aura:attribute name="disNoPreCaseId" type="Boolean" default="false" />
+    <aura:attribute name="disPreCaseId" type="Boolean" default="false" />
+
+    <aura:attribute name="contForm" type="Contact" default="{'sobjectType' : 'Contact'}"/>
+
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="recordError" type="String"/>
+
+    <aura:attribute name="hideReasonForTurnDown" type="Boolean" default="true" />
+    
+    <aura:attribute name="s2sStatedTime" type="String" default="00:00:00"/>
+    <aura:attribute name="rftStatedTime" type="String" default="00:00:00"/>
+    <aura:attribute name="ftStatedTime" type="String" default="00:00:00"/>
+    
+    <!-- EVENT SCHEDULING CONTROLLER -->
+    <aura:attribute name="timeList" type="TimeConversionList__c[]" />
+    <aura:attribute name="startTime" type="String" />
+    <aura:attribute name="endTime" type="String" />
+    <aura:attribute name="nowDate" type="Date" />
+
+    <aura:attribute name="hospitalName" type="String" default="This is NOT WORKING!"/>
+    <aura:attribute name="hospitalStreet" type="String"/>
+    <aura:attribute name="hospitalCity" type="String"/>
+    <aura:attribute name="hospitalTimeZone" type="String" />
+    <aura:attribute name="hospitalState" type="String"/>
+    <aura:attribute name="vendorCredentailCompany" type="String" />
+    <aura:attribute name="locationInfo" type="String"/>
+    <aura:attribute name="Description" type="String" />
+    <aura:attribute name="OtherInformation" type="String" />
+    <aura:attribute name="eventId1" type="String" />
+    
+    <aura:attribute name="newProcFormId" type="String" />
+    
+    
+    <!-- RENDERING CONTROLLER VARIABLES-->
+    <aura:attribute name="noRenderScheduler" type="Boolean" default="true" />
+    <aura:attribute name="noRenderBottom" type="Boolean" default="true" />
+    
+
+    <force:recordData aura:id="recordLoader"
+      recordId="{!v.recordId}"
+      layoutType="FULL"
+      targetRecord="{!v.simpleRecord}"
+      targetFields="{!v.simpleRecord}"
+      targetError="{!v.recordError}"
+      mode="EDIT"
+      recordUpdated="{!c.doInit}"
+      />
+    
+      
+    
+          <c.ProcedureFormHeader/>
+
+ <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->  
+    
+    
+    <!-- CREATE NEW PROCEDURE FORM -->
+    <div aria-labelledby="newprocedureform">
+        <!-- BOXED AREA -->
+        <fieldset class="slds-box slds-theme--default slds-container--large">
+            <legend id="newprocedureform" class="slds-text-heading--large slds-p-vertical--large">
+                <br/>
+              Add Procedure Form
+                <center class="redsmall">Required Fields in Red</center>
+            </legend>
+            
+            <!-- CREATE NEW PROCEDURE FORM -->    
+            <form class="slds-form--stacked">  
+				
+				<aura:if isTrue="{! if(v.noRenderScheduler==true,false,true)}" >
+                    <aura:set attribute="else" >
+                        <center>
+                            <lightning:button label="Submit New Procedure Form" class="slds-m-top--medium" variant="brand" onclick="{!c.clickCreate}"/>
+                        </center>
+                    </aura:set>
+                </aura:if>
+                <aura:if isTrue="{!v.noRenderScheduler}" >
+                    <aura:set attribute="else" >
+                        <center>
+                            <lightning:button label="Schedule and Create Procedure Form" class="slds-m-top--medium" variant="brand" onclick="{!c.clickCreate}"/> <!-- onclick="{!c.onCreateSchedule}" /> -->
+                        </center>
+                    </aura:set>
+                </aura:if>
+                <br/>
+                
+                <!-- HEADER INFO TABLE -->
+                <table columns="2" width="50%" >
+                    <tr>
+                        <td>
+                            <aura:text value="Submitted By: " />
+
+                        </td>
+                        <td>
+                            <aura:text aura:id="userName" value="{!v.currentUser.FirstName + ' ' + v.currentUser.LastName}"/>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <aura:text value="Current Time is: " />
+                        </td>
+                        <td>
+                            <aura:text value="{!v.nowTime}" />
+                        </td>
+                    </tr>
+                </table>
+                
+                <br/>
+                <!-- / HEADER INFO TABLE -->
+
+                <table columns="2">                  
+                    <tr>
+                        <td width="20%" class="red">
+                            <aura:text value="Account Site: " />
+                        </td>
+                        <td>
+                            <aura:text aura:id="selAccount" value="{!v.account.IQMS_Customer_Number__c + ' - ' + v.account.Name}" /><br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    <tr>
+                        <td width="20%" class="red">
+                            <aura:text value="Vendor Credential Co: " />
+                        </td>
+                        <td>
+                            <aura:text aura:id="selAccount" value="{!v.account.Vendor_Credential_Company__c}" /><br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    <tr>
+                        <td width="20%" class="{!if(v.hideReasonForTurnDown == true, 'red' , '')}">
+                            <aura:text value="Pre-Case Plan Id: " />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade" >
+                                <table columns="3">
+                                    <tr class="valignCenter">
+                                        <td width="50%" align="left">
+                                        
+                                            <lightning:input type="text" value="{!v.preCaseId}" maxlength="12" minlength="4" class="slds-form_inline" disabled="{!v.disPreCaseId}" onblur="{!c.onPreCaseIdEntry}"/>
+                                                    
+                                        </td>
+                                        <td width="10%">
+                                            <aura:text value=" " />
+                                        </td>
+                                        <td width="40%" align="right">
+                                            <lightning:input type="checkbox" label="No Pre-Case" value="{!v.newProcedureForm.No_Pre_Case_Id__c}" aura:id="noPreCase" name="noPreCase" checked="{!v.newProcedureForm.No_Pre_Case_Id__c}" disabled="{!v.disNoPreCaseId}" onchange="{!c.clickNoPreCaseId}"/> 
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="red">
+                            <aura:text value="Case Type: " />
+                        </td>
+                        <td>
+                             <ui:inputSelect aura:id="proceduretype" label="" value="{!v.newProcedureForm.Procedure_Type__c}" change="{!c.onProcType}" >
+                                    <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                    <ui:inputSelectOption text="TSP"  label="TSP" />
+                                    <ui:inputSelectOption text="Commercial"  label="Commercial" />
+                                    <ui:inputSelectOption text="ROADSTER 2"  label="ROADSTER 2" />
+                                 	<ui:inputSelectOption text="ROADSTER 2 DW-MRI"  label="ROADSTER 2 DW-MRI" />
+                                    <ui:inputSelectOption text="DW-MRI"  label="DW-MRI" />
+                                    <ui:inputSelectOption text="C2R"  label="C2R" />	
+                              		<ui:inputSelectOption text="Non-Cartid Use"  label="Non-Cartid Use" />
+                                    <ui:inputSelectOption text="- T E S T -"  label="- T E S T -" />
+                              </ui:inputSelect>
+                           
+                          	
+                        </td>
+                    </tr>
+                    
+                   	<tr>
+                        <br/>
+                    </tr>
+                                       
+                </table>
+                
+                <table columns="2">
+                    
+                    <tr>
+                        <td width="20%" class="red">
+                      
+                             <aura:text value="Procedure Status: " />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="3">
+                                     <ui:inputSelect aura:id="completion" label="" value="{!v.newProcedureForm.Procedure_Completion__c}" change="{!c.onCompl}" >
+                                        <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                        <ui:inputSelectOption text="Scheduled"  label="Scheduled" />
+                                        <ui:inputSelectOption text="Completed"  label="Completed" />
+                                        <ui:inputSelectOption text="Converted to CEA"  label="Converted to CEA" />
+                                        <ui:inputSelectOption text="Converted to TF-CAS"  label="Converted to TF-CAS" />
+                                        <ui:inputSelectOption text="Aborted"  label="Aborted" />
+                                        <!--<ui:inputSelectOption text="Cancelled/Rescheduled"  label="Cancelled/Rescheduled" />-->
+                                        <ui:inputSelectOption text="Procedure Turned Down" label="Procedure Turned Down" />
+                                    </ui:inputSelect>
+                                    <tr>
+                                       <aura:if isTrue="{! if(v.noRenderScheduler == true, false, true) }" >
+                                            <aura:set attribute="else">
+                                                <td colspan="3"> 
+                                                    <lightning:input aura:id="reasonforabort" label="Reason for Cancellation/Rescheduled, Abort, or Conversion" disabled="{!v.reasonForAbort_dis}" name="reasonforabort" class="inputArea" value="{!v.newProcedureForm.Reason_Aborted__c}" />                                          
+                                                </td>
+                                            </aura:set>
+                                    	</aura:if>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+
+
+
+                <aura:if isTrue="{!v.hideReasonForTurnDown}" aura:id="reasonForTurnDown" >
+                    <aura:set attribute="else">
+                        <br/>
+                        <table columns="2">
+                            <tr>
+                                <td width="20%" class="red">
+                                    <aura:text value="Reason for Turning Procedure Down" />
+                                </td>
+                                        <ui:inputSelect aura:id="completion" label="" value="{!v.newProcedureForm.Reason_for_Turning_Procedure_Down__c}" >
+                                            <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                            <ui:inputSelectOption text="Not enough distance between access and disease"  label="Not enough distance between access and disease"  />
+                                            <ui:inputSelectOption text="Lesion morphology: Too highly calcified"  label="Lesion morphology: Too highly calcified"  />
+                                            <ui:inputSelectOption text="Lesion morphology: Thrombus"  label="Lesion morphology: Thrombus"  />
+                                            <ui:inputSelectOption text="Disease in the common"  label="Disease in the common"  />
+                                            <ui:inputSelectOption text="Lack of high surgical risk"  label="Lack of high surgical risk"  />
+                                            <ui:inputSelectOption text="String sign"  label="String sign"  />
+                                            <ui:inputSelectOption text="Age – patient too young for a stent"  label="Age – patient too young for a stent"  />
+                                            <ui:inputSelectOption text="Intracranial disease"  label="Intracranial disease"  />
+                                            <ui:inputSelectOption text="Patient turned down"  label="Patient turned down"  />
+                                            <ui:inputSelectOption text="Diameter of ICA or common either too small or too large"  label="Diameter of ICA or common either too small or too large"  />
+                                            <ui:inputSelectOption text="Failure to be on DAPT"  label="Failure to be on DAPT"  />
+                                            <ui:inputSelectOption text="Other"  label="Other"  />
+                                        </ui:inputSelect> 
+                                <td>
+
+                                </td>
+                            </tr>
+                            <aura:if isTrue="{!if(v.newProcedureForm.Reason_for_Turning_Procedure_Down__c == 'Other', false, true)}" aura:id="reasonForTurnDownOther" >
+                                <aura:set attribute="else">
+                                    <tr>
+                                        <td width="20%" class="red">
+                                            <aura:text value="Other Reason (Required)" />
+                                        </td>
+                                        <td>
+                                            <lightning:input aura:id="commentsReasonForTurnDownOther" label=""  name="commentsReasonForTurnDownOther" class="inputArea"  value="{!v.newProcedureForm.Comments__c}" />  
+                                        </td>
+                                    </tr>
+                                </aura:set>
+                            </aura:if>
+                        </table>
+                    
+                        <table columns="2">
+                            <tr>
+                                <td width="20%" class="red">
+                                        <aura:text value="Physician Primary Operator: " />
+                                </td>
+                                <td>
+                                    
+                                    <ui:inputSelect aura:id="primaryPhysicianOperator" label="" value="{!v.selectedPrimaryPhysicianOperator}" change="{!c.updatePrimaryPhysicianOperator}" >
+                                        
+                                        <aura:iteration items="{!v.cutdown}" var="item">
+                                            <ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                        </table>
+                    </aura:set>
+                </aura:if>
+
+                <table>
+                    <aura:if isTrue="{!v.noRenderScheduler}">
+                    	<aura:set attribute="else" >
+                            <tr>
+                                <td colspan="3">
+                                    <hr/>
+                                    <center><h1><u>SCHEDULING INFORMATION</u></h1></center>
+                                    <br/>
+                                </td>
+                            </tr>
+                        </aura:set>
+                    </aura:if>
+
+                    <tr>
+                        <td width="20%" class="red">
+                            <br/>
+                            <aura:text value="Procedure Date: " />
+                        </td>
+                        <td>
+                            <div>
+                				<lightning:input aura:id="proceduredate" label="" type="Date"  name="proceduredate" value="{!v.newProcedureForm.Procedure_Date__c}" />  
+                			</div>
+                        </td>
+                    </tr> 
+
+                    <aura:if isTrue="{!v.noRenderScheduler}">
+                    	<aura:set attribute="else" >
+                            
+                            <br/>
+                            <tr>
+                                <td width="20%" class="red">
+                                    <aura:text value="Scheduled Time Zone: " />
+                                </td>       
+                                <td>
+                                    <ui:inputSelect value="{!v.hospitalTimeZone}" aura:id="localTimeZone" label="" >
+                                        <ui:inputSelectOption label="Eastern" text="America/New_York"/>
+                                        <ui:inputSelectOption label="Central" text="America/Chicago"/>
+                                        <ui:inputSelectOption label="Mountain" text="America/Denver"/>
+                                        <ui:inputSelectOption label="Pacific" text="America/Los_Angeles"/>
+                                        <ui:inputSelectOption label="Arizona" text="America/Phoenix"/>
+                                        <ui:inputSelectOption label="Alaska" text="America/Anchorage"/>
+                                        <ui:inputSelectOption label="Hawaii" text="Pacific/Honolulu"/>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <br/>
+                            <tr>
+                                <td width="20%" class="red">
+                                    <aura:text value="Scheduled Start Time: " />
+                                </td>
+                                <td>
+                                    <ui:inputSelect value="{!v.startTime}"  change="{!c.resetEndTime}" aura:id="localStartTime" >
+                                        <aura:iteration aura:id="startTimeI" items="{!v.timeList}" var="tl">
+                                                <ui:inputSelectOption aura:id="stTm" text="{!tl.Time24__c}" label="{!tl.Name}" disabled="{!if(greaterthanorequal(tl.Time24__c, '23:30'),true,false)}"/>
+                                            </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            
+                        
+                            <br/>
+                        
+                            <tr>
+                                <td width="20%" class="red">
+                                    <aura:text value="Scheduled End Time: " />
+                                </td>
+                                <td>
+                                    <ui:inputSelect value="{!v.endTime}" aura:id="localEndTime">
+                                        <aura:iteration aura:id="endTimeI" items="{!v.timeList}" var="tl">
+                                                <ui:inputSelectOption aura:id="endTm" disabled="{!if(lessthanorequal(tl.Time24__c, v.startTime),true,false)}" text="{!tl.Time24__c}" label="{!tl.Name}"/>
+                                            </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="20%"  class="red">
+                                    <aura:text value="Location" />
+                                    <br/>
+                                    <aura:text value="Information: " />
+                                </td>
+                                <td>
+                                   	<lightning:textarea aura:id="locinfo" label=""  name="locinfo" value="{!v.locationInfo}" class="textMultiline" />
+                                </td>
+                            </tr>
+                            <br/>
+                            <tr>
+                                <td colspan="2">
+                                    <hr/>
+                                    <center><h1><u>SRM PERSONNEL PRESENT AT PROCEDURE</u></h1></center>
+                                        <center class="redsmall">Either No SRM Personnel must be checked <br/> or <br/> at least one SRM personnel selected</center>
+                                    <br/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="20%" >
+                                </td>    
+                                <td class="red">    
+                                    <lightning:input type="checkbox" label="No SRM Personnel Present" aura:id="noSrmPres" name="noSrmPres"  disabled="{!v.noSrmPres_dis}" onchange="{!c.disableUsersPres}" checked="{!v.newProcedureForm.No_SRM_Personnel_Present__c}" value="{!v.newProcedureForm.No_SRM_Personnel_Present__c}" />	
+                                </td>
+                            </tr>
+                            <br/>
+                            <tr>
+                                <td width="20%" class="{!if(!v.noSRM,'red','')}" >
+                                    <aura:text value="Primary AM:" />
+                                </td>
+                                <td>
+                                   	<ui:inputSelect aura:id="amSelect" label="" class="selectwide" value="{!v.amUser}" change="{!c.updateAMUser}" disabled="{!v.amUser_dis}"  >
+                    					<aura:iteration aura:id="amInt" items="{!v.amUsers}" var="amU">
+                        					<ui:inputSelectOption aura:id="amsel" text="{!if(amU.FirstName == '- None ', 'none', amU.Id)}" disabled="false" label="{!amU.FirstName + ' ' + amU.LastName}"/>
+                    					</aura:iteration>
+                					</ui:inputSelect>
+                                </td>
+                            </tr>
+                            <br/>
+                            <tr>
+                             	<td width="20%">
+                        			<aura:text value="Primary TDS: " />
+                        		</td>
+                                <td>
+                                    <ui:inputSelect aura:id="tdsSelect" label="" class="selectwide" value="{!v.tdsUser}" change="{!c.updateTDSUser}" disabled="{!v.tdsUser_dis}" >
+                                        <aura:iteration items="{!v.tdsUsers}" var="tdsU">
+                                            <ui:inputSelectOption aura:id="amsel" text="{!if(tdsU.FirstName == '- None ' || tdsU.FirstName ==  '- DISABLED -', 'none', tdsU.Id)}" disabled="false" label="{!tdsU.FirstName + ' ' + tdsU.LastName}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <br/>
+
+
+
+                            <tr>
+                                <td width="20%" >
+                                    <aura:text value="Secondary TDS: " />
+                                </td>
+                                
+                                <td>
+                                    <ui:inputSelect aura:id="tdsSelect2" label="" class="selectwide" value="{!v.tdsUser2}" change="{!c.updateTDSUser2}" disabled="{!v.disableTds2}" >
+                                        <aura:iteration items="{!v.tdsUsers2}" var="tdsU2">
+                                            <ui:inputSelectOption text="{!if(tdsU2.FirstName == '- None ' || tdsU2.FirstName ==  '- DISABLED -', 'none', tdsU2.Id)}" label="{!tdsU2.FirstName + ' ' + tdsU2.LastName}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <br/>
+                            </tr>
+                            <tr>
+                                <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                                    <aura:text value="Other Qualified SRM: " />
+                                </td>
+                                <td>
+                                    <ui:inputSelect aura:id="qualSelect" label="" class="selectwide" value="{!v.qualUser}" change="{!c.updateQualUser}" disabled="{!v.qualUser_dis}">
+                                        <aura:iteration items="{!v.qualUsers}" var="qualU">
+                                            <ui:inputSelectOption text="{!if(qualU.FirstName == '- None ' || qualU.FirstName ==  '- DISABLED -', 'none', qualU.Id)}" label="{!qualU.FirstName + ' ' + qualU.LastName}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <br/>
+                            <tr>                     
+                                <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                                    <aura:text value="AD: " />
+                                </td>
+                                <td>
+                                      <ui:inputSelect aura:id="adSelect" label="" class="selectwide" value="{!v.adUser}" change="{!c.updateADUser}" disabled="{!v.adUser_dis}">
+                                        <aura:iteration items="{!v.adUsers}" var="adU">
+                                            <ui:inputSelectOption text="{!if(adU.FirstName == '- None ', 'none',adU.Id)}" label="{!adU.FirstName + ' ' + adU.LastName}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <tr>                     
+                                <td width="20%">
+                                    <aura:text value="Other SRM Personnel Present: " />
+                                </td>
+                                <td>
+                                    <lightning:input aura:id="othSRM" label="" class="selectwide" value="{!v.newProcedureForm.Other_SRM_Personnel_Present__c__c}" disabled="{!v.otherSrmUser_dis}"/>
+                                        
+                                </td>
+                            </tr>
+
+
+                            <tr>
+                                <br/>
+                            </tr>
+
+
+                            <tr>
+                                <td colspan="2">
+                                    <hr/>
+                                        <center><h1><u>PRIMARY PHYSICIAN</u></h1></center>
+                                </td>
+                            </tr>
+                            <tr>
+                                <br/>
+                            </tr>
+
+
+
+
+
+                            <tr
+                            >
+                                <td width="20%" class="red">
+                                        <aura:text value="Primary Physician: " />
+                                </td>
+                                <td>
+                            
+                                    <ui:inputSelect aura:id="primaryPhysicianOperator" label="" value="{!v.selectedPrimaryPhysicianOperator}" change="{!c.updatePrimaryPhysicianOperator}" >
+                                        
+                                        <aura:iteration items="{!v.cutdown}" var="item">
+                                            <ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                                        </aura:iteration>
+                                    </ui:inputSelect>
+                                </td>
+                            </tr>
+                            <tr>
+                                <br/>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <hr/>
+                                        <center><h1><u>OTHER INFORMATION</u></h1></center>
+                                </td>
+                            </tr>
+                            <tr>
+                                <br/>
+                            </tr>
+                            
+                            <tr>
+                                <td width="20%">
+                                    <aura:text value="Other" />
+                                    <br/>
+                                    <aura:text value="Information: " />
+                                </td>
+                                <td>
+                                   	<lightning:textarea aura:id="locinfo" label=""  name="locinfo" value="{!v.OtherInformation}" class="textMultiline" />
+                                </td>
+                            </tr>
+                        </aura:set>
+                    </aura:if>
+                </table>
+
+                <br/>
+
+                <!--
+                <table columns="2">
+                    <tr>
+                        <td width="20%" class="{!if(v.hideReasonForTurnDown == true, 'red' , '')}">
+                            <aura:text value="Pre-Case Plan Id: " />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade" >
+                                <table columns="3">
+                                    <tr class="valignCenter">
+                                        <td width="50%" align="left">
+                                        
+                                            <lightning:input type="text" value="{!v.preCaseId}" maxlength="12" minlength="4" class="slds-form_inline" disabled="{!v.disPreCaseId}" onblur="{!c.onPreCaseIdEntry}"/>
+                                                    
+                                        </td>
+                                        <td width="10%">
+                                            <aura:text value=" " />
+                                        </td>
+                                        <td width="40%" align="right">
+                                            <lightning:input type="checkbox" label="No Pre-Case Plan ID" value="{!v.noPreCaseId}" aura:id="noPreCase" name="noPreCase" checked="false" disabled="{!v.disNoPreCaseId}" onchange="{!c.clickNoPreCaseId}"/> 
+                                        </td>
+                                    </tr>
+                                    
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                -->
+
+
+
+            <aura:if isTrue="{!v.noRenderBottom}" aura:id="renderBottom">
+         		<aura:set attribute="else">
+                     
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+<!-- %%%%%%%%%%%%%%% S R M   P E R S O N N E L   A T    P R O C E D U R E %%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+                <hr/>
+                <center><h1><u>SRM PERSONNEL PRESENT AT PROCEDURE</u></h1></center>
+                    <center class="redsmall">Either No SRM Personnel must be checked <br/> or <br/> at least one SRM personnel selected</center>
+                <br/>
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                
+
+                <table columns="5"> 
+                    <tr>
+                        <td width="20%" >
+                        </td>    
+                    	<td class="red">    
+                        	<lightning:input type="checkbox" label="No SRM Personnel Present" aura:id="noSrmPres1" name="noSrmPres1" disabled="{!v.noSrmPres_dis}"  onchange="{!c.disableUsersPres}" checked="{!v.newProcedureForm.No_SRM_Personnel_Present__c}" value="{!v.newProcedureForm.No_SRM_Personnel_Present__c}" />	
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}" >
+                            <aura:text value="AM Present: " />
+                        </td>
+                        
+                        <td>
+                            <div>
+                            <ui:inputSelect aura:id="amSelect" label="" class="selectwide" value="{!v.amUser}" change="{!c.updateAMUser}" disabled="{!v.amUser_dis}"  >
+                    			<aura:iteration aura:id="amInt" items="{!v.amUsers}" var="amU">
+                        			<ui:inputSelectOption aura:id="amsel" text="{!if(amU.FirstName == '- None ', 'none', amU.Id)}" disabled="{!v.amUser_dis}" label="{!amU.FirstName + ' ' + amU.LastName}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                            </div>    
+						</td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                        	<aura:text value="TDS Present: " />
+                        </td>
+                        <td>
+                            <ui:inputSelect aura:id="tdsSelect" label="" class="selectwide" value="{!v.tdsUser}" change="{!c.updateTDSUser}" disabled="{!v.tdsUser_dis}" >
+                    		<aura:iteration items="{!v.tdsUsers}" var="tdsU">
+                        			<ui:inputSelectOption aura:id="amsel" text="{!if(tdsU.FirstName == '- None ' || tdsU.FirstName ==  '- DISABLED -', 'none', tdsU.Id)}" disabled="false" label="{!tdsU.FirstName + ' ' + tdsU.LastName}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        <td width="20%" >
+                        	<aura:text value="Secondary TDS Present: " />
+                        </td>
+                        
+                        <td>
+                        	<ui:inputSelect aura:id="tdsSelect2" label="" class="selectwide" value="{!v.tdsUser2}" change="{!c.updateTDSUser2}" disabled="{!v.disableTds2}" >
+                    			<aura:iteration items="{!v.tdsUsers2}" var="tdsU2">
+                        			<ui:inputSelectOption text="{!if(tdsU2.FirstName == '- None ' || tdsU2.FirstName ==  '- DISABLED -', 'none', tdsU2.Id)}" label="{!tdsU2.FirstName + ' ' + tdsU2.LastName}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+							<aura:text value="Other Qualified SRM Present: " />
+                        </td>
+                        <td>
+                        	<ui:inputSelect aura:id="qualSelect" label="" class="selectwide" value="{!v.qualUser}" change="{!c.updateQualUser}" disabled="{!v.qualUser_dis}">
+                    			<aura:iteration items="{!v.qualUsers}" var="qualU">
+                        			<ui:inputSelectOption text="{!if(qualU.FirstName == '- None ' || qualU.FirstName ==  '- DISABLED -', 'none', qualU.Id)}" label="{!qualU.FirstName + ' ' + qualU.LastName}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>                     
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="AD Present: " />
+                        </td>
+                        <td>
+                          	<ui:inputSelect aura:id="adSelect" label="" class="selectwide" value="{!v.adUser}" change="{!c.updateADUser}" disabled="{!v.adUser_dis}">
+                    			<aura:iteration items="{!v.adUsers}" var="adU">
+                        			<ui:inputSelectOption text="{!if(adU.FirstName == '- None ', 'none',adU.Id)}" label="{!adU.FirstName + ' ' + adU.LastName}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    <tr>                     
+                        <td width="20%">
+                            <aura:text value="Other SRM Personnel Present: " />
+                        </td>
+                        <td>
+                            <lightning:input aura:id="othSRM" label="" class="selectwide" value="{!v.newProcedureForm.Other_SRM_Personnel_Present__c__c}" disabled="{!v.otherSrmUser_dis}"/>
+                    			
+                        </td>
+                    </tr>
+                </table>
+                
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<!-- %%%%%%%%%%%%%%%%%  A T T E N D I N G   P H Y S I C I A N S %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+                <hr/>
+                <center><h1><u>ATTENDING PHYSICIANS</u></h1></center>
+                    <center class="redsmall">Required Fields in Red</center>
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+                
+                <table columns="2"> 
+                    
+                    <tr>
+                        <td width="20%">
+                            <aura:text value="SRM Proctor: " />
+                        </td>
+                        <td>
+                         
+                        	<ui:inputSelect aura:id="srmproctor" label="" value="{!v.selectedSRMProctor}" change="{!c.updateSrmProctor}" >
+                                
+                    			<aura:iteration items="{!v.proctors}" var="item">
+                        			<ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="red">
+                            	<aura:text value="Physician Primary Operator: " />
+                        </td>
+                        <td>
+                            
+                            <ui:inputSelect aura:id="primaryPhysicianOperator" label="" value="{!v.selectedPrimaryPhysicianOperator}" change="{!c.updatePrimaryPhysicianOperator}" >
+                                
+                    			<aura:iteration items="{!v.cutdown}" var="item">
+                        			<ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(v.stentorAndCutdownRequired,'red','')}">
+                            	<aura:text value="Stenter: " />
+                        </td>
+                        <td>
+                            
+                            <ui:inputSelect aura:id="stenter" label="" value="{!v.selectedStenter}" change="{!c.updateStenter}" >
+                                
+                    			<aura:iteration items="{!v.stenters}" var="item">
+                        			<ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                    			</aura:iteration>
+                			</ui:inputSelect>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(v.stentorAndCutdownRequired,'red','')}">
+                            <aura:text value="Cutdown NPS Physician: " />
+                        </td>
+                        <td>
+                            <div>
+                				<!--<lightning:input aura:id="procedureform" label=""   name="procedureadditionalphysicians" class="inputArea" value="{!v.newProcedureForm.Cutdown_NPS_Physician__c}" />  
+                				-->
+								<ui:inputSelect aura:id="cutdown" label="" value="{!v.selectedCutdown}" change="{!c.updateCutdown}" >
+                                    <aura:iteration items="{!v.cutdown}" var="item">
+                                        <ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                                    </aura:iteration>
+                                </ui:inputSelect>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%">
+                            <aura:text value="Additional Physician(s): " />
+                        </td>
+                        <td>
+                            <div>
+                                <table columns="3">
+                                    <tr>
+                						<td width="50%">
+                                            <ui:inputSelect aura:id="addlPhys1" label="" value="{!v.addlPhys1}" change="{!c.changeAddlPhys1}">
+                                                <aura:iteration items="{!v.physicians}" var="item">
+                                                    <ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.MiddleName + ' ' +  item.LastName + ' - ' + item.Account.Name}"/>
+                                                </aura:iteration>
+                                            </ui:inputSelect>
+                                        	<!--<lightning:input aura:id="procedureform" label=""   name="procedureadditionalphysicians" class="inputArea" value="{!v.newProcedureForm.Additional_Physician_s__c}" />  -->
+                						</td>
+                                        <td width="10%">
+                                        	<aura:text value=" " />
+                                        </td>
+                                        <td width="40%" align="right">
+                                            <lightning:input type="checkbox" label="Fellow" aura:id="fellow1" name="fellow1" disabled="true" checked="false" value="{!v.newProcedureForm.Additional_Physician_Fellow__c}"/>
+                            			</td>
+                                    </tr>
+                                 </table>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%">
+                        	<aura:text value="Other Physician(s): " />
+                        </td>
+                        <td>
+                            <div>
+                                <table columns="3">
+                                    <tr>
+                						<td width="50%">
+                                            <ui:inputSelect aura:id="addlPhys2" label="" value="{!v.addlPhys2}" change="{!c.changeAddlPhys2}" >
+                                                <aura:iteration items="{!v.physicians}" var="item">
+                                                    <ui:inputSelectOption text="{!item.Id}" label="{!item.FirstName + ' ' + item.LastName + ' - ' + item.Account.Name}"/>
+                                                </aura:iteration>
+                                            </ui:inputSelect>
+                						</td>
+                                        <td width="10%">
+                                        	<aura:text value=" " />
+                                        </td>
+                                        <td width="40%" align="right">
+                                            <lightning:input type="checkbox" label="Fellow" aura:id="fellow2" name="fellow2" disabled="true" checked="false" value="{!v.newProcedureForm.Additional_Physician_2_Fellow__c}" onchange="{!c.updateFellow2}"/>
+                            			</td>
+                                    </tr>
+                                 </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<!-- %%%%%%%%%%%%%%%%%%%%% P A T I E N T   I N F O R M A T I O N %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+                <hr/>
+                 	<center><h1><u>PATIENT INFORMATION</u></h1></center>
+                    <center class="redsmall">Required Fields in Red</center>
+                
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                
+
+                <table columns="2">
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Patient Id: " />
+                            
+                        </td>
+                        <td>
+                            <div>
+                                <table columns="2">
+                                    <tr>
+                                        <td width="5%">
+                                      		  
+                                        	<lightning:helptext content="If Patient ID is not available, use patient's initials" />	
+                                        </td>
+                                        <td>
+                                            <lightning:input aura:id="patientid" label=""  name="patientid" class="inputArea" disabled="{!if(v.newProcedureForm.Procedure_Type__c=='Commercial',true,if(v.newProcedureForm.Procedure_Type__c=='TSP',true,false))}"   value="{!v.newProcedureForm.Patient_Id__c}" />
+                                            <div class="redsmall">*Required only if procedure type is ROADSTER 2</div>
+                            			</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>   
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Patient Age: " />
+                        </td>
+                        <td>                         
+                            <ui:inputSelect aura:id="status" label="" value="{!v.newProcedureForm.Patient_Age__c}" >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="64 or younger"  label="64 or younger" />
+                                <ui:inputSelectOption text="65-69"  label="65-69" />
+                                <ui:inputSelectOption text="70-74"  label="70-74" />
+                                <ui:inputSelectOption text="75-79"  label="75-79" />
+                                <ui:inputSelectOption text="80+"  label="80+" />		
+                            </ui:inputSelect>
+                        </td>
+                    </tr>
+
+					<tr>
+                        <br/>
+                    </tr>
+
+					<tr>
+                    	<td width="20%" xclass="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Patient Gender: "  />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <ui:inputRadio aura:id="r0" name="gender" label="Male "  change="{!c.onGender}"/>
+                                        </td>
+                                        <td>
+                                            <ui:inputRadio aura:id="r1" name="gender" label="Female " change="{!c.onGender}" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Symptomatic Status: "  />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                           
+                                            <ui:inputRadio aura:id="r0" name="symptomatic" label="Symptomatic "   change="{!c.onSympt}"/>
+                                        </td>
+                                        <td width="50%">
+                                            <ui:inputRadio aura:id="r1" name="symptomatic" label="Asymptomatic "   change="{!c.onSympt}"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Target Vessel: " />
+                        </td>
+                        <td >
+                            <ui:inputSelect aura:id="targetvessel" label="" value="{!v.newProcedureForm.Target_Vessel__c}" >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="RICA"  label="RICA" />
+                                <ui:inputSelectOption text="LICA"  label="LICA" />
+                                <ui:inputSelectOption text="Non-Carotid Use"  label="Non-Carotid Use" />	
+                            </ui:inputSelect>   
+                        </td>
+                    </tr>
+                    
+                </table>
+                <br/>
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%% P A T I E N T   A N A T O M I C A L   R I S K   F A C T O R S %%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->  
+                <hr/>    
+                <center><h1><u>HIGH RISK FACTORS</u></h1></center>
+                    <center class="redsmall">At least one of the following must be checked</center>
+                <br/>
+                <table columns="1">
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="No Clinical or Anatomical High Risk Factors" aura:id="anaNone" name="anaNone" disabled="false" checked="false" onchange="{!c.disableANAOthers}" value="{!v.newProcedureForm.HRC_ANA_NONE__c}" />			
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        <h1><u>ANATOMICAL RISK FACTORS</u></h1>
+                    </tr>
+                    <tr>
+                        <td>
+                            <lightning:input type="checkbox" class="red" label="Bilateral Stenoses Requiring TX" aura:id="anaBila" name="anaBila" disabled="false" checked="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HR_ANA_BILA__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="2 or more Vessel CAD w/ HX of Angina" aura:id="anaCad" name="anaCad" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_ANA_CAD__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Restenosis after CEA" aura:id="anaCea" name="anaCea" disabled="false" checked="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_CEA__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Contralateral Occlusion" aura:id="anaCont" name="anaCont" disabled="false" checked="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_CONT__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="High Cervical Stenosis" aura:id="anaHigh" name="anaHigh" disabled="false" checked="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_HIGH__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Hostile Neck" aura:id="anaHost" name="anaHost" disabled="false" checked="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_HOST__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Laryngeal Palsy / Laryngectomy" aura:id="anaLaryn" name="anaLaryn" disabled="false" onchange="{!c.disableANANone}" checked="false" value="{!v.newProcedureForm.HRC_ANA_LARYN__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="Spinal Immobility" aura:id="anaSpin" name="anaSpin" checked="false" disabled="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_SPIN__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Tandem Stenosis > 70%" aura:id="anaTand" name="anaTand" checked="false" disabled="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_ANA_TAND__C}" />
+                        </td>
+                    </tr>
+                </table>
+                
+                <br/>
+            
+                
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%% P A T I E N T   C L I N I C A L   H I G H   R I S K   F A C T O R S %%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+                <h1><u>CLINICAL RISK FACTORS</u></h1>
+                    
+                    
+                
+                <table>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="75 Years of Age or Older" aura:id="clinAge" name="clinAge" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_AGE__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="History of Angina" aura:id="clinAng" name="clinAng" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_ANG__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="CCS 3 or 4" aura:id="clinCcs" name="clinCcs" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_CCS__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="CHF (NYHA III or IV)" aura:id="clinChf" name="clinChf" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_CHF__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="Permanent Contralateral CNI" aura:id="clinCni" name="clinCni" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_CNI__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="COPD" aura:id="clinCopd" name="clinCopd" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_COPD__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Uncontrollable Diabetes" aura:id="clinDiab" name="clinDiab" disabled="false"  checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_DIAB__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="Need for Open Heart Surgery" aura:id="clinHeart" name="clinHeart" checked="false" disabled="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_HEART__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="LVEF" aura:id="clinLvef" name="clinLvef" checked="false" disabled="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_LVEF__C}" />
+                        </td>
+                    </tr>
+                    
+                     <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Need for Major Surgery" aura:id="clinSurg" name="clinSurg" checked="false" disabled="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_SURG__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                           <lightning:input type="checkbox" label="Chronic Renal Insufficiency" aura:id="clinRena" name="clinRena" checked="false" disabled="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_RENA__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="Abnormal Stress Test" aura:id="clinStress" name="clinStress" checked="false" disabled="false" onchange="{!c.disableANANone}" value="{!v.newProcedureForm.HRC_CLN_STRESS__C}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="{!if(!v.noSRM,'red','')}">
+                            <lightning:input type="checkbox" label="MI Greater Than 72hrs and Less Than 6wks Prior to TX" aura:id="clinMi" name="clinMi" disabled="false" checked="false" onchange="{!c.disableANANone}"  value="{!v.newProcedureForm.HRC_CLN_MI__C}" />
+                        </td>
+                    </tr>
+                </table>
+                
+<!--            <aura:if isTrue="true" aura:id="renderBottom">
+         		<aura:set attribute="else">
+-->                
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+<!-- %%%%%%%%%%%%%%%%%%%%% P R O C E D U R E   I N F O R M A T I O N %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+                <hr/>
+                 	<center><h1><u>PROCEDURE INFORMATION</u></h1></center>
+                    <center class="redsmall">Required Fields in Red</center>
+                <br/>
+                
+<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->  
+               <table columns="2">          
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Anesthesia Used: " />
+                        </td>
+                        <td >
+                            <tr>
+                                <td >
+                                    <ui:inputSelect aura:id="anesthesia" label="" value="{!v.newProcedureForm.Anesthesia__c}" >
+                                        <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                        <ui:inputSelectOption text="General"  label="General" />
+                                        <ui:inputSelectOption text="Local"  label="Local" />
+                                        <ui:inputSelectOption text="Regional Block"  label="Regional Block" />
+                                        <ui:inputSelectOption text="Local + Minor Conscious Sedation"  label="Local + Minor Conscious Sedation" />
+                                    </ui:inputSelect>   
+                                </td>
+                            </tr>
+  
+                        </td>
+                    </tr>
+                    
+                    
+                                                          
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Converted to GA: " />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="convertedtoga" label="Yes "   change="{!c.onConvertToGA}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="convertedtoga" label="No "   change="{!c.onConvertToGA}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Atropine: " />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="3">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="atropene" label="Selective "   change="{!c.onAtropene}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="atropene" label="Prophylactic "   change="{!c.onAtropene}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                    	<td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r2" name="atropene" label="Not Applicable "   change="{!c.onAtropene}"/>
+                                            </div>
+                                        </td>
+                                    </tr> 
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Glycopyrrolate: " />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="glyccopyrrolate" label="Selective "   change="{!c.onGlyccopyrrolate}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="glyccopyrrolate" label="Prophylactic "   change="{!c.onGlyccopyrrolate}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                     	<td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r2" name="glyccopyrrolate" label="Not Applicable "   change="{!c.onGlyccopyrrolate}"/>
+                                            </div>
+                                        </td>
+                                    <tr>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                   	<tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="MPK Manufacturer" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="1">                                 
+                                    <tr>
+                                        
+                                    	<td >
+                                            <ui:inputSelect aura:id="mpkmfg" label="" value="{!v.newProcedureForm.MPK_Manufacturer__c}" change="{!c.onMpkMfg}" >
+                                                <ui:inputSelectOption text="SRM"  label="SRM" />
+                                                <ui:inputSelectOption text="Cook"  label="Cook" />
+                                                <ui:inputSelectOption text="Galt"  label="Galt" />
+                                                <ui:inputSelectOption text="Merit"  label="Merit" />
+                                                <ui:inputSelectOption text="Other"  label="Other" />
+                                            </ui:inputSelect>   
+                                		</td>
+                                    </tr>
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <lightning:input aura:id="otherMpkMfg" label="Other MFK Manufacturer" disabled="true" name="otherMpkMfg" class="inputArea" value="{!v.newProcedureForm.Other_MPK_Manufacturer__c}" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                   
+                    <tr>
+                    	<td width="20%"> <!-- class="red"> -->
+                            <aura:text value="MPK Lot Number" />
+                        </td>		
+                        <td>
+                              <lightning:input aura:id="mpkLotNo" disabled="false"  label="" name="mpkLotNo" class="inputArea" value="{!v.newProcedureForm.MPK_Lot_Number__c}" />
+                        </td> 
+                    </tr>
+                    
+                                        
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="MPK Size" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="mpksize" label="4Fr " value="true"  change="{!c.onMpkSize}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="mpksize" label="5Fr " value="false"  change="{!c.onMpkSize}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="MPK Dialator" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="mpkdialator" label="Stiffened "  value="false" change="{!c.onMpkDial}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="mpkdialator" label="Non-Stiffened "  value="true" change="{!c.onMpkDial}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                     
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+<!--                    <tr>
+                        <td width="20%" class="red">
+                            <aura:text value="Needle Length (cm)" />
+                        </td>
+                        <td >
+                            <table columns="2">
+                                <tr>
+                                    <td width="5%">
+                            	    	<lightning:helptext content="Needle Length in Whole cm (enter an integer value between 0 and 99)" />	
+									</td>
+                                    <td>
+                                    	<lightning:input type="number" min="0" maxlength="2"  name="needlelength"  step="0" label="" value="{!v.newProcedureForm.Needle_Length__c}"/>   
+                                    </td>
+                                </tr>
+                            </table>   
+                        </td>
+                    </tr>
+                    
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+-->                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Arterial Sheath Access" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="4">
+   									<tr>
+                                        
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="artialsheathaccess" label="Direct "   change="{!c.onArtSheathAccess}"/>
+                                            </div>
+                                        </td>
+                                     
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="artialsheathaccess" label="Tunnel "   change="{!c.onArtSheathAccess}"/>
+                                            </div>
+                                        </td>        
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>            
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="NPS Version" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="3">
+                                    <tr>
+                                        <td width="100%">
+                                            <div align="left">
+                                                <table columns="4">
+   													<tr>
+                                                        <td width="50%">
+                                            				<div align="left">
+                                                    			<ui:inputRadio aura:id="r0" name="npsversion" label="Next Gen "  value="true" change="{!c.onNpsVersion}"/> 
+                                                            </div>
+                                                        </td>
+<!--                                                 
+                                                        <td width="50%">
+                                            				<div align="left">
+                                                                <ui:inputRadio aura:id="r1" name="npsversion" label="None "  value="false" change="{!c.onNpsVersion}"/> 
+                                            		 <lightning:input type="checkbox" label="Next Gen " aura:id="npsversion" name="Next Gen"  onchange="{!c.onNpsVersion}" checked="{!(v.simpleRecord.NPS_Version__c)=='Next Gen'}" /> 
+                                                         </div>
+                                                        </td>
+-->                                                        
+                                                    </tr>
+                                                </table> 	
+                                            </div>
+                                        </td>       
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>                                       
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                           		 <aura:text value="NPS Lot Number" />
+                        </td>
+                        <td >
+                              <lightning:input aura:id="npslotno" disabled="false" maxlength="6" label="" name="npslotno" class="inputArea" value="{!v.newProcedureForm.NPS_Lot_No__c}" onchange="{!c.onNpsLotNumber}" />
+                        </td> 
+                    </tr>
+                    
+                    
+                     
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="red">
+                            <aura:text value="NPS Placement" />
+                        </td>
+                        <td>
+                            <ui:inputSelect aura:id="enrouteplacement" label="" value="{!v.newProcedureForm.Enroute__c}" >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="NPS placed and reverse flow established"  label="NPS placed and reverse flow established" />
+                                <ui:inputSelectOption text="NPS NOT placed and procedure aborted"  label="NPS NOT placed and procedure aborted" />
+                                <ui:inputSelectOption text="NPS placed, reverse flow not established, and TCAR procedure aborted"  label="NPS placed, reverse flow not established, and TCAR procedure aborted" />
+                            </ui:inputSelect>   
+                        </td>  
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Arterial Sheath Placement Wire" />
+                        </td>
+                        <td>
+                             <div class="slds-box slds-theme_shade">
+                                <table>
+                                    <tr>
+                                        <td width="33%">
+                                            <ui:inputSelect aura:id="artsheathpplacementwire" label="" value="{!v.newProcedureForm.Arterial_Sheath_Placement_Wire__c}" change="{!c.onArtSheathPlacementWire}" >
+                                                <ui:inputSelectOption text="Extra Support J Tip"  label="Extra Support J Tip" />
+                                                <ui:inputSelectOption text="Next Gen J Tip"  label="Next Gen J Tip"  />
+                                                <ui:inputSelectOption text="Amplatz 1 cm Super Stiff"  label="Amplatz 1 cm Super Stiff" />                                                
+                                                <ui:inputSelectOption text="Unknown"  label="Unknown" />
+                                                <ui:inputSelectOption text="Not Applicable"  label="Not Applicable" />
+                                                <ui:inputSelectOption text="Other"  label="Other" />
+                                                <ui:inputSelectOption text="None"  label="None" /> 
+                                            </ui:inputSelect>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td alignment="left">
+                                            <lightning:input aura:id="otherartsheathpplacementwire" label="Other Art Sheath Placement Wire" disabled="true" name="otherartsheathpplacementwire" class="inputArea" value="{!v.newProcedureForm.Other_Arterial_Sheath_Placement_Wire__c}" />  
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                     
+                    <tr>
+                        <br/>
+                    </tr>
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Wire Technique" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="3">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="wiretechnique" label="Engage EC "   change="{!c.onWireTechnique}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="wiretechnique" label="Stop Short "   change="{!c.onWireTechnique}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Use of Interventional Tools" />
+                        </td>
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r0" name="interventionaltools" label="Successful Delivery "   change="{!c.onInterventionalTools}"/>
+                                            </div>
+                                        </td>
+                                        <td width="50%">
+                                            <div align="left">
+                                                    <ui:inputRadio aura:id="r1" name="interventionaltools" label="Unsuccessful Delivery "   change="{!c.onInterventionalTools}"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <br/>
+                    </tr>
+
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="014 Guidewire Manufacturer" />
+                        </td>       
+                        <td >
+                            <div class="slds-box slds-theme_shade">
+                                <table>
+                                    <tr>
+                                        <td width="50%">
+                                            <ui:inputRadio aura:id="r0" name="guidewireMfgA" label="SRM " value="true" change="{!c.onguidewire}"/>
+                                        </td>
+                                        <td>
+                                            <ui:inputRadio aura:id="r1" name="guidewireMfgA" label="Other " value="false" change="{!c.onguidewire}" />
+                                        </td>                                        
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div align="left">
+                                                    <lightning:input aura:id="otherguidewire" label="Other Guidewire Manufacturer" disabled="true" name="otherguidewire" class="inputArea" value="{!v.newProcedureForm.Other_Guidewire_Manufacturer__c}" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td> 
+                    </tr>
+
+                    <tr>
+                    	<td width="20%" > <!-- class="red"> -->
+                            <aura:text value="Guidewire Lot Number" />
+                        </td>		
+                        <td >
+                              <lightning:input aura:id="gwLotNo" disabled="false"  label="" name="gwLotNo" class="inputArea" value="{!v.newProcedureForm.Guidewire_Lot_Number__c}" />
+                        </td> 
+                    </tr>                  
+                    <tr>
+                        <br/>
+                    </tr>                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Number of Stents Used" />
+                        </td>
+                        <td >
+                            <ui:inputSelect aura:id="numberofstents" label="" value="{!v.newProcedureForm.Number_of_Stents_Used__c}" change="{!c.onNumberOfStents}"  >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="1"  label="1" />
+                                <ui:inputSelectOption text="2"  label="2" />
+                                <ui:inputSelectOption text="None"  label="None" />
+                            </ui:inputSelect>
+  
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                   <tr>
+                        <br/>
+                    </tr>
+                    <h1><u>STENT 1 INFO</u></h1>
+                    <tr>
+                        <td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '1','red',if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red',''))}">
+                            <aura:text value="Stent 1 Type" />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <ui:inputSelect aura:id="selectstint1type" label="" value="{!v.newProcedureForm.Stent_No_1_Type__c}" change="c.onStint1Type" disabled="true">   
+                                                    <ui:inputSelectOption aura:id="s1type0" text="- DISABLED -" label="- DISABLED -"/>
+                                                    <ui:inputSelectOption aura:id="s1type1" text="SRM ENROUTE" label="SRM ENROUTE"/>
+                                                    <ui:inputSelectOption aura:id="s1type2" text="Abbott Acculink" label="Abbott Acculink"/>
+                                                    <ui:inputSelectOption aura:id="s1type3" text="Abbott Xact" label="Abbott Xact"/>
+                                                    <ui:inputSelectOption aura:id="s1type4" text="BSC Wallstent" label="BSC Wallstent"/>
+                                                    <ui:inputSelectOption aura:id="s1type5" text="Cordis Precise" label="Cordis Precise"/>
+                                                    <ui:inputSelectOption aura:id="s1type6" text="Gore Viabahn" label="Gore Viabahn"/>
+                                                    <ui:inputSelectOption aura:id="s1type7" text="Inspire" label="Inspire"/>
+                                                    <ui:inputSelectOption aura:id="s1type8" text="KOBI mini" label="KOBI mini"/>
+                                                    <ui:inputSelectOption aura:id="s1type9" text="Medtronic Cristallo" label="Medtronic Cristallo"/>
+                                                    <ui:inputSelectOption aura:id="s1type10" text="Medtronic Protoge" label="Medtronic Protoge"/>
+                                                    <ui:inputSelectOption aura:id="s1type11" text="Penumbra C-Guard" label="Penumbra C-Guard"/>
+                                                    <ui:inputSelectOption aura:id="s1type12" text="Roadsaver" label="Roadsaver"/>
+                                                    <ui:inputSelectOption aura:id="s1type13" text="Other" label="Other"/>			
+                                            </ui:inputSelect>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div align="left">
+                                                    <lightning:input aura:id="otherstint1type" label="Other Stent Type" disabled="true" name="otherstint1type" class="inputArea" value="{!v.newProcedureForm.Other_Stent_1_Type__c}" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                     
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '1','red',if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red',''))}">
+                            <aura:text value="Stent 1 Size" />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="1">
+                                    <td>
+                                        <ui:inputSelect aura:id="selectstint1size" label="" value="{!v.newProcedureForm.Stent_1_Size__c}" disabled="true" >
+                                            	<ui:inputSelectOption aura:id="s1size0" text="- DISABLED -"  label="- DISABLED -"  />
+                                                <ui:inputSelectOption aura:id="s1size1" text="5x20"  label="5x20" />
+                                                <ui:inputSelectOption aura:id="s1size2" text="5x30"  label="5x30" />
+                                                <ui:inputSelectOption aura:id="s1size3" text="5x40"  label="5x40" />
+                                                <ui:inputSelectOption aura:id="s1size4" text="6x20"  label="6x20" />
+                                                <ui:inputSelectOption aura:id="s1size5" text="6x30"  label="6x30" />
+                                                <ui:inputSelectOption aura:id="s1size6" text="6x40"  label="6x40" />
+                                                <ui:inputSelectOption aura:id="s1size7" text="7x20"  label="7x20" />
+                                                <ui:inputSelectOption aura:id="s1size8" text="7x30"  label="7x30" />
+                                                <ui:inputSelectOption aura:id="s1size9" text="7x40"  label="7x40" />
+                                                <ui:inputSelectOption aura:id="s1size10" text="8x20"  label="8x20" />
+                                                <ui:inputSelectOption aura:id="s1size11" text="8x30"  label="8x30" />
+                                                <ui:inputSelectOption aura:id="s1size12" text="8x40"  label="8x40" />
+                                                <ui:inputSelectOption aura:id="s1size13" text="9x20"  label="9x20" />
+                                                <ui:inputSelectOption aura:id="s1size14" text="9x30"  label="9x30" />
+                                                <ui:inputSelectOption aura:id="s1size15" text="9x40"  label="9x40" />
+                                                <ui:inputSelectOption aura:id="s1size16" text="10x20"  label="10x20" />
+                                                <ui:inputSelectOption aura:id="s1size17" text="10x30"  label="10x30" />
+                                                <ui:inputSelectOption aura:id="s1size18" text="10x40"  label="10x40" />	
+                                        </ui:inputSelect>
+                                    </td>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                    	<td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '1','red',if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red',''))}">
+                            <aura:text value="Stent 1 Lot Number" />
+                        </td>		
+                        <td >
+                              <lightning:input aura:id="stint1lotno" disabled="true"  label="" name="stint1lotno" class="inputArea" value="{!v.newProcedureForm.Stint_1_Lot_Number__c}" />
+                        </td> 
+                    </tr>                 
+                    <tr>
+                        <br/>
+                    </tr>
+                   <tr>
+                        <br/>
+                    </tr>
+                    <h1><u>STENT 2 INFO</u></h1>
+                    <tr>
+                        <td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red','')}">
+                            <aura:text value="Stent 2 Type"  />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="2">
+                                    <tr>
+                                        <td>
+                                            <ui:inputSelect aura:id="selectstint2type" label="" value="{!v.newProcedureForm.Stent_No_2_Type__c}" disabled="true" change="c.onStint2Type" >             					
+                                                    <ui:inputSelectOption aura:id="s2type0" text="- DISABLED -" label="- DISABLED -"/>
+                                                    <ui:inputSelectOption aura:id="s2type1" text="SRM ENROUTE" label="SRM ENROUTE"/>
+                                                    <ui:inputSelectOption aura:id="s2type2" text="Abbott Acculink" label="Abbott Acculink"/>
+                                                    <ui:inputSelectOption aura:id="s2type3" text="Abbott Xact" label="Abbott Xact"/>
+                                                    <ui:inputSelectOption aura:id="s2type4" text="BSC Wallstent" label="BSC Wallstent"/>
+                                                    <ui:inputSelectOption aura:id="s2type5" text="Cordis Precise" label="Cordis Precise"/>
+                                                    <ui:inputSelectOption aura:id="s2type6" text="Gore Viabahn" label="Gore Viabahn"/>
+                                                    <ui:inputSelectOption aura:id="s2type7" text="Inspire" label="Inspire"/>
+                                                    <ui:inputSelectOption aura:id="s2type8" text="KOBI mini" label="KOBI mini"/>
+                                                    <ui:inputSelectOption aura:id="s2type9" text="Medtronic Cristallo" label="Medtronic Cristallo"/>
+                                                    <ui:inputSelectOption aura:id="s2type10" text="Medtronic Protoge" label="Medtronic Protoge"/>
+                                                    <ui:inputSelectOption aura:id="s2type11" text="Penumbra C-Guard" label="Penumbra C-Guard"/>
+                                                    <ui:inputSelectOption aura:id="s2type12" text="Roadsaver" label="Roadsaver"/>
+                                                    <ui:inputSelectOption aura:id="s2type13" text="Other" label="Other"/>					
+                                            </ui:inputSelect>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div align="left">
+                                                    <lightning:input aura:id="otherstint2type" label="Other Stent Type" disabled="true" name="otherstint2type" class="inputArea" value="{!v.newProcedureForm.Other_Stent_2_Type__c}" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                     
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red','')}">
+                            <aura:text value="Stent 2 Size" />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="1">
+                                    <td>
+                                        <ui:inputSelect aura:id="selectstint2sz" label="" disabled="true" value="{!v.newProcedureForm.Stint_2_Size__c}">
+                                            	<ui:inputSelectOption aura:id="s2size0"  text=""  label="- None Selected -"  />
+                                                <ui:inputSelectOption aura:id="s2size1"   text="5x20"  label="5x20" />
+                                                <ui:inputSelectOption aura:id="s2size2"   text="5x30"  label="5x30" />
+                                                <ui:inputSelectOption aura:id="s2size3"   text="5x40"  label="5x40" />
+                                                <ui:inputSelectOption aura:id="s2size4"   text="6x20"  label="6x20" />
+                                                <ui:inputSelectOption aura:id="s2size5"   text="6x30"  label="6x30" />
+                                                <ui:inputSelectOption aura:id="s2size6"   text="6x40"  label="6x40" />
+                                                <ui:inputSelectOption aura:id="s2size7"   text="7x20"  label="7x20" />
+                                                <ui:inputSelectOption aura:id="s2size8"   text="7x30"  label="7x30" />
+                                                <ui:inputSelectOption aura:id="s2size9"   text="7x40"  label="7x40" />
+                                                <ui:inputSelectOption aura:id="s2size10"   text="8x20"  label="8x20" />
+                                                <ui:inputSelectOption aura:id="s2size11"   text="8x30"  label="8x30" />
+                                                <ui:inputSelectOption aura:id="s2size12"   text="8x40"  label="8x40" />
+                                                <ui:inputSelectOption aura:id="s2size13"   text="9x20"  label="9x20" />
+                                                <ui:inputSelectOption aura:id="s2size14"   text="9x30"  label="9x30" />
+                                                <ui:inputSelectOption aura:id="s2size15"   text="9x40"  label="9x40" />
+                                                <ui:inputSelectOption aura:id="s2size16"   text="10x20"  label="10x20" />
+                                                <ui:inputSelectOption aura:id="s2size17"   text="10x30"  label="10x30" />
+                                                <ui:inputSelectOption aura:id="s2size18"   text="10x40"  label="10x40" />	
+                                        </ui:inputSelect>
+                                    </td>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                    	<td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c == '2','red','')}">
+                            <aura:text value="Stent 2 Lot Number" />
+                        </td>		
+                        <td >
+                              <lightning:input aura:id="stint2lotno" disabled="true"  label="" name="stin2lotno" class="inputArea" value="{!v.newProcedureForm.Stint_2_Lot_Number__c}" />
+                        </td> 
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+        
+                    <tr>
+                    	<td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c != 'None',if(!v.noSRM,'red',''),'')}">
+                            <aura:text value="ENROUTE Stent Deployment" />
+                        </td>		
+                        <td >                           
+                            <ui:inputSelect aura:id="enroutestentdeployment" label="" value="{!v.newProcedureForm.ENROUTE_Stint_Deployment__c}"  disabled="false">
+                                <ui:inputSelectOption aura:id="edeploy0" text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption aura:id="edeploy1" text="Stent deployed without issue"  label="Stent deployed without issue" />
+                                <ui:inputSelectOption aura:id="edeploy2" text="Stent deployed with issue"  label="Stent deployed with issue" />
+                                <ui:inputSelectOption aura:id="edeploy3" text="N/A, procedure aborted prior to stenting"  label="N/A, procedure aborted prior to stenting" />
+                                <ui:inputSelectOption aura:id="edeploy4" text="N/A, reverse flow not established"  label="N/A, reverse flow not established" />                                    
+                            </ui:inputSelect>
+                        </td> 
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                    	<td width="20%" class="{!if(v.newProcedureForm.Number_of_Stents_Used__c != 'None',if(!v.noSRM,'red',''),'')}">
+                            <aura:text value="ENROUTE Delivery System Removal"  />
+                        </td>		
+                        <td >
+                            <ui:inputSelect aura:id="enroutestentremoval" label="" value="{!v.newProcedureForm.ENROUTE_Delivery_System_Removal__c}" disabled="false" >
+                                <ui:inputSelectOption aura:id="eremove0"  text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption aura:id="eremove1"  text="Stent delivery system removed without issue"  label="Stent delivery system removed without issue" />
+                                <ui:inputSelectOption aura:id="eremove2"  text="Stent delivery system removed with issue"  label="Stent delivery system removed with issue" />
+                                <ui:inputSelectOption aura:id="eremove3"  text="N/A, procedure aborted prior to stenting"  label="N/A, procedure aborted prior to stenting" />
+                                <ui:inputSelectOption aura:id="eremove4"  text="N/A, reverse flow not established"  label="N/A, reverse flow not established" />                                    
+                            </ui:inputSelect>
+                          
+                        </td> 
+                    </tr>
+                    
+                     <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Pre Dilatation Balloon Size (mm)" />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="1">
+                                    <td>
+                                        <ui:inputSelect aura:id="predilsize" label="" value="{!v.newProcedureForm.Pre_Dilation_Balloon_Size__c}" change="{!c.onpredilsize}">
+                                            	<ui:inputSelectOption text=""  label="- None Selected -"  />
+                                            	<ui:inputSelectOption text="Other Size"  label="Other Size" />  
+                                                <ui:inputSelectOption text="No Balloon Used"  label="No Balloon Used" />
+                                            	<ui:inputSelectOption text="2 x 15"  label="2 x 15" />
+                                                <ui:inputSelectOption text="2 x 20"  label="2 x 20" />
+                                                <ui:inputSelectOption text="2.5 x 20"  label="2.5 x 20" />
+                                                <ui:inputSelectOption text="2.5 x 30"  label="2.5 x 30" />
+                                                <ui:inputSelectOption text="3 x 15"  label="3 x 15" />
+                                                <ui:inputSelectOption text="3 x 20"  label="3 x 20" />
+                                                <ui:inputSelectOption text="3 x 30"  label="3 x 30" />
+                                                <ui:inputSelectOption text="3 x 40"  label="3 x 40" />
+                                                <ui:inputSelectOption text="3.5 x 15"  label="3.5 x 15" />
+                                                <ui:inputSelectOption text="3.5 x 20"  label="3.5 x 20" />
+                                                <ui:inputSelectOption text="3.5 x 30"  label="3.5 x 30" />
+                                                <ui:inputSelectOption text="3.5 x 40"  label="3.5 x 40" />
+                                                <ui:inputSelectOption text="3.5 x 5"  label="3.5 x 5" />
+                                                <ui:inputSelectOption text="4 x 20"  label="4 x 20" />
+                                                <ui:inputSelectOption text="4 x 25"  label="4 x 25" />
+                                                <ui:inputSelectOption text="4 x 30"  label="4 x 30" />
+                                                <ui:inputSelectOption text="4 x 40"  label="4 x 40" />
+                                                <ui:inputSelectOption text="4 x 60"  label="4 x 60" />
+                                                <ui:inputSelectOption text="4.5 x 15"  label="4.5 x 15" />
+                                                <ui:inputSelectOption text="4.5 x 20"  label="4.5 x 20" />
+                                                <ui:inputSelectOption text="4.5 x 30"  label="4.5 x 30" />
+                                            	<ui:inputSelectOption text="4.5 x 40"  label="4.5 x 40" />
+                                                <ui:inputSelectOption text="5 x 15"  label="5 x 15" />
+                                                <ui:inputSelectOption text="5 x 20"  label="5 x 20" />
+                                                <ui:inputSelectOption text="5 x 30"  label="5 x 30" />
+                                                <ui:inputSelectOption text="5 x 40"  label="5 x 40" />
+                                                <ui:inputSelectOption text="5.5 x 20"  label="5.5 x 20" />
+                                                <ui:inputSelectOption text="5.5 x 30"  label="5.5 x 30" />
+                                                <ui:inputSelectOption text="6 x 20"  label="6 x 20" />
+                                                <ui:inputSelectOption text="6 x 30"  label="6 x 30" />
+                                                <ui:inputSelectOption text="6 x 40"  label="6 x 40" />
+                                        </ui:inputSelect>
+                                    </td>
+                                <tr>
+                                    <td align="left">
+                                        <lightning:input aura:id="preDilOtherSize" disabled="true"  label="Other Pre-Dilatation Size" name="preDilOtherSize" class="inputArea" value="{!v.newProcedureForm.Other_Pre_Dil_Balloon_Size__c}" />
+                                    </td>
+                                </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Post Dilatation Balloon Size (mm)" />
+                        </td>
+                        <td>
+                            <div class="slds-box slds-theme_shade">
+                                <table columns="1">
+                                    <td>
+                                        <ui:inputSelect aura:id="postDilsize" label="" value="{!v.newProcedureForm.Post_Dialation_Balloon_Size__c}" change="{!c.onpostdilsize}" >
+                                            	<ui:inputSelectOption text=""  label="- None Selected -"  />
+                                                <ui:inputSelectOption text="Other Size"  label="Other Size" />  
+                                                <ui:inputSelectOption text="No Balloon Used"  label="No Balloon Used" /> 
+                                            	<ui:inputSelectOption text="3 x 20"  label="3 x 20" />
+                                                <ui:inputSelectOption text="3 x 40"  label="3 x 40" />
+                                                <ui:inputSelectOption text="3.5 x 20"  label="3.5 x 20" />
+                                                <ui:inputSelectOption text="4 x 15"  label="4 x 15" />
+                                                <ui:inputSelectOption text="4 x 20"  label="4 x 20" />
+                                                <ui:inputSelectOption text="4 x 30"  label="4 x 30" />
+                                                <ui:inputSelectOption text="4 x 40"  label="4 x 40" />
+                                                <ui:inputSelectOption text="4.5 x 15"  label="4.5 x 15" />
+                                                <ui:inputSelectOption text="4.5 x 20"  label="4.5 x 20" />
+                                                <ui:inputSelectOption text="4.5 x 30"  label="4.5 x 30" />
+                                                <ui:inputSelectOption text="4.5 x 40"  label="4.5 x 40" />
+                                                <ui:inputSelectOption text="5 x 15"  label="5 x 15" />
+                                                <ui:inputSelectOption text="5 x 20"  label="5 x 20" />
+                                                <ui:inputSelectOption text="5 x 25"  label="5 x 25" />
+                                                <ui:inputSelectOption text="5 x 30"  label="5 x 30" />
+                                                <ui:inputSelectOption text="5 x 40"  label="5 x 40" />
+                                                <ui:inputSelectOption text="5.5 x 15"  label="5.5 x 15" />
+                                                <ui:inputSelectOption text="5.5 x 20"  label="5.5 x 20" />
+                                                <ui:inputSelectOption text="5.5 x 30"  label="5.5 x 30" />
+                                                <ui:inputSelectOption text="5.5 x 40"  label="5.5 x 40" />
+                                                <ui:inputSelectOption text="6 x 15"  label="6 x 15" />
+                                                <ui:inputSelectOption text="6 x 20"  label="6 x 20" />
+                                                <ui:inputSelectOption text="6 x 30"  label="6 x 30" />
+                                                <ui:inputSelectOption text="6 x 40"  label="6 x 40" />
+                                                <ui:inputSelectOption text="7 x 15"  label="7 x 15" />
+                                                <ui:inputSelectOption text="7 x 20"  label="7 x 20" />
+                                                <ui:inputSelectOption text="7 x 30"  label="7 x 30" />
+                                                <ui:inputSelectOption text="7 x 60"  label="7 x 60" />
+                                                <ui:inputSelectOption text="8 x 40"  label="8 x 40" />                                             		
+                                        </ui:inputSelect>
+                                    </td>
+                                <tr>
+                                    <td align="left">
+                                        <lightning:input aura:id="postDilOtherSize" disabled="true"  label="Other Post-Dilatation Size" name="postDilOtherSize" class="inputArea" value="{!v.newProcedureForm.Other_Post_Dil_Balloon_Size__c}" />
+                                    </td>
+                                </tr>
+                                </table>
+                            </div>    
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>                  
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Skin to Skin Time" />
+                        </td>
+                        <td>                           
+                            <table columns="5" width="150px" >
+                                <tr>                                  
+                                    <th>Hours</th>
+                                    <th>:</th>
+                                    <th>Minutes</th>                                  
+                                    <th>:</th>
+                                    <th>Seconds</th>
+                                    <th>Reported Time <br/>HH:MM:SS</th>
+                                </tr>
+                                <tr>
+                                	<td>
+                                        <ui:inputText aura:id="s2sTimeTxtEnterHr" class=""  placeholder="00" value="00"  change="{!c.calculateSkinToSkinTimeText}"/>
+                                	</td>
+                            		<td>
+                                		<aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="s2sTimeTxtEnterMn" placeholder="00" value="00"  change="{!c.calculateSkinToSkinTimeText}" />
+                                	</td>
+                                	<td>
+                                        <aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="s2sTimeTxtEnterSs" placeholder="00" value="00"  change="{!c.calculateSkinToSkinTimeText}" />
+                                	</td>
+                                    <td>
+                                        <aura:text aura:id="s2sTimeEcho" value="{!v.s2sStatedTime}" />
+                                	</td>
+                            	</tr>
+
+                            </table>   
+                        </td>
+                    </tr>                 
+                    <tr>
+                        <br/>
+                    </tr>
+               
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Reverse Flow Time" />
+                        </td>
+                        <td>                           
+                            <table columns="5" width="150px" >
+                                <tr>                                  
+                                    <th>Hours</th>
+                                    <th>:</th>
+                                    <th>Minutes</th>                                  
+                                    <th>:</th>
+                                    <th>Seconds</th>
+                                    <th>Reported Time <br/>HH:MM:SS</th>
+                                </tr>
+                                <tr>
+                                	<td>
+                                        <ui:inputText aura:id="rftTimeTxtEnterHr" value="00"  placeholder="00"   change="{!c.calculateReverseFlowTimeText}"/>
+                                	</td>
+                            		<td>
+                                		<aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="rftTimeTxtEnterMn" value="00" placeholder="00"   change="{!c.calculateReverseFlowTimeText}" />
+                                	</td>
+                                	<td>
+                                        <aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="rftTimeTxtEnterSs" value="00" placeholder="00"   change="{!c.calculateReverseFlowTimeText}" />
+                                	</td>
+                                    <td>
+                                        <aura:text aura:id="rftTimeEcho" value="{!v.rftStatedTime}" />
+                                	</td>
+                            	</tr>
+
+                            </table>   
+                        </td>
+                    </tr>                       
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                    	<td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Toleration of Reverse Flow" />
+                        </td>		
+                        <td >                   
+                            <ui:inputSelect aura:id="tolerationreverseflow" label="" value="{!v.newProcedureForm.Toleration_of_Reverse_Flow__c}" >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="Tolerated reverse flow"  label="Tolerated reverse flow" />
+                                <ui:inputSelectOption text="Initially intolerant but weened"  label="Initially intolerant but weened" />
+                                <ui:inputSelectOption text="No toleration of Hi Flow"  label="No toleration of Hi Flow" />
+                                <ui:inputSelectOption text="No toleration of both Hi and Low Flow"  label="No toleration of both Hi and Low Flow" /> 
+                                <ui:inputSelectOption text="Unknown, GA was used"  label="Unknown, GA was used" /> 
+                                <ui:inputSelectOption text="Not Applicable"  label="Not Applicable" /> 
+                            </ui:inputSelect>                        
+                        </td> 
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Local Complications" />
+                        </td>
+                        <td>
+                           <div class="slds-box slds-theme_shade"> 
+                                       <ui:inputSelect aura:id="localcomplications" label="" value="{!v.newProcedureForm.Local_Complications__c}" change="{!c.onLocalComplications}" >
+                                            <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                            <ui:inputSelectOption text="None"  label="None" />
+                                            <ui:inputSelectOption text="Bleeding"  label="Bleeding" />
+                                            <ui:inputSelectOption text="Dissection"  label="Dissection" />
+                                            <ui:inputSelectOption text="Unknown"  label="Unknown" /> 
+                                            <ui:inputSelectOption text="Other"  label="Other" /> 
+                                        </ui:inputSelect>
+                               <div align="left">
+                                                    <lightning:input aura:id="otherLocalComplications" label="Other Local Complications" disabled="true" name="therLocalComplications" class="inputArea" value="{!v.newProcedureForm.Other_Local_Complications__c}" />
+                               </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Dissection Step" />
+                        </td>
+                        <td>
+                            <ui:inputSelect aura:id="dissectionstep" label="" value="{!v.newProcedureForm.Dissection_Step__c}" disabled="{!if(v.newProcedureForm.Local_Complications__c == 'None', true, false)}">
+                                <ui:inputSelectOption text=""  label="{!if(v.newProcedureForm.Local_Complications__c == 'None', '- Disabled -', '- None Selected -')}"   />
+                                <ui:inputSelectOption text="Arterial Sheath"  label="Arterial Sheath" />
+                                <ui:inputSelectOption text="Interventional Wire"  label="Interventional Wire" />
+                                <ui:inputSelectOption text="MPK"  label="MPK" /> 
+                                <ui:inputSelectOption text="Not Applicable"  label="Not Applicable" />
+                                <ui:inputSelectOption text="Unknown"  label="Unknown" />
+                            </ui:inputSelect>
+                          
+                        </td>
+                    </tr>
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Dissection Type" />
+                        </td>
+                        <td>
+                            <ui:inputSelect aura:id="dissectiontype" label="" value="{!v.newProcedureForm.Dissection_Type__c}" disabled="{!if(v.newProcedureForm.Local_Complications__c == 'None', true, false)}" >
+                                <ui:inputSelectOption text=""  label="{!if(v.newProcedureForm.Local_Complications__c == 'None', '- Disabled -', '- None Selected -')}"  />
+                                <ui:inputSelectOption text="CEA"  label="CEA" />
+                                <ui:inputSelectOption text="Repuncture"  label="Repuncture" />
+                                <ui:inputSelectOption text="Stent"  label="Stent" />
+                                <ui:inputSelectOption text="Surgery"  label="Surgery" /> 
+                                <ui:inputSelectOption text="Not Applicable"  label="Not Applicable" />
+                                <ui:inputSelectOption text="Unknown"  label="Unknown" />
+                            </ui:inputSelect>   
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%">
+                            <aura:text value="Fluoro Time (mGy)" />
+                        </td>
+                        <td>
+                            <table columns="2">
+                                <tr>
+                                    <td width="5%">
+                            	    	<lightning:helptext content="Fluoro Time in mGy (use whole numbers; enter an decimal[for example 1:15 = 1.25] from 0 to 999)" />	
+									</td>
+                                    <td>
+                                    	<lightning:input type="decimal" min="0" maxlength="6"  name="fluorotimemgy"  step="any" label="" value="{!v.newProcedureForm.Fluoro_Time_mGy__c}"/>   
+                                    </td>
+                                </tr>
+                            </table>   
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>                   
+                    <tr>
+                        <td width="20%" >
+                            <aura:text value="Fluoro Time (hh:mm:ss)" />
+                        </td>
+                        <td>                           
+                            <table columns="5" width="150px" >
+                                <tr>                                  
+                                    <th>Hours</th>
+                                    <th>:</th>
+                                    <th>Minutes</th>                                  
+                                    <th>:</th>
+                                    <th>Seconds</th>
+                                    <th>Reported Time <br/>HH:MM:SS</th>
+                                </tr>
+                                <tr>
+                                	<td>
+                                        <ui:inputText aura:id="ftTimeTxtEnterHr" value="00"  placeholder="00"   change="{!c.calculateFlouroTimeText}"/>
+                                	</td>
+                            		<td>
+                                		<aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="ftTimeTxtEnterMn" value="00" placeholder="00"   change="{!c.calculateFlouroTimeText}" />
+                                	</td>
+                                	<td>
+                                        <aura:text value=":" />
+                                	</td>
+                                	<td>
+                                        <ui:inputText aura:id="ftTimeTxtEnterSs" value="00" placeholder="00"   change="{!c.calculateFlouroTimeText}" />
+                                	</td>
+                                    <td>
+                                        <aura:text aura:id="ftTimeEcho" value="{!v.ftStatedTime}" />
+                                	</td>
+                            	</tr>
+                            </table>   
+                        </td>
+                    </tr>                                                        
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%">
+                            <aura:text value="Contrast Used (cc/ml)" />
+                        </td>
+                        <td>
+                            <table columns="2">
+                                <tr>
+                                    <td width="5%">
+                                        <lightning:helptext content="Contrast Used cc/ml (use whole numbers; enter an integer from 0 to 999)" />	
+									</td>
+                                    <td>
+                                    	<lightning:input type="number" min="0" maxlength="3"  name="contrastused"  step="0" label="" value="{!v.newProcedureForm.Contrast_Used__c}"/>   
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                    <tr>
+                        <td width="20%" class="{!if(!v.noSRM,'red','')}">
+                            <aura:text value="Debris in Filter" />
+                        </td>
+                        <td>
+                           <ui:inputSelect aura:id="debrisinfilter" label="" value="{!v.newProcedureForm.Debris_in_Filter__c}" >
+                                <ui:inputSelectOption text=""  label="- None Selected -"  />
+                                <ui:inputSelectOption text="Yes"  label="Yes" />
+                                <ui:inputSelectOption text="No"  label="No" />
+                            </ui:inputSelect>
+  
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <br/>
+                    </tr>
+                    
+                   
+                     <tr>
+                        <td class="{!if(v.noSRM,'red','')}">
+                            <aura:text value="Comments" />
+                        </td>
+                        <td>
+                            <div>
+                				<lightning:input aura:id="comments" label=""  name="comments" class="inputArea"  value="{!v.newProcedureForm.Comments__c}" />  
+                			</div>
+                        </td>
+                    </tr>
+                    
+                </table>
+                    
+                </aura:set>
+
+            <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+            <!-- * * * * * * * * * * * * * * *  E N D    O F    R E N D E R   B O T T O M  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+            <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+            </aura:if>
+            
+                
+                <center>
+                        <aura:if isTrue="{! if(v.noRenderScheduler==true,false,true)}" >
+                                <aura:set attribute="else" >
+                                    <center>
+                                        <lightning:button label="Submit New Procedure Form" class="slds-m-top--medium" variant="brand" onclick="{!c.clickCreate}"/>
+                                    </center>
+                                </aura:set>
+                            </aura:if>
+                            <aura:if isTrue="{!v.noRenderScheduler}" >
+                                <aura:set attribute="else" >
+                                    <center>
+                                        <lightning:button label="Schedule and Create Procedure Form" class="slds-m-top--medium" variant="brand" onclick="{!c.clickCreate}" />
+                                    </center>
+                                </aura:set>
+                            </aura:if>
+                </center>
+<!--                <center>
+                    <br/>                                
+                    <lightning:button label="Create New Physician"
+                          iconName="utility:new_window"
+                          iconPosition="left"
+                          variant="brand"
+                          onclick="{!c.newPopup}"
+                          />
+                    <br/>
+                </center>
+
+-->
+
+                    <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%% N E W    C O N T A C T     P O P      UP                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+                    <div role="dialog" tabindex="-1" aria-labelledby="header43" aura:id="Modalbox1" class="slds-modal slds-modal_large">
+                        <div class="slds-modal__container" style="width: 65%;">
+                            <div class="slds-modal__header">
+                                NEW CONTACT
+                            </div>          
+                
+                            <div class="slds-modal__content slds-p-around--medium">
+                                <div class="slds-p-left_xx-large slds-p-right_xx-large">
+                                    <div class="slds-page-header" style="padding-top: 9px; padding-bottom: 9px;, padding-right: 9px;, padding-left: 10px;">
+                                        <h3 style="font-size: 1rem;" title="">Contact Information</h3>
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-p-top_medium">
+                                    <div class="slds-size_6-of-12 slds-p-left_xx-large slds-p-horizontal_x-large " >
+                                        <lightning:input label="First Name (Required)" name="myfirstname" value="{!v.contForm.FirstName}"/>
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-p-top_medium">    
+                                    <div class="slds-size_5-of-12 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                        <lightning:input label="Middle Name" name="mymiddlename" value="{!v.contForm.MiddleName}"/>
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-p-top_x-small">
+                                    <div class="slds-size_6-of-12 slds-p-left_xx-large slds-p-horizontal_x-large " >
+                                        <lightning:input label="Last Name  (Required)" name="mylastname" value="{!v.contForm.LastName}"/>
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-p-top_medium"> 
+                                    <div class="slds-size_6-of-12 slds-p-left_xx-large slds-p-horizontal_x-large " >
+                                        <lightning:input label="Primary Specialty" name="myspecialty" value="{!v.contForm.Primary_Specialty__c}"/>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-p-top_x-small">
+                                    <div class="slds-size_5-of-12 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                        <lightning:input label="Email  (Required)" name="myemail" value="{!v.contForm.Email}"/>
+                                    </div>
+                                </div>
+
+                                <div class="slds-grid slds-p-top_medium"> 
+                                    <div class="slds-size_5-of-12 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                        <lightning:input label="Phone" name="myphone" value="{!v.contForm.Phone}"/>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-p-top_medium"> 
+                                    <div class="slds-size_5-of-12 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                        <lightning:input type="checkbox" label="Fellow" aura:id="modalFellow" name="modalFellow" checked="{!v.contForm.Fellow__c}"/>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="slds-modal__footer">
+                                <lightning:button label="Save" onclick="{!c.saveModal}" />
+                                <lightning:button label="close" onclick="{!c.closeNewModal}" />
+                            </div>
+                        </div>
+                    </div>
+                    <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%--> 
+
+                
+                
+            </form>
+            <!-- / CREATE NEW EXPENSE FORM -->
+      </fieldset>
+      <!-- / BOXED AREA -->
+    </div>
+    <!-- / CREATE NEW EXPENSE -->
+    
+    
+    
+    
+    
+</aura:component>

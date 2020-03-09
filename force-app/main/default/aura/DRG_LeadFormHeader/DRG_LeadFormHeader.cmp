@@ -1,0 +1,25 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global" >
+	<div style="background-color:black">
+    	<br/>
+    	<center>
+            <p>
+            	<img width="178" height="45" id="g1-logo" class="top" src="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png" alt="Silk Road Medical" data-g1-src-desktop="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png" data-g1-src-desktop-hdpi="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png">
+            	</img>
+                &nbsp; DRG Lead Data<br/>
+                <div class="h1">
+            		 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                     v 0.00.01
+        		</div>
+            </p>
+        </center>
+        
+    	
+        <br/>
+	</div> 
+    <hr></hr>
+       
+</aura:component>

@@ -1,0 +1,110 @@
+<aura:component controller="SRM_ITF_ServerController" >
+	
+	  <aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+    <aura:attribute name="AMUsers" type="User[]" />
+    <aura:attribute name="TDSUsers" type="User[]" />
+    <aura:attribute name="OtherUsers" type="User[]" />
+    <aura:attribute name="tempStatus" type="Integer" default='0' />
+    <aura:attribute name="currentStatus" type="Integer" default='0' />
+
+    <aura:registerEvent name="updateITFormFromSRMInfo" type="c:UpdateITForm"/>
+
+    <div style="padding-top: 2vw; padding-right: 2vw; padding-left: 2vw; background-color: white; text-align: left; border-style: ridge;">
+        <form>
+            <table style="width: 100%">
+              <tr>
+                <td style="text-align: right; width:40%; padding-right:3vw">
+                  <span style="color:red">*</span> Transfer Date:
+                </td>
+                <td style="text-align:left; width:25%">
+                  <ui:inputDate 
+                    aura:id="SRMInfoForm"
+                    value="{!v.ITForm.Transfer_Date__c}"
+                    displayDatePicker="true"
+                    format="MM/dd/yyyy"/>
+                </td>
+                <td style="text-align:left; width:25%">
+                </td>
+              </tr>
+            </table>
+
+            <div style="color: black; font-weight: bold; background-color: white; text-align: left; padding-top: 2vw">
+                <span style="color:red">*</span> SRM Representative:
+            </div> 
+            <div style ="border: dotted; padding-top:2vw">
+              <table>
+                <tr>
+                  <td class="left">
+                    Area Manager
+                  </td>
+                  <td class="right">
+                    <ui:inputSelect 
+                      aura:id="SRMInfoFormAM"  
+                      class="selectwide" 
+                      value="{!v.ITForm.SRM_AM__c}"
+                      disabled="false"  >
+                        <aura:iteration items="{!v.AMUsers}" var="user">
+                            <ui:inputSelectOption text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="left">
+                  Therapy Development Specialist
+                  </td>
+                  <td class="right">
+                    <ui:inputSelect 
+                      aura:id="SRMInfoFormTDS"  
+                      class="selectwide" 
+                      value="{!v.ITForm.SRM_TDS__c}"
+                      disabled="false"  >
+                        <aura:iteration items="{!v.TDSUsers}" var="user">
+                          <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="left">
+                  Other Qualified SRM Representative
+                  </td>
+                  <td class="right">
+                    <ui:inputSelect 
+                      aura:id="SRMInfoFormOther"  
+                      class="selectwide" 
+                      value="{!v.ITForm.Other_Qualified_SRM_Employee__c}"
+                      disabled="false">
+                        <aura:iteration items="{!v.OtherUsers}" var="user">
+                          <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <table>
+                <tr>
+                  <td class="right2">
+                  </td>
+                  <td class="right2">
+                      <aura:if isTrue="{!lessthan(v.currentStatus,3)}">
+                          <lightning:button label="Next" 
+                              class="slds-m-top--medium"
+                              variant="brand"
+                              onclick="{!c.NextSaveButton}"/>
+                          <aura:set attribute="else">
+                            <lightning:button label="Save" 
+                              class="slds-m-top--medium"
+                              variant="brand"
+                              onclick="{!c.NextSaveButton}"/>
+                          </aura:set>
+                      </aura:if>
+                  </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</aura:component>

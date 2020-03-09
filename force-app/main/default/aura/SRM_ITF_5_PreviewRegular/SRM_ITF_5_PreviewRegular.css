@@ -1,0 +1,182 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+}
+
+.THIS td.center{
+	text-align: center;
+	width: 45%;
+}
+
+.THIS td.center6{
+	text-align: center;
+	width: 45%;
+	background-color: white;
+	padding: 2vw;
+}
+
+.THIS td.left{
+	padding-right: 2vw;
+	width: 55%; 
+	text-align: left;
+}
+
+.THIS td.LeftBorder{
+	padding-right: 2vw;
+	width: 55%; 
+	text-align: left;
+	border: dotted;
+}
+
+.THIS td.rightRequire{
+	padding-right: 	2vw;
+	padding-top: 1vw;
+	width: 40%; 
+	text-align: right;
+	color:black;
+}
+
+.THIS td.right{
+	padding-right: 	2vw;
+	width: 40%; 
+	text-align: right;
+}
+
+.THIS .slds-button{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	line-height: 150%;
+	/*width: 50%;*/
+	/*height: 150%;*/
+}
+
+.THIS .slds-button1{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	/*width: 20vw;*/
+	height: 100%;
+	text-align: center;
+	padding-top: 0.25vw;
+	padding-bottom: 0.25vw;
+	line-height: 150%;
+}
+
+.THIS .slds-button2{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	width: 85%;
+	line-height: 150%;
+}
+
+.THIS .slds-button7{
+	font-size: 100%;
+	background-color: #0070D2;
+	color: white;
+	line-height: 150%;
+}
+
+/*Class style user input*/
+.THIS .slds-form--horizontal{
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+    background-color: white;
+}
+
+.THIS .form-element__help{
+	font-size: 80%;
+	margin: 0vw;
+}
+
+.THIS img.resize {
+	max-width: 500%;
+	object-fit: contain;
+	width: 100%;
+}
+
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+}
+
+.THIS .uiInput--checkbox{
+	border: 3px solid black;
+}
+
+.THIS table.tablefixed{
+	table-layout: fixed;
+	width: 98%;
+}
+
+.THIS th.editcolumn{
+	text-align: right;
+	width: 20%; 
+	padding-bottom:0.5vw;
+}
+
+.THIS th.noteColumn{
+	text-align: left; 
+	width: 75%;
+}
+
+.THIS .slds-file-selector__dropzone {
+	padding: .125rem;
+    border: 1px dashed rgb(217, 219, 221);
+    border-radius: .25rem;
+    width: 40vw;
+    height: 10vh;
+    text-align: center;
+    padding-top: 3vh;
+    padding-left: 10vw;
+}
+
+.THIS .checkbox{
+	width: 2vw;
+	height: 2vw;
+}
+
+.THIS td.right6{
+	text-align: left;
+	color: 	#16325c;
+	width: 48%;
+	overflow: hidden;
+	text-overflow: hidden;
+	/*border: dotted;*/
+	font-weight: 550;
+}
+
+.THIS td.left6{
+	text-align: right;
+	padding-right: 	1vw;
+	width: 48%;
+}
+
+.THIS .slds-form-element__label
+{
+	font-size: inherit;
+}
+
+.THIS .slds-file-selector__dropzone
+{
+	border: 4px dashed rgb(227, 216, 30);
+	padding-top: 1rem;
+    padding-bottom: 2rem;
+    padding-right: 2rem;
+    padding-left: 2rem;
+    width: 100%;
+    height: 3rem;
+}
+
+@media (max-aspect-ratio: 11/9) {
+	.THIS .slds-file-selector__dropzone {
+		padding: .125rem;
+    	border: 1px dashed rgb(217, 219, 221);
+    	border-radius: .25rem;
+    	text-align: center;
+	}
+}

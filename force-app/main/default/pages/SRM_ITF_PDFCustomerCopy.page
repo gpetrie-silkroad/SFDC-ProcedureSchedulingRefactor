@@ -1,0 +1,340 @@
+<apex:page controller="SRM_ITF_PDFController" renderAs="Advanced_PDF" showHeader="false" sidebar="false" applyBodyTag="false">
+    <head>
+        <style type="text/css" media="print">
+            @page{
+                margin-bottom: 14%;
+                margin-right: 5%;   
+                margin-left: 5%; 
+                margin-top: 14%;
+                @top-center {content: element(header);}
+                @bottom-right {content: element(footerRight);}
+                @bottom-left {content: element(footerleft);}
+            }             
+            div.header{
+                font-weight: bold;
+                font-size: 300%;
+                position: running(header);
+                text-align: center;
+            }            
+            div.footerRight {
+                padding-top: 10px;
+                position: running(footerRight);
+                width:100%;
+                text-align: right;
+            }            
+            div.footerLeft {
+                padding-top: 10px;
+                position: running(footerLeft);
+                width:100%;
+                text-align: left;
+            } 
+            .pagenumber:before {
+                content: counter(page);
+            }
+            .pagecount:after {
+                content: counter(pages);
+            }
+        
+            body{
+                background-color: white;
+                font-size: 15px;
+            } 
+            div.pad{
+                text-align: center;
+                font-size: 14px;
+                overflow: hidden;
+                width:100%;
+            }             
+            mark{
+                background-color: yellow;
+                color: black;
+                font-weight: bold;
+                font-size: 17px;
+            }  
+            mark1{
+                background-color: white;
+                font-size: 15px;
+            } 
+
+            mark12{
+                font-weight: bold;
+                font-size: 15px;
+                color: rgb(0, 132, 255);
+                text-decoration: underline;
+            } 
+
+            mark13{
+                color: red;
+            }          
+            mark2{
+                color: #00008B;
+                font-weight: bold;
+                font-size: 17px;
+            }
+        </style>
+    </head>
+    
+    <!-- Header: Title of the form -->
+    <div class = "header">
+        <div style="padding:0px">
+            <img id="SRMLogo" 
+                 src="{!LogoLink}" 
+                 height="55px" 
+                 alt="Silkroad Medical Logo"/>
+
+            Inventory Transfer Form 
+         <!-- ITFID -->
+        <div class = "pad" >
+            ITFID: {!v.itf_id__c} <br/>
+        </div>
+         </div>
+    </div>  
+
+    <!-- Footer: Page # and document version -->
+     <div class="footerLeft">
+        <div>
+           <!-- Wl14-F1.X (DCOXXX)-->
+        </div>
+    </div>   
+    <div class="footerRight">
+        <div>
+            Page <span class="pagenumber"/> of <span class="pagecount"/>
+        </div>
+    </div>
+
+    <!-- SRM Info -->
+    <table style="padding: 0; width:100%">
+        <tr>
+            <td width="25%" style="text-align: left;">
+                <b> Silk Road Representative: </b>
+            </td>
+            <td width="40%" style="border-bottom:dotted; text-align: center;">
+                {!srm_representative}
+            </td>
+            <td width="15%" style="text-align: right;">    
+                <b> Transfer Date: </b>
+            </td>
+            <td width="15%" style="border-bottom:dotted; text-align: center;">
+                <apex:outputText value="{0,date,MM/dd/yy}">
+                    <apex:param value="{!v.Transfer_Date__c}"/> 
+                </apex:outputText>
+            </td>
+        </tr>
+    </table>
+    <br/>
+    
+    <!-- Transaction Info -->
+    <table style="padding: 0; width:100%; text-align: left;">
+        <tr>
+            <td width="18%" style="text-align: left;">
+                <b> Transaction Type: </b>
+            </td>
+            <td width="52%" style="border-bottom:dotted; text-align: left;">
+                {!v.ITF_Type__c}
+            </td>
+            <td width="30%" />         
+        </tr>
+    </table>  
+    <div  style="width:100%; padding-left: 20px; padding-top: 10px;">
+        <div style="width:95%; border: 1px solid; padding-bottom:10px; padding-top: 0px;">
+            <table style="padding-bottom: 10px; padding-top:0px; width:100%; text-align: left;">
+                <apex:pageBlock rendered="{!if(v.ITF_Type__c=='Transfer to Customer',true,false)}">                
+                    <tr>
+                        <td width="17%" style="text-align: right;">
+                            <b> Account Name: </b>
+                        </td>
+                        <td width="45%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!toAccountName}
+                        </td>
+                        <td width="17%" style="text-align: right;">
+                            <b> PO#: </b>
+                        </td>
+                        <td width="20%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!v.Bill_Only_PO__c} 
+                        </td>     
+                    </tr>
+                </apex:pageBlock> 
+            
+                <apex:pageBlock rendered="{!if(v.ITF_Type__c=='External Transfer (Customer to Customer)',true,false)}">
+                    <tr>
+                        <td width="17%" style="text-align: right;">
+                            <b> From Account: </b>
+                        </td>
+                        <td width="45%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!fromAccountName}
+                        </td>
+                        <td width="17%" style="text-align: right;">
+                            <b> No charge PO#: </b>
+                        </td>
+                        <td width="20%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!v.no_charge_po__c}
+                        </td>                                   
+                    </tr>
+                    <tr>
+                        <td width="17%" style="text-align: right; padding-top:10px;">
+                            <b> To Account: </b>
+                        </td>
+                        <td width="45%" style="border-bottom:dotted; text-align: left; overflow: hidden; padding-top:10px;">
+                            {!toAccountName}
+                        </td>
+                        <td width="17%" style="text-align: right; padding-top:10px;">
+                            <b> Bill Only PO#: </b>
+                        </td>
+                        <td width="20%" style="border-bottom:dotted; text-align: left; overflow: hidden; padding-top:10px;">
+                            {!v.Bill_Only_PO__c}      
+                        </td> 
+                    </tr>
+                </apex:pageBlock>      
+                
+                <apex:pageBlock rendered="{!if(v.ITF_Type__c=='Internal Transfer (AM/TDS to AM/TDS)',true,false)}">
+                    <tr>
+                        <td width="20%" style="text-align: right;">
+                            <b> From AM/TDS: </b>
+                        </td>
+                        <td width="30%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!v.From_Rep_TDS__c}
+                        </td>
+                        <td width="20%" style="text-align: right;">
+                            <b> To AM/TDS: </b>
+                        </td>
+                        <td width="30%" style="border-bottom:dotted; text-align: left; overflow: hidden">
+                            {!v.To_Rep_TDS__c}
+                        </td>                                   
+                    </tr>
+                </apex:pageBlock>
+            </table>  
+        </div>  
+    </div>    
+    <br/>
+    <div style="text-align: center; width:100%">    
+        <mark>*CUSTOMER PURCHASE ORDER IS REQUIRED*</mark><br/>
+        <mark1>
+            Please provide a PO via email to 
+            <mark12>
+                customerservice@silkroadmed.com.
+            </mark12>
+            <mark13>
+                Please reference “BILL ONLY” and “DOS” on the PO.
+            </mark13>
+            Should you have any questions please call our Customer Success team at <b>855-410-TCAR</b>.<br/>
+        </mark1>
+        <br/>
+        <mark2>PLEASE DO NOT INCLUDE PATIENT INFORMATION ON THIS DOCUMENT</mark2>
+    </div>
+    <br/>
+    
+    <!--Inventory Transaction-->
+    <b> Inventory transaction(s) </b>
+    <table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+        <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+            <th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                #
+            </th>       
+            <th style = "width: 55%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 5px;">
+                Product Information
+            </th>
+            <th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                Qty
+            </th> 
+            <th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: center">
+                Unit Price
+            </th>
+            <th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: center">
+                Extended Price
+            </th>
+        </tr>
+        <apex:variable var="index" value="{!1}" />
+        <apex:repeat value="{!iTFTransactions}" var="transaction">        
+            <tr style = "width: 100%; border: 1px solid black; border-collapse: collapse; page-break-inside: avoid;">
+                <td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    {!index}
+                </td>       
+                <td style = "width: 58%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 5px;">
+                    Product #: <b>{!transaction.Product_Number__c}</b><br/>
+                    Description: <b>{!transaction.Product__c}</b><br/>
+                    Lot #: <b>{!transaction.Lot_number__c}</b><br/>
+                    Inventory Owner: <b>{!transaction.Inventory_Owner__c}</b><br/>
+                </td>
+                <td style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+                    {!transaction.Quantity__c} ({!transaction.UOM__c})
+                </td> 
+                <td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: right; padding-right: 5px">
+                    <apex:outputText value="${0, number, ###,###,###,##0.00}">  
+                        <apex:param value="{!transaction.Price__c}"/>  
+                    </apex:outputText>
+                </td>
+                <td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: right; padding-right: 5px">
+                    <apex:outputText value="${0, number, ###,###,###,##0.00}">  
+                        <apex:param value="{!transaction.Extended_Price__c}"/>  
+                    </apex:outputText>
+                </td>
+            </tr>       
+            <apex:variable var="index" value="{!index + 1}" />
+        </apex:repeat>        
+    </table>
+    <div style="text-align:right; width:100%; padding-top:5px; font-weight: bold;">
+        Total: &nbsp;
+        <apex:outputText value="${0, number, ###,###,###,##0.00}">  
+            <apex:param value="{!v.Total_Price__c}"/>  
+        </apex:outputText>
+    </div>    
+    <br/>
+    
+    <!--Customer Info-->
+    <div style="text-align:center; width:100%; page-break-inside: avoid;">
+        <div style="width: 90%; text-align:left; padding-left: 20px">
+            <i>
+                We have received the items listed above, and agree to pay the amounts listed above.
+                No other deliverables or commitments exist outside of those stated above.
+                Silk Road Medical, Inc. standard terms of net 30 days and FOB shipping point apply.         
+            </i>
+            <br/>
+<!--             <center>
+                <b>
+                    {!"[T&C Link to Website??????]"}
+                </b>
+            </center> -->
+        </div>
+        <br/>
+
+        <!-- Case 1: Customer signed in person/ blank signature box so Customer can sign via email-->
+        <apex:pageBlock rendered="{!if(v.CustomerSignViaDocumentID__c != null,false,true)}">
+            <table style="padding: 0; width:100%">
+                <tr>
+                    <td width="20%" style="text-align: left;">
+                        <b> Customer Name: </b>
+                    </td>
+                    <td width="30%" style="border-bottom:dotted; text-align: center;">
+                        {!v.recipient_name__c}
+                    </td>
+                    <td width="20%" style="text-align: right;">    
+                        <b> Customer Title </b>
+                    </td>
+                    <td width="30%" style="border-bottom:dotted; text-align: center;">
+                        {!v.recipient_title__c}
+                    </td>
+                </tr>            
+            </table>        
+            <br/>
+            <div style="width: 98%; text-align: left; border: 2px solid; padding: 5px">
+                Customer Signature:<br/>
+                <apex:pageBlock rendered="{!if(v.signAttachID__c != null,true,false)}">
+                    <img src="{!'/servlet/servlet.FileDownload?file='+v.signAttachID__c}" style="width:80%;"/>
+                </apex:pageBlock>
+                <apex:pageBlock rendered="{!if(v.signAttachID__c != null,false,true)}">
+                    <div style="padding-left: 1000px; padding-bottom:150px;" />
+                </apex:pageBlock>                
+            </div>
+        </apex:pageBlock>
+
+        <!-- Case 2: Customer signed via attached PDF file-->  
+        <apex:pageBlock rendered="{!if(v.CustomerSignViaDocumentID__c != null, true, false)}">
+            <div style="width: 98%; text-align: left; border: 2px solid; padding: 5px">
+                Customer Information:
+                <center style="padding-bottom: 60px; padding-top: 60px; font-size: 150%; font-weight: bold">
+                    Please see an attached file on Salesforce of the Inventory Transfer Form for customer info and signature.
+                </center>              
+            </div>
+        </apex:pageBlock>
+    </div>    
+</apex:page>

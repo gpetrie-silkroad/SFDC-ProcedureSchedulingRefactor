@@ -1,0 +1,99 @@
+<aura:component access="global">
+<!-- =========================Global attributes================================== -->
+	<aura:attribute name="version" type="String" />
+	<aura:attribute name="title" type="String" />
+	<aura:attribute name="IsAdministration" type="Boolean" default="False"/>
+	<aura:attribute name="viewType" type="Integer" default="0"/> <!-- send signal back to parent component -->
+<!-- ====================end of Global attributes================================ -->
+
+<!-- =========================Local attributes================================== -->
+	<aura:attribute name="isDesktop" type="Boolean" />
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+<!-- ====================end of Calling controller================================ -->
+
+	<div style="width:100%; background-color: black; text-align: center">
+
+		<!-- Customize Header for Desktop view -->
+		<aura:if isTrue="{!v.isDesktop=='True'}">
+		
+			<div class = "space">
+				<br/>
+			</div>
+
+        	<img class="resize" 
+        		 id="SRMLogo"
+        		 src="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png"
+        		 alt="Silkroad Medical Logo" /> 
+
+        	<b class = "h1">
+        		{!v.title}
+       		</b>
+
+       		<br/>
+       			<center>
+					<div class ="flexibleScreen">
+						<table>
+							<tr>
+								<td class = "p2" style = "width: 50%; text-align: center"> 
+								</td>  
+								<td class = "p2" style = "width: 50%; text-align: center"> 
+									{!v.version}
+									<aura:if isTrue="{!v.IsAdministration}">
+										&nbsp;&nbsp;&nbsp;&nbsp;
+								      	<lightning:button
+									        	label="Switch View - CS/TDS"
+									        	onclick="{!c.SwitchView}"/>
+									</aura:if>	
+								</td>							   		  	
+							</tr>
+						</table>
+					</div>
+				</center>
+
+			<div class = "space">
+				<br/>
+			</div>
+			<hr/>
+
+			<!-- customize Header for Phone view -->
+			<aura:set attribute="else">
+				<div class = "space">
+					<br/>
+				</div>
+
+				<div style="width:100%">
+					<div class="column left">
+						<img class="resize2" 
+							 id="SRMLogo"
+							 src="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png"
+							 alt="Silkroad Medical Logo" /> 
+					</div>
+
+					<div class="column right">
+						<b class = "h2">
+							{!v.title}
+						</b>
+					</div>
+
+					<div class ="flexibleScreen">
+						<table>
+							<tr>
+								<td class = "p2" style = "width: 70%; text-align: center"> <!-- &nbsp;&nbsp;&nbsp;ITFID: &nbsp; {!v.ITFID} --></td>  
+								<td class = "p2" style = "width: 30%; text-align: center"> {!v.version}</td>	    		  	
+							</tr>
+						</table>
+					</div>
+
+				</div>
+				
+				<div class = "space">
+					<br/>
+				</div>			
+				<hr/>
+			</aura:set>
+		</aura:if>
+	</div>
+</aura:component>

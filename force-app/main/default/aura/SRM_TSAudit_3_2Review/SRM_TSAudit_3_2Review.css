@@ -1,0 +1,96 @@
+.THIS td {
+  /*border: 1px solid #000000;*/
+  text-align: left;
+  padding: 8px;
+}
+
+.THIS th {
+  /*border: 1px solid #000000;*/
+  text-align: left;
+  padding: 8px;
+}
+
+.THIS tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+
+.THIS .uiInput--select.select
+{
+	/*max-width: 100%;*/
+	width: 90%;
+	text-align: center;
+}
+
+.THIS .uiInput--input.input
+{
+	/*max-width: 100%;*/
+	width: 85%;
+	text-align: center;
+}
+
+.THIS table.tableTransaction
+{
+  table-layout: fixed;
+  width: 100%;  
+}
+
+.THIS th.th21
+{
+  text-align: right;
+  padding: 1vw;
+  vertical-align: bottom;
+  width: 10%;
+  border: none;
+}
+
+.THIS th.th22
+{
+  text-align: left;
+  padding: 1vw;
+  vertical-align: bottom;
+  width: 90%;
+  border: none;
+}
+
+.THIS .uiInput--input.input.inputsize
+{
+  width:50%;
+}
+
+.THIS .slds-rich-text-area__content
+{
+  text-align: left;
+}
+
+.THIS .slds-button_brand
+{
+  padding-left: 0rem; 
+  padding-right: 0rem;
+}
+
+.THIS .slds-item--detail
+{
+  text-align: left;
+  width: 45%;
+}
+
+.THIS .slds-item--label
+{
+  text-align: right;
+  font-weight: bold;
+  width: 55%;
+}
+
+.THIS .itemTitle
+{
+  text-align: left;
+  font-weight: bold;
+  color: orange;
+}
+
+.THIS .slds-tabs_default__item.slds-is-active
+{
+  background: #44a2f5;
+  color: white;
+}

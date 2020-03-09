@@ -1,0 +1,5 @@
+.THIS .slds-tabs_default__item.slds-is-active
+{
+	background: #44a2f5;
+    color: white;
+}

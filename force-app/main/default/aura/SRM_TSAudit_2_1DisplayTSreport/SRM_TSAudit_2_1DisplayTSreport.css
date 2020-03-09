@@ -1,0 +1,9 @@
+.THIS .slds-m-top--medium{
+	margin-top: 0px;
+}
+
+.THIS .slds-truncate{
+    font-size: 100%;
+    font-weight: bold;
+    color: yellow;
+}

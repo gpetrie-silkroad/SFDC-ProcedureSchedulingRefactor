@@ -1,0 +1,39 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 120%;
+    background-color: #fafaf5;
+}
+
+.THIS .flexibleScreen{
+	width: 60%;
+}
+
+.THIS .flexibleScreenMobile{
+	width: 100%;
+	/*font-size: 2.75vw;*/
+}
+
+.THIS td{
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    vertical-align: top;
+}
+
+.THIS .slds-box{
+	padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+}
+
+/*Mobile Screen*/
+@media (max-aspect-ratio: 15/16) {
+	.THIS {
+    	font-size: 100%;
+	}
+	.THIS .flexibleScreenMobile{
+		width: 100%;
+	}
+}

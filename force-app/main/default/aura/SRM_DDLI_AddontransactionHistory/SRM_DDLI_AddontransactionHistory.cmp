@@ -1,0 +1,192 @@
+<aura:component controller = "SRM_DDLInventory_ServerController" implements="flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId" access="global">
+	<aura:attribute name="ListTransactionResult" type="Transaction__c[]"/>
+	<aura:attribute name="reason" type="String" default=""/>
+	<aura:attribute name="type" type="String" default=""/>
+
+	<aura:attribute name="activeSections" type="List" default="[]" />
+	<aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+
+    <lightning:accordion
+	        allowMultipleSectionsOpen="true"
+	        activeSectionName="{! v.activeSections }">
+        <lightning:accordionSection name="T" label="Transactions Log">
+        	<center>
+        		<div style = "width: 85%; padding-bottom: 2px;">
+		        	<table>
+		        		<tr>
+		        			<td style = "text-align: right; padding-right: 2px;">
+		        				Order Number:
+		        			</td>
+		        			<td style = "width:60%; text-align: left;">
+		        				<ui:inputText value = "{!v.reason}"/>
+		        			</td>
+		        		</tr>
+		        		<tr>
+		        			<td>
+		        			</td>
+		        			<td style = "width:60%; text-align: left;">
+					            <lightning:button 
+					            		variant="neutral" 
+		                                label="Search"
+		                                title="Search"
+		                                onclick="{!c.search}"/>        				
+		        			</td>
+		        		</tr>
+		        	</table>
+	        	</div>
+        	</center>
+			<table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+				<tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;"> 			
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						Transfer Date
+					</th>
+					<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+						Qty received
+					</th> 
+					<th style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Qty used
+					</th>
+					<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Ref #
+					</th>
+					<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						Ship To/Delivery To
+					</th>
+					<th style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						Reason
+					</th>
+					<th style = "width: 20%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						Note
+					</th>
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						Transacted By
+					</th>
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Item #
+					</th>
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Lot #
+					</th>
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+						Batch #
+					</th> 
+					<th style = "width: 10%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+						Location
+					</th>
+				</tr>
+
+				<aura:iteration  items="{!v.ListTransactionResult}" var="transaction">
+					<tr>
+						<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							<ui:outputDAte value = "{!transaction.TransferDate__c}" format="MM/dd/yyyy"/>
+						</td>
+						<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+							<aura:if isTrue="{!or(transaction.TranInOut__c == 'IN', and (greaterthan(transaction.TranQuan__c,0), greaterthan(transaction.QADTranasctionID__c,0)))}">
+								{!transaction.TranQuan__c}
+							</aura:if>
+						</td> 
+						<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							<aura:if isTrue="{!transaction.TranInOut__c == 'OUT'}">
+								-{!transaction.TranQuan__c}
+							</aura:if>
+							<aura:if isTrue="{!greaterthan(0,transaction.TranQuan__c)}">
+								{!transaction.TranQuan__c}
+							</aura:if>
+						</td>
+
+						<td style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							<aura:if isTrue="{!greaterthan(transaction.QADTranasctionID__c,0)}">
+								{!transaction.TransReason__c}
+								<aura:set attribute="else">
+									{!transaction.RefNo__c}
+								</aura:set>
+							</aura:if>
+						</td>	
+
+						<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							<aura:if isTrue="{!transaction.Account__c != null}">
+								<a href="{!'https://silkroadmed.lightning.force.com/lightning/r/Account/' + transaction.Account__c + '/view'}">{!transaction.DeliveryTo__c}</a>
+								<aura:set attribute="else">
+									{!transaction.DeliveryTo__c}
+								</aura:set>
+							</aura:if>
+						</td>
+						<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							<aura:if isTrue="{!greaterthan(transaction.QADTranasctionID__c,0)}">
+								{!transaction.TransReason__c}&nbsp;-&nbsp;{!transaction.TransType__c}
+								<aura:set attribute="else">
+									{!transaction.TransReason__c}
+								</aura:set>
+							</aura:if>
+						</td>
+						<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							{!transaction.Note__c}
+						</td>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							{!transaction.UserID__c}
+						</td>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+							{!transaction.ItemNo__c}
+						</td>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+							{!transaction.LotNo__c}
+						</td>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center;">
+							<aura:if isTrue="{!greaterthan(transaction.QADTranasctionID__c,0)}">
+								{!transaction.QADTranasctionID__c}
+								<aura:set attribute="else">
+									{!transaction.Batch__c}
+								</aura:set>
+							</aura:if>			
+						</td> 
+						<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+							{!transaction.Loc_Desc__c}
+						</td>
+					</tr>
+				</aura:iteration>
+			</table>	
+        </lightning:accordionSection>
+    </lightning:accordion>
+<!--==========================Waiting/error pop-up message =================================================-->   
+	<aura:if isTrue="{!v.WaitingWindow}">
+		<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+		    <div class="slds-modal__container">
+		        <!-- ================Header Message============================-->
+		        <header class="slds-modal__header">
+		            <lightning:buttonIcon iconName="utility:close"
+		                                    onclick="{!c.closeWaitingPopUp}"
+		                                    alternativeText="close"
+		                                    variant="bare-inverse"
+		                                    class="slds-modal__close"/>
+		            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+		        </header>
+
+
+		        <!-- ================Body Message============================-->
+		        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+		            <p>
+		                {!v.waitingMessage}
+		            </p>
+
+		        </div>
+		        <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+		            <div class="slds-spinner__dot-a"></div>
+		            <div class="slds-spinner__dot-b"></div>
+		        </div>
+
+		        <!-- ================Footer Message============================-->
+		        <footer class="slds-modal__footer">
+		            <lightning:button variant="neutral" 
+		                                label="Cancel"
+		                                title="Cancel"
+		                                onclick="{!c.closeWaitingPopUp}"/>
+		        </footer>
+		    </div>
+		</section>
+	  <div class="slds-backdrop slds-backdrop_open"></div>
+	</aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->
+</aura:component>

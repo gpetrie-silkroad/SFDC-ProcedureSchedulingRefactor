@@ -1,0 +1,13 @@
+.THIS div.PhoneBackground
+{
+	width: 95%;
+	/*background-color: yellow;*/
+}
+
+.THIS div.DesktopBackground
+{
+	width: 100%;
+	padding-left: 10vw;
+	padding-right: 10vw;
+	background-color: white;
+}

@@ -1,0 +1,282 @@
+<aura:component>
+	<!-- ==================Attribute From SRM_DDLInventory_TransactionResult============================ -->
+	<aura:attribute name="transaction" type="Transaction__c"/>
+	<aura:attribute name="ListOnHandQty" type="Integer[]" />
+	<aura:attribute name="index" type="Integer" />
+	<aura:attribute name="IsChange" type="Boolean" default="false"/>
+	<aura:attribute name="viewAll" type="Boolean" default="false"/>
+	<aura:attribute name="devicetype" type="String" default="DESKTOP"/>
+	<aura:attribute name="submittedDate" type= "Date" />
+
+	<!--=====================local Attribute====================================-->
+	<aura:attribute name="onHandQty" type="Integer"/>
+	<aura:attribute name="editTrackNo" type="String"/>
+	<aura:attribute name="IsAfterCountDate" type="Boolean" default="false"/>
+	
+	<aura:handler name="init" action="{!c.init}" value="{!this}"/>
+	<aura:handler name="change" value="{!v.ListOnHandQty}" action="{!c.changeOnHandQty}"/>
+	<aura:handler name="change" value="{!v.submittedDate}" action="{!c.changeSubmitDate}"/>
+
+<!-- ================================View all UI===================================================================================== -->
+	<aura:if isTrue="{!v.viewAll}">
+		<tr>
+			<aura:if isTrue="{!v.IsAfterCountDate}">
+				<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw; background-color: green">
+					<ui:inputDAte 
+						value = "{!v.transaction.TransferDate__c}" 
+						format="MM/dd/yyyy" 
+						change = "{!c.changeTransactionDetail}"
+						displayDatePicker="true"/>
+				</td>
+				<td style = "border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+					<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+						{!v.transaction.TranQuan__c}
+					</aura:if>
+				</td> 
+				<td style = "border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+					<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+						-{!v.transaction.TranQuan__c}
+					</aura:if>
+					<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+						{!v.transaction.TranQuan__c}
+					</aura:if>
+				</td>
+				<td style = "border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+					{!v.onHandQty}
+				</td>				
+				<aura:set attribute="else">
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<ui:inputDAte 
+								value = "{!v.transaction.TransferDate__c}"
+								format="MM/dd/yyyy"
+								change = "{!c.changeTransactionDetail}"
+								displayDatePicker="true"/>
+					</td>
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center;">
+						<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+							{!v.transaction.TranQuan__c}
+						</aura:if>
+					</td> 
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+						<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+							-{!v.transaction.TranQuan__c}
+						</aura:if>
+						<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+							{!v.transaction.TranQuan__c}
+						</aura:if>
+					</td>
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+						{!v.onHandQty}
+					</td>					
+				</aura:set>
+			</aura:if>
+
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+				<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+					{!v.transaction.TransReason__c}
+					<aura:set attribute="else">
+						{!v.transaction.RefNo__c}
+					</aura:set>
+				</aura:if>
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+				<aura:if isTrue="{!v.transaction.Account__c != null}">
+					<a href="{!'https://silkroadmed.lightning.force.com/lightning/r/Account/' + v.transaction.Account__c + '/view'}">{!v.transaction.DeliveryTo__c}</a>
+					<aura:set attribute="else">
+						{!v.transaction.DeliveryTo__c}
+					</aura:set>
+				</aura:if>
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+				<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+					{!v.transaction.TransReason__c}&nbsp;-&nbsp;{!v.transaction.TransType__c}
+					<aura:set attribute="else">
+						{!v.transaction.TransReason__c}
+					</aura:set>
+				</aura:if>
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+				<ui:inputTextArea 
+                    	value="{!v.transaction.Note__c}"
+                    	rows="2"
+                    	change = "{!c.changeTransactionDetail}"/> 
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+				{!v.transaction.UserID__c}
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+				{!v.transaction.ItemNo__c}
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: center">
+				{!v.transaction.LotNo__c}
+			</td>
+			<td style = "border: 1px solid black; border-collapse: collapse; text-align: center;">
+				<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+					{!v.transaction.QADTranasctionID__c}
+					<aura:set attribute="else">
+						{!v.transaction.Batch__c}
+					</aura:set>
+				</aura:if>			
+			</td> 
+			<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+				{!v.transaction.Loc_Desc__c}
+			</td>
+			<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+				<button class="slds-button slds-button--brand" onclick="{!c.updateHiddenField}">
+					<aura:if isTrue="{!v.transaction.IsDisplayed__c}">
+						Displayed
+						<aura:set attribute="else">
+							Hidden
+						</aura:set>
+					</aura:if>
+				</button>
+			</td>
+		</tr>
+<!-- ================================End of View all UI===================================================================================== -->
+
+<!-- ================================Rep View UI===================================================================================== -->
+		<aura:set attribute="else">
+			<tr>
+				<!-- ==============================Desktop/Tablet View=============================== -->
+				<aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+					<aura:if isTrue="{!v.IsAfterCountDate}">
+						<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw; background-color: green">
+							<ui:outputDAte value = "{!v.transaction.TransferDate__c}" format="MM/dd/yyyy"/>
+						</td>
+						<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+							<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+								{!v.transaction.TranQuan__c}
+							</aura:if>
+						</td> 
+						<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+							<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+								-{!v.transaction.TranQuan__c}
+							</aura:if>
+							<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+								{!v.transaction.TranQuan__c}
+							</aura:if>
+						</td>
+						<td style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center; background-color: green">
+							{!v.onHandQty}
+						</td>				
+						<aura:set attribute="else">
+							<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+								<ui:outputDAte value = "{!v.transaction.TransferDate__c}" format="MM/dd/yyyy"/>
+							</td>
+							<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+								<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+									{!v.transaction.TranQuan__c}
+								</aura:if>
+							</td> 
+							<td style = "width: 2%; border: 1px solid black; border-collapse: collapse; text-align: center">
+								<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+									-{!v.transaction.TranQuan__c}
+								</aura:if>
+								<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+									{!v.transaction.TranQuan__c}
+								</aura:if>
+							</td>
+							<td style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center">
+								{!v.onHandQty}
+							</td>					
+						</aura:set>
+					</aura:if>			 			
+					<td style = "width: 4%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+							{!v.transaction.TransReason__c}
+							<aura:set attribute="else">
+								{!v.transaction.RefNo__c}
+							</aura:set>
+						</aura:if>
+					</td>
+					<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!v.transaction.Account__c != null}">
+							<a href="{!'https://silkroadmed.lightning.force.com/lightning/r/Account/' + v.transaction.Account__c + '/view'}">{!v.transaction.DeliveryTo__c}</a>
+							<aura:set attribute="else">
+								{!v.transaction.DeliveryTo__c}
+							</aura:set>
+						</aura:if>
+					</td>
+					<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+							{!v.transaction.TransReason__c}&nbsp;-&nbsp;{!v.transaction.TransType__c}
+							<aura:set attribute="else">
+								{!v.transaction.TransReason__c}
+							</aura:set>
+						</aura:if>
+					</td>
+					<td style = "width: 15%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!v.transaction.Note__c}
+					</td>
+					<!-- ==============================Phone View=============================== -->
+					<aura:set attribute="else">						
+						<aura:if isTrue="{!v.IsAfterCountDate}">
+							<td style = "background-color: green; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+								Transacted Date: <ui:outputDAte value = "{!v.transaction.TransferDate__c}" format="MM/dd/yyyy"/> <br/>
+								Transacted Qty:
+								<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+									{!v.transaction.TranQuan__c}
+								</aura:if>
+								<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+									-{!v.transaction.TranQuan__c}
+								</aura:if>
+								<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+									{!v.transaction.TranQuan__c}
+								</aura:if>
+								<br/>
+								Qty on Hand: {!v.onHandQty}<br/>
+							</td>
+							<aura:set attribute="else">
+								<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+									Transacted Date: <ui:outputDAte value = "{!v.transaction.TransferDate__c}" format="MM/dd/yyyy"/> <br/>
+									Transacted Qty:
+									<aura:if isTrue="{!or(v.transaction.TranInOut__c == 'IN', and (greaterthan(v.transaction.TranQuan__c,0), greaterthan(v.transaction.QADTranasctionID__c,0)))}">
+										{!v.transaction.TranQuan__c}
+									</aura:if>
+									<aura:if isTrue="{!v.transaction.TranInOut__c == 'OUT'}">
+										-{!v.transaction.TranQuan__c}
+									</aura:if>
+									<aura:if isTrue="{!greaterthan(0,v.transaction.TranQuan__c)}">
+										{!v.transaction.TranQuan__c}
+									</aura:if>
+									<br/>
+									Qty on Hand: {!v.onHandQty}<br/>
+								</td>
+							</aura:set>
+						</aura:if>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+							Ref #:
+							<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+								{!v.transaction.TransReason__c}
+								<aura:set attribute="else">
+									{!v.transaction.RefNo__c}
+								</aura:set>
+							</aura:if>
+							<br/>
+							Deliver To:
+							<aura:if isTrue="{!v.transaction.Account__c != null}">
+								<a href="{!'https://silkroadmed.lightning.force.com/lightning/r/Account/' + v.transaction.Account__c + '/view'}">{!v.transaction.DeliveryTo__c}</a>
+								<aura:set attribute="else">
+									{!v.transaction.DeliveryTo__c}
+								</aura:set>
+							</aura:if>
+							<br/>
+							Reason:
+							<aura:if isTrue="{!greaterthan(v.transaction.QADTranasctionID__c,0)}">
+								{!v.transaction.TransReason__c}&nbsp;-&nbsp;{!v.transaction.TransType__c}
+								<aura:set attribute="else">
+									{!v.transaction.TransReason__c}
+								</aura:set>
+							</aura:if>
+							<br/>
+							<aura:if isTrue="{! and(v.transaction.Note__c != null, v.transaction.Note__c != undefined, v.transaction.Note__c != '')}">
+								Note: {!v.transaction.Note__c}
+							</aura:if>
+						</td>						
+					</aura:set>
+				</aura:if>
+			</tr>
+		</aura:set>
+<!-- ================================End of Rep View UI===================================================================================== -->
+	</aura:if>
+</aura:component>

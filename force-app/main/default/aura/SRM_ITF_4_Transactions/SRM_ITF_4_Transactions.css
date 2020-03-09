@@ -1,0 +1,79 @@
+.THIS {
+	padding:0; 
+    margin:0;
+    font-size: 150%;
+    color: black;
+}
+
+/*Class style user input*/
+.THIS .slds-form--horizontal{
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+}
+
+/*Class style header*/
+.THIS .slds-text-heading--medium{
+	padding-bottom: 0vw; 
+    margin:0;
+    font-size: 150%;
+    font-weight: bold;
+}
+
+.THIS .slds-theme--default{
+	background-color: white;
+}
+
+.THIS td.left{
+	padding-right: 	2vw;
+	width: 45%; 
+	text-align: right;
+}
+
+.THIS td.leftRequire{
+	padding-right: 	2vw;
+	width: 45%; 
+	text-align: right;
+	color:black;
+}
+
+.THIS td.center1{
+	width: 55%; 
+	text-align: center;
+}
+
+.THIS td.center{
+	text-align: center;
+}
+.THIS td.center2{
+	text-align: center;
+	padding-bottom: 2vw;
+}
+
+.THIS td.right{
+	width: 55%; 
+	text-align: left;
+}
+
+.THIS .slds-button{
+	font-size: 100%;
+	line-height: 100%;
+}
+
+.THIS .smallbox{
+    font-size: 110%;
+    font-weight: bold;
+    text-align: left;
+    width: 95%;
+    max-width: 95%;
+}
+
+.THIS .smalfont{
+    font-size: 80%;
+    width: 85%;
+}
+
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+}

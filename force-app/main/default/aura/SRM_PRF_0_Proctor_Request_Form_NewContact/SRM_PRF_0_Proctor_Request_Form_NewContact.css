@@ -1,0 +1,88 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    /*background-color: #fafaf5;*/
+    /*background-color: green;*/
+    font-size: 100%;
+}
+
+.THIS td{
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    vertical-align: top;
+}
+
+.THIS tr.tr1
+{
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    text-align: center;
+}
+.THIS td.top
+{
+    padding-top: 0.5rem;
+    padding-bottom: unset;
+    text-align: left;
+}
+.THIS th.top
+{
+    padding-top: 0.5rem;
+    padding-bottom: unset;
+    text-align: left;
+}
+.THIS td.bottom
+{
+    padding-top: unset;
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+.THIS td.middle
+{
+    padding-top: unset;
+    padding-bottom: unset;
+    text-align: left;
+}
+.THIS td.bottomLine
+{
+    border-width:1px; 
+    border-style:dotted;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    padding-top: unset;
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+
+.THIS span.help
+{
+    color:rgb(194, 57, 52);
+}
+
+.THIS td.right
+{
+    text-align: right;
+}
+
+.THIS .form-element__help{
+	font-family: "Times New Roman", Aria, Architect;
+	font-size: 100%;
+	/*font-weight: bold;*/
+	margin: 0vw;
+	padding-top: none;
+	padding-bottom: 4px;
+}
+
+.THIS .myCheckbox{
+  display: inline-block;
+}
+
+.THIS .input1
+{
+    width: 20%;
+}
+
+.THIS .input2
+{
+    width: 25%;
+}

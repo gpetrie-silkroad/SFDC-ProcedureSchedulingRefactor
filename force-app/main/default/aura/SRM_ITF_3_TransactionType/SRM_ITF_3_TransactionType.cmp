@@ -1,0 +1,433 @@
+<aura:component controller="SRM_ITF_ServerController">
+	  <aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+    <aura:attribute name="ITFID" type="String"/>
+	  <aura:attribute name="tempStatus" type="Integer" default='0' />
+    <aura:attribute name="AMUsers" type="User[]" />
+    <aura:attribute name="TDSUsers" type="User[]" />
+    <aura:attribute name="OtherUsers" type="User[]" />
+    <aura:attribute name="Accounts" type="Account[]" />
+    <aura:attribute name="AMUser" type="String" />
+    <aura:attribute name="TDSUser" type="String" />
+    <aura:attribute name="OtherUser" type="String" />
+    <aura:attribute name="currentStatus" type="Integer" default='0'/>
+
+    <aura:attribute name="controllingTransactionTypePickList" type="Integer" default='0'/> 
+      <!--0: from CS ITF
+          1: newITF from Account
+          2: newITF/edit ITF from ITF object -->
+
+    <!-- Local Attributes -->
+    <aura:attribute name="SearchCustomerToName" type="String" default=""/>
+    <aura:attribute name="showSearchCustomerTO" type="Boolean" default="false"/>
+    <aura:attribute name="tempAccounts" type="Account[]" />
+    <aura:attribute name="SearchCustomerFromName" type="String" default=""/>
+    <aura:attribute name="ITF_Type__c" type="String" default=""/>
+    <aura:attribute name="showSearchCustomerTO2" type="Boolean" default="false"/>
+    <aura:attribute name="changeToREPTDS" type="Boolean" default="false"/>
+    <aura:attribute name="tempAccounts2" type="Account[]" />
+    <aura:attribute name="currentSelectedUsers" type="String" default=""/>
+
+    <aura:handler name="init" action="{!c.initialvalues}" value="{!this}"/>
+    <aura:handler name="change" value="{!v.ITForm}" action="{!c.updateCurrentSelectedUsers}"/>
+
+    <!-- Send a signal to Inventory Transfer form to update ITFform on Salesforce -->
+    <aura:registerEvent name="updateITFormFromITFDetail" type="c:UpdateITForm"/>
+
+    <div style="padding-top: 0.5vw; padding-right: 1vw; padding-left: 1vw; background-color: white; text-align: left; border-style: ridge;">
+          <form>
+              <table>
+                  <tr>
+                      <th style ="text-align: right; padding-right: 2vw; padding-bottom: 2vw; width:40%">
+                      Transaction Type:
+                      </th>
+                      <th style ="text-align: left; padding-bottom: 2vw; width:40%">
+                      <ui:inputSelect 
+                          aura:id="SRMInfoForm_TranType"
+                          value="{!v.ITF_Type__c}"
+                          required="true"
+                          change = "{!c.updateTransactionType}">
+                        <aura:if isTrue="{!and(v.ITF_Type__c != null, v.ITF_Type__c != '')}">
+                          <ui:inputSelectOption text="{!v.ITF_Type__c}"  label="{!v.ITF_Type__c}"/>   
+                        </aura:if>
+
+                        <!-- <ui:inputSelectOption text=""  label="N/A"  /> -->
+
+                        <aura:if isTrue="{!or(v.controllingTransactionTypePickList == 0, v.controllingTransactionTypePickList == 1)}">
+                          <ui:inputSelectOption text="Transfer to Customer"  label="Transfer to Customer"  />
+                          <ui:inputSelectOption text="External Transfer (Customer to Customer)"  label="Customer to Customer"  /> 
+                          <ui:inputSelectOption text="Evaluation"  label="Evaluation"  />                         
+                        </aura:if>
+
+                        <aura:if isTrue="{!or(v.controllingTransactionTypePickList == 0, v.controllingTransactionTypePickList == 2)}">
+                          <ui:inputSelectOption text="Internal Transfer (AM/TDS to AM/TDS)"  label="AM/TDS to AM/TDS"  />
+                          <ui:inputSelectOption text="Demo"  label="Demo"  />                          
+                        </aura:if>
+
+                      </ui:inputSelect>
+                      </th>
+                      <th style ="text-align: left; padding-bottom: 2vw; width:20%"/>
+                  </tr>
+              </table>
+
+              <!-- Quick note for empty ITF Transaction Type -->
+              <aura:if isTrue="{!v.ITF_Type__c==''}">
+                  <div style ="font-size: 75%; text-align: center; width:100%; padding-left: 2vw">
+                    <lightning:button label="Transfer to Customer" 
+                              class="slds-button2"
+                              variant="brand"
+                              onclick="{!c.TransfertoCustomerButton}"/> <br/><br/>
+                    <lightning:button label="External Transfer (Customer to Customer)" 
+                              class="slds-button2"
+                              variant="brand"
+                              onclick="{!c.ExternalTransferButton}"/><br/><br/>
+                    <lightning:button label="Internal Transfer (AM/TDS to AM/TDS)" 
+                              class="slds-button2"
+                              variant="brand"
+                              onclick="{!c.InternalTransferButton}"/><br/><br/>
+                    <lightning:button label="Demo" 
+                              class="slds-button2"
+                              variant="brand"
+                              onclick="{!c.DemoButton}"/><br/> <br/> 
+                    <lightning:button label="Evaluation" 
+                              class="slds-button2"
+                              variant="brand"
+                              onclick="{!c.evaluationButton}"/><br/>  <br/>   
+                  </div>
+              </aura:if>
+
+              <!-- Input Fields for Transfer to customer -->
+              <aura:if isTrue="{!or(v.ITF_Type__c=='Transfer to Customer',v.ITF_Type__c=='Evaluation')}">
+                  <b> Transfer to Customer</b><br/>
+                  <div style="padding: 2vw; border-style: dotted">
+                    <table style = "table-layout:fixed;">
+                    <tr>
+                      <td class="leftRequire" style="width: 35%" >
+                        <span style="color:red">*</span> Customer
+                      </td>
+                      <td class="right" style="width: 40%; overflow: hidden; ">
+                      <ui:inputText
+                        aura:id="SearchNameTextBox"
+                        keyup="{!c.SearchButton}" updateOn="keyup"            
+                        value="{!v.SearchCustomerToName}">
+                      </ui:inputText>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                      </td>
+                      <td>
+                      <aura:if isTrue="{!v.showSearchCustomerTO}">
+                        <table style="border-style: ridge; padding:0px">
+                        <aura:iteration items="{!v.tempAccounts}" var="Account" indexVar="index">
+                          <tr style = "width: 100%; border-collapse: collapse; padding:0px; border: 1px solid">
+                            <lightning:button label="{!Account.IQMS_Customer_Number__c+ '-' + Account.Name }"
+                            name="{!index}"
+                            class="slds-button59"
+                            variant="brand"
+                            onclick="{!c.SelectButton}"/>
+                          </tr>
+                        </aura:iteration>
+                        </table>
+                      </aura:if>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="left">
+                      Customer Bill Only PO#
+                      </td>
+                      <td class="right" style="width: 65%">
+                      <ui:inputText
+                      value="{!v.ITForm.Bill_Only_PO__c}"/>
+                      </td>
+                    </tr>  
+                    </table>
+                  </div>
+              </aura:if>
+
+              <!-- Input Fields for Customer to Customer -->
+              <aura:if isTrue="{!v.ITF_Type__c=='External Transfer (Customer to Customer)'}">
+                    <b> Customer to customer</b>             
+                    <div style="padding: 2vw; border-style: dotted">
+                      <table style = "table-layout:fixed;">
+                        <tr>
+                          <td class="leftRequire" style="width: 35%" >
+                            <span style="color:red">*</span> From Customer
+                          </td>
+                          <td class="right" style="width: 40%; overflow: hidden; ">
+                          <ui:inputText
+                            aura:id="SearchNameTextBox2"
+                            keyup="{!c.SearchButton2}" updateOn="keyup"            
+                            value="{!v.SearchCustomerFromName}">
+                          </ui:inputText>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                          </td>
+                          <td>
+                          <aura:if isTrue="{!v.showSearchCustomerTO2}">
+                          <table style="border-style: ridge; padding:0px">
+                          <aura:iteration items="{!v.tempAccounts2}" var="Account" indexVar="index">
+                            <tr style = "width: 100%; border-collapse: collapse; padding:0px; border: 1px solid">
+                              <lightning:button 
+                                label="{!Account.IQMS_Customer_Number__c+ '-' + Account.Name }"
+                                name="{!index}"
+                                class="slds-button59"
+                                variant="brand"
+                                onclick="{!c.SelectButton2}"/>
+                            </tr>
+                          </aura:iteration>
+                          </table>
+                          </aura:if>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="left">
+                          Customer No Charge PO#
+                          </td>
+                          <td class="right" style="width: 65%">
+                          <ui:inputText
+                            value="{!v.ITForm.No_Charge_PO__c}"/>
+                          </td>
+                        </tr>  
+                        <tr>
+                          <td class="leftRequire" style="width: 35%" >
+                            <span style="color:red">*</span> To Customer
+                          </td>
+                          <td class="right" style="width: 40%; overflow: hidden; ">
+                          <ui:inputText
+                            aura:id="SearchNameTextBox1"
+                            keyup="{!c.SearchButton}" updateOn="keyup"            
+                            value="{!v.SearchCustomerToName}">
+                          </ui:inputText>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                          </td>
+                          <td>
+                          <aura:if isTrue="{!v.showSearchCustomerTO}">
+                          <table style="border-style: ridge; padding:0px">
+                          <aura:iteration items="{!v.tempAccounts}" var="Account" indexVar="index">
+                            <tr style = "width: 100%; border-collapse: collapse; padding:0px; border: 1px solid">
+                              <lightning:button 
+                                label="{!Account.IQMS_Customer_Number__c+ '-' + Account.Name }"
+                                name="{!index}"
+                                class="slds-button59"
+                                variant="brand"
+                                onclick="{!c.SelectButton}"/>
+                            </tr>
+                          </aura:iteration>
+                          </table>
+                          </aura:if>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="left">
+                          Customer Bill Only PO#
+                          </td>
+                          <td class="right" style="width: 65%">
+                          <ui:inputText
+                            value="{!v.ITForm.Bill_Only_PO__c}"/>
+                          </td>
+                        </tr>                        
+                      </table>
+                    </div>
+                  </aura:if>
+
+                  <!-- Input Fields for AM/REP to AM/REP -->
+                  <aura:if isTrue="{!or(v.ITF_Type__c=='Internal Transfer (AM/TDS to AM/TDS)',v.ITF_Type__c=='Demo')}">
+                    <b>AM/TDS to AM/TDS</b>
+                    <div style="padding: 1vw; border-style: dotted">
+                      <span style="color: black; font-weight: bold; text-align:left; width: 100%">
+                        <span style="color:red">*</span> From Rep/TDS:
+                      </span>
+                      <div style="padding-top: 1vw; background-color : #F2F2F2;">
+                        <table>
+<!--                         <tr>
+                          <td class="left" style="width: 25%">
+                            AM
+                          </td>
+                          <td class="right" style="width: 70%">
+                            <ui:inputSelect 
+                              aura:id="fromAM"  
+                              class="selectwide" 
+                              value="{!v.ITForm.SRM_AM__c}"
+                              disabled="false">
+                              <aura:iteration items="{!v.AMUsers}" var="user">
+                              <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                              </aura:iteration>
+                            </ui:inputSelect>
+                          </td>  
+                        </tr>
+                        <tr>
+                          <td class="left" style="width: 25%">
+                            TDS
+                          </td>
+                          <td class="right" style="width: 70%">
+                            <ui:inputSelect 
+                              aura:id="fromTDS"  
+                              class="selectwide" 
+                              value="{!v.ITForm.SRM_TDS__c}"
+                              disabled="false">
+                              <aura:iteration items="{!v.TDSUsers}" var="user">
+                              <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                              </aura:iteration>
+                            </ui:inputSelect>
+                          </td> 
+                        </tr>
+                        <tr>
+                          <td class="left" style="width: 25%">
+                            Other User
+                          </td>
+                          <td class="right" style="width: 70%">
+                            <ui:inputSelect 
+                              aura:id="fromOther"  
+                              class="selectwide" 
+                              value="{!v.ITForm.Other_Qualified_SRM_Employee__c}"
+                              disabled="false">
+                              <aura:iteration items="{!v.OtherUsers}" var="user">
+                              <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                              </aura:iteration>
+                            </ui:inputSelect>
+                          </td> 
+                        </tr>
+
+                        <tr>
+                          <td class="left" style="width: 25%">
+                            Other User
+                          </td>
+                          <td class="right" style="width: 70%">
+                            <ui:inputSelect 
+                              aura:id="fromOther"  
+                              class="selectwide" 
+                              value="{!v.ITForm.Other_Qualified_SRM_Employee__c}"
+                              disabled="false">
+                              <aura:iteration items="{!v.OtherUsers}" var="user">
+                              <ui:inputSelectOption aura:id="user" text="{!user.Id}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                              </aura:iteration>
+                            </ui:inputSelect>
+                          </td> 
+                        </tr>  -->
+
+                        <tr>
+                          <td class="left" style="width: 25%">
+                            Rep/TDS Users:
+                          </td>
+                          <td class="right" style="width: 70%">
+                            {!v.currentSelectedUsers}
+                          </td> 
+                        </tr>
+
+
+                        </table>
+                      </div>
+                      <div style="font-weight: bold; text-align:left; width: 100%; padding-top: 1vw">
+                        <span style="color: black;"> 
+                          <span style="color:red">*</span> 
+                          To Rep/TDS:
+                        </span>&nbsp;&nbsp;&nbsp;
+                        <span style="background-color: yellow">
+                          {!v.ITForm.To_Rep_TDS__c}
+                        </span>&nbsp;&nbsp;&nbsp;
+                        <aura:if isTrue="{!and(v.ITForm.To_Rep_TDS__c != null, v.ITForm.To_Rep_TDS__c != '')}">
+                          <lightning:button 
+                            label="Edit"
+                            variant="brand"
+                            onclick="{!c.turnonchangeToREPTDS}"/>
+                        </aura:if>
+                      </div>
+
+                      <aura:if isTrue="{!v.changeToREPTDS}">
+                        <div style="padding-top: 1vw; background-color : #F2F2F2;">
+                        <table>
+                          <tr>
+                          <td class="left" style="width: 25%">
+                          AM
+                          </td>
+                          <td class="right" style="width: 70%">
+                          <ui:inputSelect 
+                            aura:id="ToAM"  
+                            class="selectwide" 
+                            value="{!v.AMUser}"
+                            disabled="false">
+                            <aura:iteration items="{!v.AMUsers}" var="user">
+                            <ui:inputSelectOption aura:id="user" text="{!user.FirstName + ' ' + user.LastName}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                            </aura:iteration>
+                          </ui:inputSelect>
+                          </td>  
+                          </tr>
+                          <tr>
+                          <td class="left" style="width: 25%">
+                          TDS
+                          </td>
+                          <td class="right" style="width: 70%">
+                          <ui:inputSelect 
+                            aura:id="ToTDS"  
+                            class="selectwide" 
+                            value="{!v.TDSUser}"
+                            disabled="false">
+                            <aura:iteration items="{!v.TDSUsers}" var="user">
+                            <ui:inputSelectOption aura:id="user" text="{!user.FirstName + ' ' + user.LastName}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                            </aura:iteration>
+                          </ui:inputSelect>
+                          </td> 
+                          </tr>
+                          <tr>
+                          <td class="left" style="width: 25%">
+                          Other User
+                          </td>
+                          <td class="right" style="width: 70%">
+                          <ui:inputSelect 
+                            aura:id="ToOther"  
+                            class="selectwide" 
+                            value="{!v.OtherUser}"
+                            disabled="false">
+                            <aura:iteration items="{!v.OtherUsers}" var="user">
+                            <ui:inputSelectOption aura:id="user" text="{!user.FirstName + ' ' + user.LastName}" disabled="false" label="{!user.FirstName + ' ' + user.LastName}"/>
+                            </aura:iteration>
+                          </ui:inputSelect>
+                          </td> 
+                          </tr>
+                        </table>
+                        </div>
+                      </aura:if>
+                    </div>
+                  </aura:if>
+                  <table>
+                    <aura:if isTrue="{!lessthan(v.currentStatus,3)}">
+                    <tr>
+                      <td class="right2">
+                        <lightning:button label="Back" 
+                                class="slds-m-top--medium"
+                                variant="brand"
+                                onclick="{!c.backButton}"/>                              
+                      </td>
+                      <td>
+                      </td>
+                      <td class="right2">
+                        <lightning:button label="Next" 
+                                class="slds-m-top--medium"
+                                variant="brand"
+                                onclick="{!c.nextButton}"/>
+                      </td>
+                    </tr>
+                    <aura:set attribute="else">
+                      <tr>
+                      <td class="right2">                           
+                      </td>
+                      <td>
+                      </td>
+                      <td class="right2">
+                        <lightning:button label="Save" 
+                            class="slds-m-top--medium"
+                            variant="brand"
+                            onclick="{!c.nextButton}"/>
+                      </td>
+                      </tr>                
+                    </aura:set>
+                    </aura:if>
+            </table>
+        </form>
+    </div>
+</aura:component>

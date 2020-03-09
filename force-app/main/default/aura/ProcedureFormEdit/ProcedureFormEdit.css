@@ -1,0 +1,41 @@
+.THIS{
+     
+}
+.THIS .slds-section__title{
+    background-color: YellowGreen;
+    color: white
+}
+
+
+.THIS .slds-modal__header{
+    background-color: purple;
+    color: white
+}
+
+.THIS hr{
+            border-color: black;
+        	border-width: 1px;
+            border-style: solid;
+    		height: 2px;
+}
+.THIS h1{
+    font-weight: 900;
+    color: black;
+}
+
+.THIS .red {
+    color: red;
+}
+
+.THIS .redsmall {
+    color: red;
+    font-size: 12px;
+}
+
+.s.THIS {
+   background-color: yellow;
+}
+
+.selectwide.THIS {
+   width: 200px;
+}

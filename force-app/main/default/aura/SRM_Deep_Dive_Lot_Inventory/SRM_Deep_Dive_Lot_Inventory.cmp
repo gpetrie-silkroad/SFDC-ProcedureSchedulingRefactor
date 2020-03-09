@@ -1,0 +1,69 @@
+<aura:component controller = "SRM_DDLInventory_ServerController" implements="flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable">
+	<aura:attribute name="LocationID" type="String" default=" "/>
+	<aura:attribute name="LocationRepName" type="String" default=""/> <!-- read-only - only modify by Use Input component -->
+	<aura:attribute name="LotNo" type="String" default=" "/>
+	<aura:attribute name="TranReason" type="String" default=""/>
+	<aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+	<aura:attribute name="Viewmode" type="Integer" default="0"/>
+	<aura:attribute name="version" type="String" default="v1.7.8"/>
+			<!-- 0: directly access 
+			1: access via TSAudit - CS View
+			2: access via TSAudit - rep/tds view -->
+
+	<aura:attribute name="activeSections" type="List" default="['I','T','P']" />
+
+	<c:SRM_TSAudit_3_0Header
+		    version = "{!v.version}"
+		    title = "Deep Dive Lot Inventory"/>
+
+	<aura:if isTrue="{!v.Viewmode == 0}">
+		<div class = "header"> Sorting Fields</div>
+		<center>
+			<div style ="width: 95%; padding-bottom: 2vw">
+				<div style="padding: 1vw; background-color: white; text-align: left; border-style: ridge;">
+					<c:SRM_DDLInventory_UserInput
+						LocationID = "{!v.LocationID}"
+						LotNo = "{!v.LotNo}"
+						TranReason = "{!v.TranReason}"
+						LocationSearchName = "{!v.LocationRepName}"
+						UpdateTrigger = "{!v.UpdateTrigger}"/>
+				</div>
+			</div>
+		</center>
+	</aura:if>
+
+    <lightning:accordion
+        allowMultipleSectionsOpen="true"
+        activeSectionName="{! v.activeSections }">
+        <lightning:accordionSection name="T" label="Transactions Log">
+			<div style ="width: 98%; padding-bottom: 2vw">
+				<c:SRM_DDLInventory_TransactionsResult
+					LocationID = "{!v.LocationID}"
+					LotNo = "{!v.LotNo}"
+					TranReason = "{!v.TranReason}"
+					LocationRepName = "{!v.LocationRepName}"
+					Viewmode = "{!v.Viewmode}"
+					UpdateTrigger = "{!v.UpdateTrigger}"/>
+			</div>
+        </lightning:accordionSection>
+        <lightning:accordionSection name="I" label="Inventory Transfer Forms">
+			<div style ="width: 98%; padding-bottom: 2vw">
+				<c:SRM_DDLInventory_ITFResult
+					LocationRepName = "{!v.LocationRepName}"
+					LocationID = "{!v.LocationID}"
+					LotNo = "{!v.LotNo}"
+					UpdateTrigger = "{!v.UpdateTrigger}"
+					activeSections = "{!v.activeSections}"/>
+			</div>
+        </lightning:accordionSection>
+        <lightning:accordionSection name="P" label="Procedures Log">
+			<div style ="width: 98%; padding-bottom: 2vw">
+				<c:SRM_DDLInventory_ProcedureFormResult
+					LocationRepName = "{!v.LocationRepName}"
+					LocationID = "{!v.LocationID}"
+					LotNo = "{!v.LotNo}"
+					UpdateTrigger = "{!v.UpdateTrigger}"/>
+			</div>
+        </lightning:accordionSection>
+    </lightning:accordion>
+</aura:component>

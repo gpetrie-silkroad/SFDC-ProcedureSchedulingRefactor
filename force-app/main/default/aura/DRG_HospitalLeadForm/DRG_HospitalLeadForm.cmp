@@ -1,0 +1,2035 @@
+<aura:component controller="DRG_HospitalLeadForm_LightningController" 
+                implements="force:appHostable,flexipage:availableForAllPageTypes,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction" 
+                access="global" >    
+    
+   <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <aura:handler event="force:refreshView" action="{!c.doInit}" />
+
+    
+    <aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
+    <aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>
+    
+    <aura:attribute name="record" type="Object"/>
+    
+    <aura:attribute name="currentUser" type="User" />
+    
+    <aura:attribute name="device" type="String" />
+    
+    <aura:attribute name="pd1Hdr" type="String" />
+	<aura:attribute name="pd2Hdr" type="String" />
+	<aura:attribute name="pd3Hdr" type="String" />
+	<aura:attribute name="pd4Hdr" type="String" />    
+    
+    <aura:attribute name="drgFacilityData" type="DRG_Facility__c[]" />
+    <aura:attribute name="selectedDrgFacility" type="String" />
+    
+    <aura:attribute name="stateList" type="String[]" />
+    <aura:attribute name="selectedState" type="String" />
+    
+    <aura:attribute name="cityList" type="String[]" />
+    <aura:attribute name="selectedCity" type="String" />
+    
+    <aura:attribute name="selectedCity1" type="String" />
+    
+    <aura:attribute name="parentNetworkList" type="String[]" />
+    <aura:attribute name="selectedParentNetwork" type="String" />
+    
+    <aura:attribute name="drgPhysicianData" type="DRG_Physician__c[]" />
+    <aura:attribute name="selectedDrgPhysician" type="String" />
+    
+    <aura:attribute name="procedureCountSet" type="List" />
+    
+    <aura:attribute name="proceduresByCity" type="List" />
+    
+    <aura:attribute name="proceduresByNetwork" type="List" />
+    
+    <aura:attribute name="proceduresByFacility" type="List" />
+    <aura:attribute name="selectedFacility" type="String" />
+    <aura:attribute name="facilityRecordId" type="String"/>
+    <aura:attribute name="facilityRecord" type="DRG_Facility__c" />
+    
+    <aura:attribute name="newOpportunityId" type="String" />
+    <aura:attribute name="testValue" type="String" />
+    
+    <aura:attribute name="hideOpportunities" type="Boolean" default="true" />
+    <aura:attribute name="sortByProcedures" type="Boolean" default="true" />
+    <aura:attribute name="hideHistory" type="Boolean" default="true" />
+    <aura:attribute name="facilityLookup" type="Boolean" default="true" />
+    
+    <aura:attribute name="searchString" type="String" />
+    
+    <aura:attribute name="proceduresByPhysician" type="List" />
+    <!-- <aura:attribute name="proceduresByPhysician" type="DRG_Physician__c[]"/> -->
+    <aura:attribute name="selectedPhysician" type="String" />
+    <aura:attribute name="physicianRecordId" type="String" />
+    <aura:attribute name="physicianRecord" type="DRG_Physician__c" />
+    
+
+
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->  
+    <!-- LOCATE DRG LEAD FORM -->
+    <div aria-labelledby="newprocedureform">
+        <!-- BOXED AREA -->
+        <fieldset class="slds-box slds-theme--default slds-container--large">
+            <legend id="newprocedureform" class="slds-text-heading--large slds-p-vertical--large">
+                <br/><br/>
+              New Hospital Opportunity Form
+                
+            </legend>
+            <form class="slds-form--stacked"> 
+    
+    <center><ui:spinner aura:id="spinner"/></center>
+
+             
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%   DESKTOP    R E N D E R I N G 									       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+-->   
+<aura:if isTrue="{!v.device != 'DESKTOP'}" aura:id="renderNonIphone">
+         		<aura:set attribute="else">     
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% DESKTOP S E L E C T   S T A T E  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+    <center>
+        
+        <aura:if isTrue="{!v.facilityLookup}" >
+        	<lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.toggleFacilitySearch}"/>
+        	<aura:set attribute="else">
+            	<lightning:button label="Search" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleFacilitySearch}" />
+            </aura:set>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.sortByProcedures}" >
+	        <lightning:button label="Sort Alphabetically" class="slds-button_brand" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+            <aura:set attribute="else">
+        		<lightning:button label="Sort by Number of Procedures" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+            </aura:set>     
+        </aura:if>
+        
+        
+        <aura:if isTrue="{!v.hideHistory}" >
+        	<lightning:button label="Show History" class="slds-button_brand" variant="brand" onclick="{!c.toggleHideHistory}"  />
+        	<aura:set attribute="else">
+            	<lightning:button label="Hide History" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleHideHistory}"  />
+            </aura:set>
+        </aura:if>
+        
+        <lightning:button label="Reset Form" class=".slds-button_brand" variant="brand" onclick="{!c.refreshView}" />
+        
+        <br/>
+        <br/>
+    
+        
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%%%%%%%%%%%% S E A R C H     A R E A  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->         
+        
+        
+        <aura:if isTrue="{!v.facilityLookup}" >
+            <aura:set attribute="else">
+                <hr/>
+                
+                <center>
+                    <h1>
+                		<u>
+                            SEARCH BY FACILITY
+                        </u>
+                    </h1>
+                    <lightning:input type="text" value="{!v.searchString}" aura:id="searchStringId" name="searchStringId"  placeholder="Enter Search String Here" />
+                    <br/>
+                    <lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.partialSearch}"/>
+                    
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%%%%%%%%%%%% S E A R C H     A R E A  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->                              
+                </center>
+            </aura:set>
+        </aura:if>
+    </center>
+
+    <aura:if isTrue="{! if(v.facilityLookup == true, false, true) }" >
+        <aura:set attribute="else">                    
+                                        
+        <hr/>
+        <center>
+            <h1>
+                <u>
+                    <aura:text value="STATE" />
+                </u>
+            </h1>    
+        </center>
+                        
+        <table columns="2" width="100%">
+            <tr>
+                <td width="10%" class="superTable">
+                    <aura:text value="Select a State: " />
+                </td>
+                <td width="20%">
+                    <ui:inputSelect aura:id="selectedState" label="" value="{!v.selectedState}" change="{!c.updateState}"><!--click="{!c.updateState}"-->
+                        <aura:iteration items="{!v.stateList}" var="item">
+                            <ui:inputSelectOption text="{!item}" label="{!item}"/>
+                        </aura:iteration>
+                    </ui:inputSelect>
+                </td>
+                <td width="5%">
+                </td>	
+                <td width="75%">
+                    
+                </td>
+            </tr>
+        </table>
+        
+        </aura:set>
+    </aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerState"/>
+    </center>    
+    
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% DESKTOP S E L E C T   C I T Y  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+        <aura:if isTrue="{! if(v.facilityLookup == true, false, true) }" >
+            <aura:set attribute="else">                     
+                <hr/>
+                <center>
+                    <h1>
+                        <u>
+                            <aura:text value="CITY" />
+                        </u>
+                    </h1>    
+                </center>
+                                
+               <table colums="2" width="100%">
+                    <td width="20%">
+                    </td>
+                    <td>
+                        <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                    </td>
+               </table>            
+                                
+                <table colums="2" width="100%" class="stripe">
+                    <tr>
+                        <aura:if isTrue="true" aura:id="renderCityList">
+                            <aura:set attribute="else"> 
+                                <td width="200px" class="superTable">
+                                    <aura:text value=" Select a City" />
+                                </td>
+                                <td>
+                                    <table class="{!if(v.selectedCity != null,if(v.selectedCity != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                        <tr class="subtableheader" >
+                                            <th width="50px" class="alignLeft"></th>
+                                            <th width="150px" class="alignLeft">City</th>
+                                            <th width="100px" class="alignRight">Recent*<br/>Procedures</th>
+                                            <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                            <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                            
+                                            <aura:if isTrue="{!v.hideHistory}">
+                                                <aura:set attribute = "else">
+                                                    <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                                    <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                                    <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                                    <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                                </aura:set>
+                                            </aura:if>    
+                                        </tr>  
+                                       
+                                        <aura:iteration items="{!v.proceduresByCity}" var="pcs">
+                                            <tr width="100%" class="stripe">               
+                                                <td width="50px" class="alignLeft">
+                                                    <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.citySelect}">Select City</ui:inputCheckbox>
+                                                </td>
+                                                <td width="150px" class="alignLeft">
+                                                    <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.TotalProcedures}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CASPeriod4}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CEAPeriod4}"/>
+                                                </td>
+                                                
+                                                <aura:if isTrue="{!v.hideHistory}">
+                                                    <aura:set attribute = "else">
+                                                        <td width="100px" class="alignRight">
+                                                            <aura:text value="{!pcs.CASPeriod3}"/>
+                                                        </td>
+                                                        <td width="100px" class="alignRight">
+                                                            <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                        </td>
+                                                        <td width="100px" class="alignRight">
+                                                            <aura:text value="{!pcs.CASPeriod2}"/>
+                                                        </td>
+                                                        <td width="100px" class="alignRight">
+                                                            <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                        </td>
+                                                     </aura:set>
+                                                </aura:if>    
+                                            </tr>
+                                        </aura:iteration>                 
+                                    </table>
+                                </td>
+                            </aura:set>
+                        </aura:if>
+                    </tr>
+                    <br/>
+                </table>
+            
+                <br/>
+            </aura:set>
+        </aura:if>
+
+        <center>
+            <ui:spinner aura:id="spinnerCity"/>
+        </center>    
+    
+    
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% DESKTOP S E L E C T   N E T W O R K %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+	<aura:if isTrue="{! if(v.facilityLookup == true, false, true) }" >
+    	<aura:set attribute="else">                    
+        <hr/>
+        <center>
+            <h1>
+                <u>
+                    <aura:text value="NETWORK" />
+                </u>
+            </h1>    
+        </center>
+                        
+        <table colums="2" width="100%">
+            <td width="20%">
+            </td>
+            <td>
+                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+            </td>
+        </table>  
+        
+        <table columns="2" width="100%" class="stripe">
+            <tr>
+                <aura:if isTrue="false" aura:id="renderNetworkList">
+                    <aura:set attribute="else"> 
+                        <td width="200px" class="superTable">
+                            <aura:text value=" Select a Parent Network: " />
+                        </td>
+                        <td>
+                            <table class="{!if(v.selectedParentNetwork == null, 'subtable', 'subtableMedium')}" width="100%" >
+                                <tr class="subtableheader">
+                                    <th width="50px" class="alignLeft"></th>
+                                    <th width="150px" class="alignLeft">Network</th>
+                                    <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+                                    <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                    <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                    
+                                    <aura:if isTrue="{!v.hideHistory}">
+                                            <aura:set attribute = "else">
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                            </aura:set>
+                                    </aura:if> 
+                                </tr>  
+                                
+                                <aura:iteration items="{!v.proceduresByNetwork}" var="pcs">
+                                    <tr>               
+                                        <td width="50px" class="alignLeft">
+                                           <!-- <button id="{!pcs.EntityName}" onclick="{!}">Select Network </button> -->
+                                            <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.networkSelect}">Select Network</ui:inputCheckbox>
+                                        </td>
+                                        <td width="150px" class="alignLeft">
+                                            <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                        </td>
+                                        <td width="100px" class="alignRight">
+                                            <aura:text value="{!pcs.TotalProcedures}"/>
+                                        </td>
+                                        <td width="100px" class="alignRight">
+                                            <aura:text value="{!pcs.CASPeriod4}"/>
+                                        </td>
+                                        <td width="100px" class="alignRight">
+                                            <aura:text value="{!pcs.CEAPeriod4}"/>
+                                        </td>
+                                        
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                            <aura:set attribute = "else">
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CASPeriod3}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CASPeriod2}"/>
+                                                </td>
+                                                <td width="100px" class="alignRight">
+                                                    <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                </td>
+                                            </aura:set>
+                                        </aura:if> 
+                                    </tr>
+                                </aura:iteration>                 
+                            </table>
+                        </td>
+                    </aura:set>
+                </aura:if>
+            </tr> 
+            <br/>
+        </table>
+        <br/>
+    </aura:set>
+</aura:if> 
+
+<center>
+    <ui:spinner aura:id="spinnerNetwork"/>
+</center>
+   
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% DESKTOP S E L E C T   F A C I L I T Y %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<hr/>
+    <center>
+    	<h1>
+    		<u>
+    			<aura:text value="FACILITY" />
+    		</u>
+    	</h1>    
+    </center>
+    
+   <table colums="2" width="100%">
+   		<td width="20%">
+    	</td>
+        <td>
+        	<aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+       	</td>
+   	</table>                 
+   
+                    
+     <table columns="2" width="100" class="stripe">
+        <tr>
+            <aura:if isTrue="false" aura:id="renderFacilityList">
+         		<aura:set attribute="else"> 
+                    <td width="20%" class="superTable">
+                        <aura:text value=" Select a Facility: " />
+                    </td>
+                    <td>
+                        <table class="{!if(v.selectedFacility == null, 'subtable', 'subtableMedium')}" >
+                            <tr class="subtableheader">
+                                <th width="50px" class="alignLeft"></th>
+                                <th width="100px" class="alignLeft">Facility</th>
+                                <th width="50px" class="alignRight">VQI<br/>Memb</th>
+                                <th width="50px" class="alignRight">CAS<br/>Mod</th>
+                                <th width="100px" class="alignRight">Status</th>
+                                <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                
+                                <aura:if isTrue="{!v.hideHistory}">
+                                    <aura:set attribute = "else">
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                    </aura:set>
+                                </aura:if> 
+                            </tr>  
+                            
+                            <aura:iteration items="{!v.proceduresByFacility}" var="pcs">
+                                <tr>               
+                                    <td width="50px" class="alignLeft">
+                                      
+                                        <ui:inputCheckbox name="{!pcs.EntityName}" text="{!pcs.RecordId}" value="{!pcs.CkBox}" click="{!c.facilitySelect}">Select Facility</ui:inputCheckbox>
+                                    </td>
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                    </td>
+                                    	
+                                    <td width="50px" class="alignRight">
+                                        <ui:inputCheckbox value="{!pcs.VQI}" disabled="true"/>
+                                    </td>
+                                    <td width="50px" class="alignRight">
+                                        <ui:inputCheckbox value="{!pcs.CAS}" disabled="true"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.LeadStatus}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.TotalProcedures}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CASPeriod4}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CEAPeriod4}"/>
+                                    </td>
+                                    
+                                    <aura:if isTrue="{!v.hideHistory}">
+                                    	<aura:set attribute = "else">
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod2}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod2}"/>
+                                            </td>
+                                        </aura:set>
+                                	</aura:if> 
+                                </tr>
+                            </aura:iteration>                 
+                        </table>
+                    </td>
+                </aura:set>
+            </aura:if>
+        </tr>
+    </table>
+         <br/>
+         <aura:if isTrue="{!if(v.facilityRecord.Name == null, true, false)}" aura:id="renderFacilityRecord">
+         	<aura:set attribute="else">
+        <table>    
+                <tr>
+                    <td width="20%">
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                                <td width="10%">
+                                    <aura:text value="Facility Name:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Name}" />
+                                </td>
+                            </tr>
+                             <tr>
+                                <td width="10%">
+                                    <aura:text value="Provider Id:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Medicare_Provider_ID__c}" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="10%">
+                                    <aura:text value="Facility Address:  " />
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Street_Address__c}" /><br/>
+                                    <aura:text value="{!v.facilityRecord.City__c + ', ' + v.facilityRecord.State_Provence__c + ' ' + v.facilityRecord.Postal_Code__c}" />
+                                </td>
+                            </tr>
+                            <aura:if isTrue="{!if(v.facilityRecord.Lead_Status__c == 'DRG', false, true)}" aura:id="renderFacilityButton">
+         						<aura:set attribute="else">
+                            
+                                    <tr>
+                                        <td width="10%" />
+                                        <td width="5%" />
+                                        <td>
+                                            <lightning:button label="Convert to Opportunity" class=".slds-button_brand" variant="brand" onclick="{!c.convertFacilityLead}" />
+                                        </td>
+                                    </tr>
+                                </aura:set>
+                            </aura:if>    
+                                
+                        </table>
+                    </td>           
+        		</tr>
+        		<br/>
+            </table>
+             </aura:set>
+         </aura:if>
+
+        <center>
+            <ui:spinner aura:id="spinnerFacility"/>
+        </center>
+    
+   
+		<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+		<!-- %%%%%%%%%%%%%%% DESKTOP S E L E C T   P H Y S I C I A N %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+		<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                    
+	<hr/>
+    <center>
+    	<h1>
+    		<u>
+    			<aura:text value="PHYSICIAN" />
+    		</u>
+    	</h1>    
+    </center>
+                    
+    <table colums="2" width="100%">
+   		<td width="20%">
+    	</td>
+        <td>
+        	<aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+       	</td>
+   	</table>                   
+                    
+    <table columns="2" width="75%" class="stripe">
+        <tr>
+            <aura:if isTrue="false" aura:id="renderPhysicianList">
+         		<aura:set attribute="else"> 
+                    <td width="20%" class="superTable" >
+                        <aura:text value=" Procedures by Physician: &nbsp; &nbsp;" />
+                    </td>
+                    <td>
+                        <table class="{!if(v.selectedPhysician == null, 'subtable', 'subtableMedium')}" >
+                            <tr class="subtableheader">
+								<th width="100px" class="alignLeft">Physician</th>
+                                <th width="100px" class="alignLeft">Specialty</th>
+                                <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                
+                                <aura:if isTrue="{!v.hideHistory}">
+                                    <aura:set attribute = "else">
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                    </aura:set>
+                                </aura:if> 
+                                
+                            </tr>  
+                            
+                            <aura:iteration items="{!v.proceduresByPhysician}" var="pcs">
+                                <tr>               
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                    </td>
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text value="{!pcs.Specialty}" />
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.TotalProcedures}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CASPeriod4}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CEAPeriod4}"/>
+                                    </td>
+                                    
+                                    <aura:if isTrue="{!v.hideHistory}">
+                                        <aura:set attribute = "else">
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod2}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod2}"/>
+                                            </td>
+                                        </aura:set>
+                                	</aura:if> 
+                                </tr>
+                            </aura:iteration>                 
+                        </table>
+                    </td>
+                </aura:set>
+            </aura:if>
+        </tr>
+        </table>
+
+        <center>
+            <ui:spinner aura:id="spinnerPhysician"/>
+        </center>
+                    
+    </aura:set>
+    </aura:if>
+
+
+
+
+
+
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%   TABLET    R E N D E R I N G 									   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+-->   
+<aura:if isTrue="{!v.device != 'TABLET'}" aura:id="renderNonIphone">
+	<aura:set attribute="else">     
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% Tablet S E L E C T   S T A T E  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+    <center>
+        
+        <aura:if isTrue="{!v.facilityLookup}" >
+        	<lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.toggleFacilitySearch}"/>
+        	<aura:set attribute="else">
+            	<lightning:button label="Search" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleFacilitySearch}" />
+            </aura:set>
+        </aura:if>
+        
+        <aura:if isTrue="{!v.sortByProcedures}" >
+	        <lightning:button label="Sort Alphabetically" class="slds-button_brand" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+            <aura:set attribute="else">
+        		<lightning:button label="Sort by Number of Procedures" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+            </aura:set>     
+        </aura:if>
+        
+        <aura:if isTrue="{!v.hideHistory}" >
+        	<lightning:button label="Show History" class="slds-button_brand" variant="brand" onclick="{!c.toggleHideHistory}"  />
+        	<aura:set attribute="else">
+            	<lightning:button label="Hide History" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleHideHistory}"  />
+            </aura:set>
+        </aura:if>
+        
+        <lightning:button label="Reset Form" class=".slds-button_brand" variant="brand" onclick="{!c.refreshView}" />
+                  
+        
+        <aura:if isTrue="{!v.facilityLookup}" >
+            <aura:set attribute="else">
+                <hr/>
+                
+                <center>
+                    <h1>
+                		<u>
+                            SEARCH BY FACILITY
+                        </u>
+                    </h1>
+                    <lightning:input type="text" value="{!v.searchString}" aura:id="searchStringId" name="searchStringId"  placeholder="Enter Search String Here" />
+                    <br/>
+                    <lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.partialSearch}"/>
+                    
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%%%%%%%%%%%% S E A R C H     A R E A  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->                              
+                </center>
+            </aura:set>
+        </aura:if>
+    </center>                    
+                    
+                    
+                    
+                    
+                    
+    <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >                    
+        <aura:set attribute="else">                    
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+                        <aura:text value="STATE" />
+                    </u>
+                </h1>    
+            </center>
+                            
+            <table columns="2" width="100%">
+                <tr>
+                    <td width="10%" class="superTable">
+                        <aura:text value="Select a State: " />
+                    </td>
+                    <td width="20%">
+                        <ui:inputSelect aura:id="selectedState" label="" value="{!v.selectedState}" change="{!c.updateState}" click="{!c.updateState}">
+                            <aura:iteration items="{!v.stateList}" var="item">
+                                <ui:inputSelectOption text="{!item}" label="{!item}"/>
+                            </aura:iteration>
+                        </ui:inputSelect>
+                    </td>
+                    <td width="5%">
+                    </td>	
+                    <td width="75%">
+                        
+                    </td>
+                </tr>
+            </table>
+        </aura:set>
+    </aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerState"/>
+    </center>
+
+    
+    
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% Tablet S E L E C T   C I T Y  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+    <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >                    
+        <aura:set attribute="else">         
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+                        <aura:text value="CITY" />
+                    </u>
+                </h1>    
+            </center>
+            <div class="superTable">
+                <table columns="2" width="100%">
+                    <tr>
+                        <td width="50%">
+                            <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                        </td>
+                        <td width="50%" class="alignRight">
+                            <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+                            
+            
+                            
+            <table colums="1" width="100%" class="stripe">
+                <tr>
+                    <aura:if isTrue="true" aura:id="renderCityList">
+                        <aura:set attribute="else"> 
+                            <td>
+                                <table class="{!if(v.selectedCity != null,if(v.selectedCity != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                    <tr class="subtableheader" >
+                                        <th width="50px" class="alignLeft"></th>
+                                        <th width="150px" class="alignLeft">City</th>
+                                        
+                                        <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+                                        <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                        <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                            <aura:set attribute = "else">
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                            </aura:set>
+                                        </aura:if>
+                                    </tr>  
+                                   
+                                    <aura:iteration items="{!v.proceduresByCity}" var="pcs">
+                                        <tr width="100%" class="stripe">               
+                                            <td width="50px" class="alignLeft">
+                                               <!-- <button id="{!pcs.EntityName}" onclick="{!c.citySelect}">Select City </button> -->
+                                                <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.citySelect}">Select City</ui:inputCheckbox>
+                                                
+                                            </td>
+                                            <td width="150px" class="alignLeft">
+                                                <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.TotalProcedures}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4}"/>
+                                            </td>
+                                            <aura:if isTrue="{!v.hideHistory}">
+                                                <aura:set attribute = "else">
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                </aura:set>
+                                            </aura:if>
+                                        </tr>
+                                    </aura:iteration>                 
+                                </table>
+                            </td>
+                        </aura:set>
+                    </aura:if>
+                </tr>
+                <br/>
+            </table>
+        
+            <br/>
+        </aura:set>
+    </aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerCity"/>
+    </center>
+
+    
+    
+    
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% Tablet S E L E C T   N E T W O R K %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+	                   
+   <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >                    
+        <aura:set attribute="else">                     
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+                        <aura:text value="NETWORK" />
+                    </u>
+                </h1>    
+            </center> 
+          
+            <div  class="superTable">      
+                <div class="superTable">
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                                <aura:text value=" Select a Parent Network: " />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <table columns="1" width="100%" class="stripe">
+                <tr>
+                    <aura:if isTrue="false" aura:id="renderNetworkList">
+                        <aura:set attribute="else"> 
+                            
+                            <td>
+                                <table class="{!if(v.selectedParentNetwork == null, 'subtable', 'subtableMedium')}" width="100%" >
+                                    <tr class="subtableheader">
+                                        <th width="50px" class="alignLeft"></th>
+                                        <th width="150px" class="alignLeft">Network</th>
+                                        
+                                        <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+                                        <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                        <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                            <aura:set attribute = "else">
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                                <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>>
+                                            </aura:set>
+                                        </aura:if>
+                                    </tr>  
+                                    
+                                    <aura:iteration items="{!v.proceduresByNetwork}" var="pcs">
+                                        <tr>               
+                                            <td width="50px" class="alignLeft">
+                                               <!-- <button id="{!pcs.EntityName}" onclick="{!}">Select Network </button> -->
+                                                <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.networkSelect}">Select Network</ui:inputCheckbox>
+                                            </td>
+                                            <td width="150px" class="alignLeft">
+                                                <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.TotalProcedures}"/>
+                                            </td>
+        
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4}"/>
+                                            </td>
+                                            <aura:if isTrue="{!v.hideHistory}">
+                                                <aura:set attribute = "else">
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2}"/>
+                                                    </td>
+                                                    <td width="100px" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                </aura:set>
+                                            </aura:if>
+                                        </tr>
+                                    </aura:iteration>                 
+                                </table>
+                            </td>
+                        </aura:set>
+                    </aura:if>
+                </tr> 
+                <br/>
+            </table>
+            <br/>
+       </aura:set>
+   </aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerNetwork"/>
+    </center>
+    
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<!-- %%%%%%%%%%%%%%% Tablet S E L E C T   F A C I L I T Y %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+	<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+	<hr/>
+    <center>
+    	<h1>
+    		<u>
+    			<aura:text value="FACILITY" />
+    		</u>
+    	</h1>    
+    </center> 
+               
+    <div  class="superTable">     
+        <table columns="2" width="100%">
+            <tr>
+                <td width="50%">
+                    <aura:text value=" Select a Facility: " />
+                </td>
+                <td width="50%" class="alignRight">
+                    <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                </td>
+            </tr>
+        </table>        
+    </div>
+     <table columns="1" width="100" class="stripe">
+        <tr>
+            <aura:if isTrue="false" aura:id="renderFacilityList">
+         		<aura:set attribute="else"> 
+                  
+                    <td>
+                        <table class="{!if(v.selectedFacility == null, 'subtable', 'subtableMedium')}" >
+                            <tr class="subtableheader">
+                                <th width="50px" class="alignLeft"></th>
+                                <th width="100px" class="alignLeft">Facility</th>
+                                <th width="50px" class="alignLeft">V<br/>Q<br/>I</th> 
+                                <th width="50px" class="alignLeft">C<br/>A<br/>S</th>
+                                <th width="100px" class="alignRight">Status</th>
+                                <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+
+                                <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                <aura:if isTrue="{!v.hideHistory}">
+                                    <aura:set attribute = "else">
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                    </aura:set>
+                                </aura:if>
+                            </tr>  
+                            
+                            <aura:iteration items="{!v.proceduresByFacility}" var="pcs">
+                                <tr>               
+                                    <td width="50px" class="alignLeft">
+                                      
+                                        <ui:inputCheckbox name="{!pcs.EntityName}" text="{!pcs.RecordId}" value="{!pcs.CkBox}" click="{!c.facilitySelect}">Select Network</ui:inputCheckbox>
+                                    </td>
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                    </td>
+                                    	
+                                    <td width="50px" class="alignLeft" align="right">
+                                        <ui:inputCheckbox value="{!pcs.VQI}" disabled="true"/>
+                                    </td>
+                                    <td width="50px" class="alignLeft" align="right">
+                                        <ui:inputCheckbox value="{!pcs.CAS}" disabled="true"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.LeadStatus}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.TotalProcedures}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CASPerod4}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CEAPeriod4}"/>
+                                    </td>
+                                    <aura:if isTrue="{!v.hideHistory}">
+                                        <aura:set attribute = "else">
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod2}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod2}"/>
+                                            </td>
+                                        </aura:set>
+                                    </aura:if>
+                                </tr>
+                            </aura:iteration>                 
+                        </table>
+                    </td>
+                </aura:set>
+            </aura:if>
+        </tr>
+    </table>
+         <br/>
+         <aura:if isTrue="{!if(v.facilityRecord.Name == null, true, false)}" aura:id="renderFacilityRecord">
+         	<aura:set attribute="else">
+        <table>    
+                <tr>
+                    <td width="10%">
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                                <td width="40%">
+                                    <aura:text value="Facility Name:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="65%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Name}" />
+                                </td>
+                            </tr>
+                             <tr>
+                                <td width="40%">
+                                    <aura:text value="Provider Id:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="65%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Medicare_Provider_ID__c}" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="40%">
+                                    <aura:text value="Facility Address:  " />
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="65%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Street_Address__c}" /><br/>
+                                    <aura:text value="{!v.facilityRecord.City__c + ', ' + v.facilityRecord.State_Provence__c + ' ' + v.facilityRecord.Postal_Code__c}" />
+                                </td>
+                            </tr>
+                            <aura:if isTrue="{!if(v.facilityRecord.Lead_Status__c == 'DRG', false, true)}" aura:id="renderFacilityButton">
+         						<aura:set attribute="else">
+                            
+                                    <tr>
+                                        <td width="10%" />
+                                        <td width="5%" />
+                                        <td>
+                                            <lightning:button label="Convert to Opportunity" class=".slds-button_brand" variant="brand" onclick="{!c.convertFacilityLead}" />
+                                        </td>
+                                    </tr>
+                                </aura:set>
+                            </aura:if>    
+                                
+                        </table>
+                    </td>           
+        		</tr>
+        		<br/>
+            </table>
+             </aura:set>
+         </aura:if>
+
+        <center>
+            <ui:spinner aura:id="spinnerFacility"/>
+        </center>
+    
+    
+		<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                 
+		<!-- %%%%%%%%%%%%%%% TABLET S E L E C T   P H Y S I C I A N %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% --> 
+		<!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->                    
+	<hr/>
+    <center>
+    	<h1>
+    		<u>
+    			<aura:text value="PHYSICIAN" />
+    		</u>
+    	</h1>    
+    </center>
+
+    <div  class="superTable">       
+       <table columns="2" width="100%">
+            <tr>
+                <td width="50%">
+                    <aura:text value=" Procedures by Physician: " />
+                </td>
+                <td width="50%" class="alignRight">
+                    <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                </td>
+            </tr>
+        </table>	
+    </div>
+    <table columns="1" width="75%" class="stripe">
+        <tr>
+            <aura:if isTrue="false" aura:id="renderPhysicianList">
+         		<aura:set attribute="else"> 
+                    <td>
+                        <table class="{!if(v.selectedPhysician == null, 'subtable', 'subtableMedium')}" >
+                            <tr class="subtableheader">
+                                <th width="100px" class="alignLeft">Physician</th>
+                                <th width="100px" class="alignLeft">Specialty</th>
+                                <th width="100px" class="alignRight">Total Recent*<br/>Procedures</th>
+
+                                <th width="100px" class="alignRight">Recent*<br/>CAS</th>
+                                <th width="100px" class="alignRight">Recent*<br/>CEA</th>
+                                <aura:if isTrue="{!v.hideHistory}">
+                                    <aura:set attribute = "else">
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd3Hdr}"/><br/>CEA</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CAS</th>
+                                        <th width="100px" class="alignRight"><aura:text value="{!v.pd2Hdr}"/><br/>CEA</th>
+                                    </aura:set>
+                                </aura:if>
+                            </tr>  
+                            
+                            <aura:iteration items="{!v.proceduresByPhysician}" var="pcs">
+                                <tr>               
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text aura:id="eName1" value="{!pcs.EntityName}"/>
+                                    </td>
+                                    <td width="100px" class="alignLeft">
+                                        <aura:text value="{!pcs.Specialty}" />
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.TotalProcedures}"/>
+                                    </td>
+
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CASPeriod4}"/>
+                                    </td>
+                                    <td width="100px" class="alignRight">
+                                        <aura:text value="{!pcs.CEAPeriod4}"/>
+                                    </td>
+                                    <aura:if isTrue="{!v.hideHistory}">
+                                        <aura:set attribute = "else">
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod3}"/>
+                                            </td>
+                                            <td width="100px" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod3}"/>
+                                            </td>
+                                        </aura:set>
+                                    </aura:if>
+                                </tr>
+                            </aura:iteration>                 
+                        </table>
+                    </td>
+                </aura:set>
+            </aura:if>
+        </tr>
+        </table>
+
+        <center>
+            <ui:spinner aura:id="spinnerPhysician"/>
+        </center>
+    
+    </aura:set>
+    </aura:if>
+
+                
+                
+                
+                
+                
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%   i P h o n e     R E N D E R I N G 									   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+-->               
+                
+                
+               
+    <aura:if isTrue="{!v.device != 'PHONE'}" aura:id="renderNonIphone">
+    	<aura:set attribute="else">
+            <br/>
+            <center>
+                
+                <aura:if isTrue="{!v.facilityLookup}" >
+                    <lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.toggleFacilitySearch}"/>
+                    <aura:set attribute="else">
+                        <lightning:button label="Search" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleFacilitySearch}" />
+                    </aura:set>
+                </aura:if>
+                <br/>
+                <br/>
+                
+                <aura:if isTrue="{!v.sortByProcedures}" >
+                    <lightning:button label="Sort Alphabetically" class="slds-button_brand" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+                    <aura:set attribute="else">
+                        <lightning:button label="Sort by Number of Procedures" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleSortByProcedures}" />
+                    </aura:set>     
+                </aura:if>
+                <br/>
+                <br/>
+                                       
+                <aura:if isTrue="{!v.hideHistory}" >
+                    <lightning:button label="Show History" class="slds-button_brand" variant="brand" onclick="{!c.toggleHideHistory}"  />
+                    <aura:set attribute="else">
+                        <lightning:button label="Hide History" class="slds-button slds-button_destructive" variant="brand" onclick="{!c.toggleHideHistory}"  />
+                    </aura:set>
+                </aura:if>
+                <br/>
+                <br/>
+
+                
+                <lightning:button label="Reset Form" class=".slds-button_brand" variant="brand" onclick="{!c.refreshView}" />
+                <br/>
+                <br/>
+                
+                <aura:if isTrue="{!v.facilityLookup}" >
+                    <aura:set attribute="else">
+                        <hr/>
+                        
+                
+                <center>
+                    <h1>
+                        <u>
+                            SEARCH BY FACILITY
+                        </u>
+                    </h1>
+                    <lightning:input type="text" value="{!v.searchString}" aura:id="searchStringId" name="searchStringId"  placeholder="Enter Search String Here" />
+                    <br/>
+                    <lightning:button label="Search" class="slds-button_brand" variant="brand" onclick="{!c.partialSearch}"/>
+                    
+<!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                    
+%%%%%%%%%%%% S E A R C H     A R E A  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->                              
+           		</center>
+           </aura:set>
+        </aura:if>
+    </center> 
+            
+            
+    <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >
+        <aura:set attribute="else">            
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+            			<aura:text value="STATE" />
+                    </u>
+                 </h1>    
+            </center>
+  
+           <aura:text value="Select a State: " />
+
+            <table columns="2" width="100%">
+                <tr>
+                    <td width="100%">
+                        <ui:inputSelect aura:id="selectedState" label="" value="{!v.selectedState}" change="{!c.updateState}" click="{!c.updateState}">
+                            <aura:iteration items="{!v.stateList}" var="item">
+                                <ui:inputSelectOption text="{!item}" label="{!item}"/>
+                            </aura:iteration>
+                        </ui:inputSelect>
+                    </td>
+                </tr>
+            </table>
+    		<br/>
+        </aura:set>
+    </aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerState"/>
+    </center>
+            
+            <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%   i P h o n e     S E L E C T   C I T Y 						   	       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+			
+    <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >
+        <aura:set attribute="else">                        
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+            			<aura:text value="CITY" />
+                    </u>
+                 </h1>    
+            </center>
+            
+            <aura:if isTrue="{!v.selectedCity != null}" aura:id="renderCityList">
+         		<aura:set attribute="else"> 
+                 	<table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                            	<aura:text value=" Select a City:" />
+                    		</td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>
+
+                
+                   <table colums="1" width="200px" class="stripe">
+                    <tr>
+                        <td>
+                            <table class="{!if(v.selectedCity != null,if(v.selectedCity != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                <tr class="subtableheader">
+                                    <th width="5%" class="alignLeft"></th>
+                                    <th width="15%" class="alignLeft">City</th>
+                                    <th width="10%" class="alignRight">Total Recent*<br/>Procedures</th>
+                                    
+                                </tr>  
+                               
+                                <aura:iteration items="{!v.proceduresByCity}" var="pcs">
+                                    <tr width="100%">               
+                                        <td width="5%" class="alignLeft">
+                                           <!-- <button id="{!pcs.EntityName}" onclick="{!c.citySelect}">Select City </button> -->
+                                            <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.citySelect}">Select City</ui:inputCheckbox>
+                                            
+                                        </td>
+                                        <td width="15%" class="alignLeft">
+                                            <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                        </td>
+                                        <td width="10%" class="alignRight">
+                                            <aura:text value="{!pcs.TotalProcedures}"/>
+                                        </td>
+                              
+                                    </tr>
+                                </aura:iteration>                 
+                            </table>
+                        </td>
+                       </tr>
+                    </table>
+                </aura:set>
+            </aura:if>
+      
+        	<aura:if isTrue="{!v.selectedCity == null}" aura:id="renderCitySelected">
+            	<aura:set attribute="else">
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                        		<aura:text value=" Selected City: " />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>
+						<table>
+                    		<tr>
+                    			<td class="superTableRed">
+                        			<aura:text value="{!v.selectedCity + ', ' + v.selectedState}" />
+                    			</td>
+                			</tr>
+ 							<tr>
+                                <table columns="4">
+                                    <tr class="subtableheader">
+                                        <th width="5%" class="alignLeft"></th>
+                                        <th width="15%" class="alignLeft">Period</th>
+                                        <th width="28%" class="alignRight">Total</th>
+                                        <th width="26%" class="alignRight">CAS</th>
+                                        <th width="26%" class="alignRight">CEA</th>
+                                    </tr>
+                                    <aura:iteration items="{!v.proceduresByCity}" var="pcs">
+                                        <tr>
+                                            <td width="5%" />
+                                            <td width="15%" class="alignLeft">
+                                                <aura:text value="Recent*:" />
+                                            </td>
+                                            <td width="28%" class="alignRight">
+                                                <aura:text value="{!pcs.TotalProcedures}" />
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4}"/>
+                                            </td>
+                                        </tr>
+                                        
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                        	<aura:set attribute = "else">
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd3Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3 + pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd2Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2 + pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                </tr>
+                                            </aura:set>
+                                        </aura:if>
+                                    </aura:iteration>     
+                                </table>
+                			</tr>
+                		</table>
+            	</aura:set>
+        	</aura:if>
+        </aura:set>
+	</aura:if>
+
+    <center>
+        <ui:spinner aura:id="spinnerCity"/>
+    </center>
+            <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%   i P h o n e     S E L E C T   N E T W O R K 						       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+            
+            
+    <aura:if isTrue="{!if(v.facilityLookup == true, false, true)}" >
+        <aura:set attribute="else">              
+            <br/><br/>
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+            			<aura:text value="NETWORK" />
+                    </u>
+                 </h1>    
+            </center>
+            <aura:if isTrue="{!v.selectedParentNetwork != null}" aura:id="renderNetworkList">
+         		<aura:set attribute="else">
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                                <aura:text value=" Select a Network:" />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>
+                 
+                   <table colums="1" width="200px" class="stripe">
+                    <tr>
+                        <td>
+                            <table class="{!if(v.selectedParentNetwork != null,if(v.selectedParentNetwork != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                <tr class="subtableheader">
+                                    <th width="5%" class="alignLeft"></th>
+                                    <th width="15%" class="alignLeft">Network</th>
+                                    <th width="10%" class="alignRight">Total Recent*<br/>Procedures</th>
+                                    
+                                </tr>  
+                               
+                                <aura:iteration items="{!v.proceduresByNetwork}" var="pcs">
+                                    <tr width="100%">               
+                                        <td width="5%" class="alignLeft">
+                                           
+                                            <ui:inputCheckbox name="{!pcs.EntityName}" value="{!pcs.CkBox}" click="{!c.networkSelect}">Select City</ui:inputCheckbox>
+                                            
+                                        </td>
+                                        <td width="15%" class="alignLeft">
+                                            <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                        </td>
+                                        <td width="10%" class="alignRight">
+                                            <aura:text value="{!pcs.TotalProcedures}"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>                 
+                            </table>
+                        </td>
+                       </tr>
+                    </table>
+                </aura:set>
+            </aura:if>
+      
+        	<aura:if isTrue="{!v.selectedParentNetwork == null}" aura:id="renderNetworkSelected">
+            	<aura:set attribute="else">             
+                       <table columns="2" width="100%">
+                            <tr>
+                                <td width="50%">
+                            		<aura:text value=" Selected Network: " />
+                                  </td>
+                                <td width="50%" class="alignRight">
+                                    <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                                </td>
+                            </tr>
+                        </table>
+						<table>
+                    		<tr>
+                    			<td class="superTableRed">
+                        			<aura:text value="{!v.selectedParentNetwork}" />
+                    			</td>
+                			</tr>
+ 							<tr>
+                                <table columns="4">
+                                    <tr class="subtableheader">
+                                        <th width="5%" class="alignLeft"></th>
+                                        <th width="15%" class="alignLeft">Period</th>
+                                        <th width="28%" class="alignLeft">Total</th>
+                                        <th width="26%" class="alignRight">CAS</th>
+                                        <th width="26%" class="alignRight">CEA</th>
+                                    </tr>
+                                    <aura:iteration items="{!v.proceduresByNetwork}" var="pcs">
+                                        <tr>
+                                            <td width="5%" />
+                                            <td width="15%" class="alignLeft">
+                                                <aura:text value="Recent*:" />
+                                            </td>
+                                            <td width="28%" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4 + pcs.CEAPeriod4}"/>
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4}"/>
+                                            </td>
+                                        </tr>
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                        	<aura:set attribute = "else">
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd3Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3 + pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd2Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2 + pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                </tr>
+                                            </aura:set>
+                                        </aura:if>
+                                    </aura:iteration>     
+                                </table>
+                			</tr>
+                		</table>
+            	</aura:set>
+        	</aura:if>
+        </aura:set>
+    </aura:if> 
+
+    <center>
+        <ui:spinner aura:id="spinnerNetwork"/>
+    </center>    
+            
+            <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%   i P h o n e     S E L E C T   F A C I L I T Y					       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+            			<aura:text value="FACILITY" />
+                    </u>
+                 </h1>    
+            </center>
+            <aura:if isTrue="{!v.selectedFacility != null}" aura:id="renderFacilityList">
+         		<aura:set attribute="else"> 
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                   					<aura:text value=" Select a Facility:" />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>                  
+                 
+                   <table colums="1" width="200px" class="stripe">
+                    <tr>
+                        <td>
+                            <table class="{!if(v.selectedFacility != null,if(v.selectedFacility != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                <tr class="subtableheader">
+                                    <th width="5%" class="alignLeft"></th>
+                                    <th width="33%" class="alignLeft"><br/>Hospital</th>
+                                    <th width="15%" class="alignLeft">Status</th>
+                                    <th width="15%" class="alignright"><br/>VQI</th>
+                                    <th width="15%" class="alignright"><br/>CAS</th>
+                                    <th width="17%" class="alignRight">Total Recent*<br/>Procedures</th>
+                                    
+                                </tr>  
+                               
+                                <aura:iteration items="{!v.proceduresByFacility}" var="pcs">
+                                    <tr width="100%">               
+                                        <td width="5%" class="alignLeft">
+                                                                             
+                                            <ui:inputCheckbox name="{!pcs.EntityName}" text="{!pcs.RecordId}" value="{!pcs.CkBox}" click="{!c.facilitySelect}">Select Network</ui:inputCheckbox>
+                                            
+                                        </td>
+                                        <td width="33%" class="alignLeft">
+                                            <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                        </td>
+                                        <td width="15%" class="alignLeft">
+                                            <aura:text value="{!if(pcs.LeadStatus == 'Opportunity' , 'Opp', pcs.LeadStatus)}"/>
+                                        </td>
+                                        <td width="15%" class="alignRight">
+                                            <ui:inputCheckbox value="{!pcs.VQI}" disabled="true"/>
+                                        </td>
+                                        <td width="15%" class="alignRight">
+                                            <ui:inputCheckbox value="{!pcs.CAS}" disabled="true"/>
+                                        </td>
+                                        <td width="17%" class="alignRight">
+                                            <aura:text value="{!pcs.TotalProcedures}"/>
+                                        </td>
+                                       
+                                    </tr>
+                                </aura:iteration>                 
+                            </table>
+                        </td>
+                       </tr>
+                    </table>
+                </aura:set>
+            </aura:if>
+      
+        	<aura:if isTrue="{!v.selectedFacility == null}" aura:id="renderFacilitySelectedIPhone">
+            	<aura:set attribute="else">
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+								<aura:text value=" Selected Facility: " />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}"/>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    
+						<table>
+                    		<tr>
+                    			<td class="superTableRed">
+                        			<aura:text value="{!v.selectedFacility}" />
+                    			</td>
+                			</tr>
+ 							<tr>
+                                <table columns="4">
+                                    <tr class="subtableheader">
+                                        <th width="5%" class="alignLeft"></th>
+                                        <th width="15%" class="alignLeft">Period</th>
+                                        <th width="28%" class="alignRight">Total</th>
+                                        <th width="26%" class="alignRight">CAS</th>
+                                        <th width="26%" class="alignRight">CEA</th>
+                                    </tr>
+                                    <aura:iteration items="{!v.proceduresByFacility}" var="pcs">
+                                        <tr>
+                                            <td width="5%" />
+                                            <td width="15%" class="alignLeft">
+                                                <aura:text value="Recent*:" />
+                                            </td>
+                                            <td width="28%" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4 + pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CASPeriod4}"/>
+                                            </td>
+                                            <td width="26%" class="alignRight">
+                                                <aura:text value="{!pcs.CEAPeriod4}"/>
+                                            </td>
+                                        </tr>
+                                        <aura:if isTrue="{!v.hideHistory}">
+                                            <aura:set attribute = "else">
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd3Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3 + pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod3}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod3}"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td width="5%" />
+                                                    <td width="15%" class="alignLeft">
+                                                        <aura:text value="{!v.pd2Hdr + ':'}" />
+                                                    </td>
+                                                    <td width="28%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2 + pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CASPeriod2}"/>
+                                                    </td>
+                                                    <td width="26%" class="alignRight">
+                                                        <aura:text value="{!pcs.CEAPeriod2}"/>
+                                                    </td>
+                                                </tr>
+                                            </aura:set>
+                                        </aura:if>
+                                    </aura:iteration>     
+                                </table>
+                			</tr>
+                		</table>
+            	</aura:set>
+        	</aura:if>
+            <aura:if isTrue="{!if(v.facilityRecord.Name == null, true, false)}" aura:id="renderFacilityRecordIPhone">
+         	<aura:set attribute="else">
+                <br/>
+                <table>
+                    <tr>
+                        <td width="10%">
+                            <aura:text value="Hospital:  " />   
+                        </td>
+                        <td width="5%">
+                        </td>
+                        <td width="75%" class="superTableRed">
+                            <aura:text value="{!v.facilityRecord.Name}" />
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        <td width="10%">
+                            <aura:text value="Id:  " />   
+                        </td>
+                        <td width="5%">
+                        </td>
+                        <td width="75%" class="superTableRed">
+                            <aura:text value="{!v.facilityRecord.Medicare_Provider_ID__c}" />
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>
+                        <td width="10%">
+                            <aura:text value="Address:  " />
+                        </td>
+                        <td width="5%">
+                        </td>
+                        <td width="75%" class="superTableRed">
+                            <aura:text value="{!v.facilityRecord.Street_Address__c}" /><br/>
+                            <aura:text value="{!v.facilityRecord.City__c + ', ' + v.facilityRecord.State_Provence__c + ' ' + v.facilityRecord.Postal_Code__c}" />
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>  
+                        <td width="10%">
+                            <aura:text value="VQI:  " />   
+                        </td>
+                        <td width="5%">
+                        </td>
+                        <td width="75%" class="superTableRed">
+                            <ui:inputCheckbox value="{!v.facilityRecord.VQI_Member__c}" disabled="true"/>
+                        </td>
+                    </tr>
+                    <br/>
+                    <tr>  
+                        <td width="10%">
+                            <aura:text value="Lead Status:  " />   
+                        </td>
+                        <td width="5%">
+                        </td>
+                        <td width="75%" class="superTableRed">
+                            <aura:text value="{!v.facilityRecord.Lead_Status__c}" />
+                        </td>
+                    </tr>
+                    <br/>
+                    <aura:if isTrue="{!if(v.facilityRecord.Lead_Status__c == 'DRG', false, true)}" aura:id="renderFacilityButtonIPhone">
+                        <aura:set attribute="else">
+                            
+                            <tr>
+                                <td width="10%" />
+                                <td width="5%" />
+                                <td>
+                                    <lightning:button label="Convert to Opportunity" class=".slds-button_brand" variant="brand" onclick="{!c.convertFacilityLead}" />
+                                </td>
+                            </tr>
+                        </aura:set>
+                    </aura:if>    
+                    
+                </table>
+        
+             </aura:set>
+         </aura:if>
+
+        <center>
+            <ui:spinner aura:id="spinnerFacility"/>
+        </center>
+            
+            
+            
+            
+            <!--%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%   i P h o n e     S E L E C T   PHYSICIAN					       ********%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%-->
+            <hr/>
+            <center>
+                <h1>
+                    <u>
+            			<aura:text value="PHYSICIAN" />
+                    </u>
+                 </h1>    
+            </center>
+            <aura:if isTrue="{!v.selectedPhysician != null}" aura:id="renderPhysicianListIPhone">
+         		<aura:set attribute="else"> 
+   				   
+                    
+                    <table columns="2" width="100%">
+                        <tr>
+                            <td width="50%">
+                                 <aura:text value=" Procedures by Physician:" />
+                            </td>
+                            <td width="50%" class="alignRight">
+                                <aura:text value="{!' * Recent = ' + v.pd4Hdr}" />
+                            </td>
+                        </tr>
+                    </table>
+                 
+                   <table colums="1" width="200px" class="stripe">
+                    <tr>
+                        <td>
+                            <table class="{!if(v.selectedPhysician != null,if(v.selectedPhysician != '','subtable','subtableSmall'),'subtable' )}" width="100%">
+                                <tr class="subtableheader">
+                                    
+                                    <th width="40%" class="alignLeft">Name<br/>Specialty</th>
+                                    <th width="20%" class="alignRight">Total</th>
+                                    <th width="20%" class="alignRight">CAS</th>
+                                    <th width="20%" class="alignRight">CEA</th>
+                                </tr>  
+                               
+                                <aura:iteration items="{!v.proceduresByPhysician}" var="pcs">
+                                    <tr width="100%">               
+                                        <td width="40%" class="alignLeft">
+                                            <aura:text aura:id="eName" value="{!pcs.EntityName}"/>
+                                            <br/>
+                                            <div class="italicBlue">
+                                           		<aura:text aura:id="eName" value="{!pcs.Specialty}"/>
+                                            </div>   
+                                        </td>
+                                        <td width="20%" class="alignRight">
+                                            <aura:text value="{!pcs.CASPeriod4 + pcs.CEAPeriod4}"/>
+                                        </td>
+                                        <td width="20%" class="alignRight">
+                                            <aura:text value="{!pcs.CASPeriod4}"/>
+                                        </td>
+                                        <td width="20%" class="alignRight">
+                                            <aura:text value="{!pcs.CEAPeriod4}"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>                 
+                            </table>
+                        </td>
+                       </tr>
+                    </table>
+                </aura:set>
+            </aura:if>
+      
+
+            <aura:if isTrue="{!if(v.physicianRecord.Id == null, true, false)}" aura:id="renderPhysicianRecordIPhone">
+         	<aura:set attribute="else">
+                <br/>
+                <table>
+                            <tr>
+                                <td width="20%">
+                                    <aura:text value="Phys:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.physicianRecord.Full_Name__c}" />
+                                </td>
+                            </tr>
+                     		<tr>
+                                <td width="20%">
+                                    <aura:text value="Specialty:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="italicBlue">
+                                    <aura:text value="{!v.physicianRecord.Specialty__c}" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="20%">
+                                    <aura:text value="NPI No:  " />   
+                                </td>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.physicianRecord.NPI_Number__c}" />
+                                </td>
+                            </tr>
+                    		<tr>
+                                <td width="5%">
+                                </td>
+                                <td width="75%" class="superTableRed">
+                                    <aura:text value="{!v.facilityRecord.Lead_Status__c}" /><br/>
+                                </td>
+                            </tr>  
+                                
+                        </table>
+        
+             </aura:set>
+         </aura:if>         
+
+        <center>
+            <ui:spinner aura:id="spinnerPhysician"/>
+        </center>   
+            
+        <br/>
+            
+            
+            
+            
+            
+        </aura:set> <!-- END OF IPHONE RENDER -->
+    </aura:if> <!-- END OF IPHONE RENDER -->
+                
+                
+            </form>
+        </fieldset>
+    </div>
+    
+    
+            
+</aura:component>

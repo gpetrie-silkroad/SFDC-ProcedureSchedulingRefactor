@@ -1,0 +1,821 @@
+<aura:component controller="SRM_ITF_ServerController">
+	<aura:attribute name="ITForm" type="Inventory_Transfer_Form__c" default="{ 'sobjectType': 'Inventory_Transfer_Form__c'}"/>
+	<aura:attribute name="ITFID" type="String" default=""/>	
+	<aura:attribute name="tempStatus" type="Integer" default='0' />
+	<aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]" />
+	<aura:attribute name="AMUsers" type="User[]" />
+    <aura:attribute name="TDSUsers" type="User[]" />
+    <aura:attribute name="OtherUsers" type="User[]" />
+    <aura:attribute name="Accounts" type="Account[]" />
+    <aura:attribute name="possibleCSList" type="String[]" />
+    <aura:attribute name="toAccountName" type="String" default=""/>
+    <aura:attribute name="fromAccountName" type="String" default=""/>
+    <aura:attribute name="AMName" type="String" default=""/>
+    <aura:attribute name="TDSName" type="String" default=""/>
+    <aura:attribute name="OtherName" type="String" default=""/>
+    <aura:attribute name="currentStatus" type="Integer"/>
+    <aura:attribute name="updateITFormSignal" type="Boolean" default="false"/>
+    <aura:attribute name="createHardCopyPDFSignal" type="Boolean" default="false"/>
+    <aura:attribute name="emailType" type="Integer"/>
+    <aura:attribute name="updateTransactions" type="Boolean" default="false"/>
+    <aura:attribute name="isChangeonITForm" type="Boolean" default="false"/>
+    <aura:attribute name="isChangeonITFTransaction" type="Boolean" default="false"/>
+    <aura:attribute name="isLoading" type="Boolean" default="false"/>
+    <aura:attribute name="initialDrawing" type="Boolean" default="true"/>
+    <aura:attribute name="signInPerson" type="Boolean" default=""/>
+    <aura:attribute name="recordId" type="String" default=""/>
+    <aura:attribute name="DisableDetailModify" type="Boolean" default="true"/>
+    <aura:attribute name="ITFsteps" type="String[]"/>
+
+    <aura:registerEvent name="updateITFormFromPreview" type="c:UpdateITForm"/>
+
+    <!-- <ltng:require afterScriptsLoaded="{!c.Init}"/> -->
+    <aura:handler name="render" value="{!this}" action="{!c.Init}"/>
+
+	<aura:handler name="change" value="{!v.ITForm}" action="{!c.updateNames}"/>
+	<aura:handler name="change" value="{!v.ITForm}" action="{!c.updateCSProcess}"/>
+	<aura:handler name="change" value="{!v.updateTransactions}" action="{!c.refreshTransactionsData}"/>
+	<aura:handler name="change" value="{!v.Accounts}" action="{!c.updateNames}"/>
+	<aura:handler name="init" action="{!c.initialvalues}" value="{!this}"/>
+	<aura:handler name="change" value="{!v.updateITFormSignal}" action="{!c.updateITForm}"/>
+	<aura:handler name="change" value="{!v.createHardCopyPDFSignal}" action="{!c.createHardCopyPDF}"/>
+
+	<aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+
+	<div style="padding: 0.5vw; background-color: white; text-align: left; border-style: ridge;">
+		<table>
+			<tr>
+				<th>
+					Transfer Date: <ui:outputDate value="{!v.ITForm.Transfer_Date__c}"/>
+				</th>
+			</tr>
+			<tr>
+				<th>
+					Return Date: <ui:outputDate value="{!v.ITForm.Ship_Date__c}"/>
+				</th>
+			</tr>
+			<tr>
+				<td style="width:45%">
+					<!-- Silkroad Info Section -->
+					<div style ="width: 100%; text-align: left;">			
+						<table class="tablefixed">
+							<th class="noteColumn">
+								SRM Information
+							</th>
+							<th class = "editcolumn">
+								<lightning:button 
+										label="Edit" 
+										variant="brand"
+										class="slds-button1"
+										onclick="{!c.editSRMInfo}"/>
+							</th>
+						</table>
+					</div>
+
+					<div style ="width: 98%; border: dotted;">
+						<table>
+							<aura:if isTrue="{!v.AMName != ''}">
+								<tr>
+									<td class="right">
+										Area Manager:
+									</td>
+									<td class="left">
+										<b>{!v.AMName }</b>
+									</td>
+								</tr>
+							</aura:if>
+							<aura:if isTrue="{!v.TDSName != ''}">
+								<tr>
+									<td class="right">
+										TDS:
+									</td>
+									<td class="left">
+										<b>{!v.TDSName}</b>
+									</td>
+								</tr>
+							</aura:if>
+							<aura:if isTrue="{!v.OtherName != ''}">
+								<tr>
+									<td class="right">
+										Silk Road Representative:
+									</td>
+									<td class="left">
+										<b>{!v.OtherName}</b>
+									</td>
+								</tr>
+							</aura:if>
+						</table>
+					</div>
+				</td>
+				<td>
+					<!-- Inventory Customer Info -->
+					<div style ="width: 100%; text-align: left;">
+						<table class="tablefixed">
+							<th class="noteColumn">
+								Transaction Type - <b>{!v.ITForm.ITF_Type__c}</b>
+							</th>
+							<th class = "editcolumn">
+								<!-- <aura:if isTrue="{!v.ITForm.EditableByRepTDS__c}"> -->
+									<lightning:button 
+										label="Edit" 
+										variant="brand"
+										class="slds-button1"
+										onclick="{!c.editSRMDetail}"/>
+								<!-- </aura:if> -->
+							</th>
+						</table>		
+					</div>
+					<div style ="width: 98%; border: dotted;">
+						<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Transfer to Customer'}">
+							<table>
+								<tr>
+									<td class="right">
+										Account Name:
+									</td>
+									<td class="left">
+										<b>{!v.toAccountName}</b>
+									</td>
+								</tr>	
+								<tr style ="padding-bottom: 1vw">
+									<td class="rightI">
+										Bill-only PO#: 
+									</td>
+									<td class="leftI">
+										<ui:inputText 
+											value="{!v.ITForm.Bill_Only_PO__c}" 
+											change="{!c.onChangeITForm}"
+											class ="input"/>
+										<!-- <b>{!v.ITForm.Bill_Only_PO__c}</b> -->
+									</td>
+								</tr>			
+							</table>
+						</aura:if>
+
+						<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'External Transfer (Customer to Customer)'}">
+							<table>
+								<tr>
+									<td class="right">
+										From Account:
+									</td>
+									<td class="left">
+										<b>{!v.fromAccountName}</b>
+									</td>
+								</tr>	
+								<tr>
+									<td class="right">
+										No-charge PO#: 
+									</td>
+									<td class="left">
+										<b>{!v.ITForm.No_Charge_PO__c}</b>
+									</td>
+								</tr>
+								<tr>
+									<td class="right">
+										To Account:
+									</td>
+									<td class="left">
+										<b>{!v.toAccountName}</b>
+									</td>
+								</tr>	
+								<tr style ="padding-bottom: 1vw">
+									<td class="rightI">
+										Bill-only PO#: 
+									</td>
+									<td class="leftI">
+										<ui:inputText 
+											value="{!v.ITForm.Bill_Only_PO__c}" 
+											change="{!c.onChangeITForm}"
+											class ="input"/>
+										<!-- <b>{!v.ITForm.Bill_Only_PO__c}</b> -->
+									</td>
+								</tr>							
+							</table>
+						</aura:if>
+
+						<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)'}">
+							<table>
+								<tr>
+									<td class="right">
+										From Am/TDS:
+									</td>
+									<td class="left">
+										<b>{!v.ITForm.From_Rep_TDS__c}</b>
+									</td>
+								</tr>	
+								<tr>
+									<td class="right">
+										To Am/TDS: 
+									</td>
+									<td class="left">
+										<b>{!v.ITForm.To_Rep_TDS__c}</b>
+									</td>
+								</tr>			
+							</table>
+						</aura:if>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<div style="width:100%; text-align: left; padding-top: 2vw">
+			<table style = "table-layout: fixed">
+				<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)'}">
+					<td style="text-align: right">
+						Ref #:
+					</td>
+					<td style="width:25%">
+						<ui:inputText 
+							value="{!v.ITForm.Primary_Bill_Only_Number__c}" 
+							change="{!c.onChangeITForm}"
+							class ="input2"
+							disabled="{!v.DisableDetailModify}"/>
+					</td>
+					<td/>
+					<aura:set attribute="else">
+						<td style="text-align: right">
+							Primary SO Number:
+						</td>
+						<td style="width:25%">
+							<ui:inputText 
+								value="{!v.ITForm.Primary_Bill_Only_Number__c}" 
+								change="{!c.onChangeITForm}"
+								class ="input2"/>
+						</td>
+						<td/>
+					</aura:set>
+				</aura:if>
+			</table> 
+		</div>
+
+		<!-- Transctions Detail Section -->
+		<div style ="width: 100%; text-align: left;">
+			<table class="tablefixed">
+				<tr>
+					<th class="noteColumn">
+						Inventory Transaction(s)
+					</th>
+					<th class = "editcolumn">
+						<table class="tablefixed">
+							<tr>
+								<th class = "editcolumn">
+									<lightning:button 
+											label="Add Transaction" 
+											variant="brand"
+											class="slds-button4"
+											onclick="{!c.editSRMTransactions}"/>
+								</th>
+								<th class = "editcolumn">
+									<lightning:button 
+											label="Edit Details" 
+											variant="brand"
+											class="slds-button4"
+											onclick="{!c.editTransactionDetail}"/>									
+								</th>
+							</tr>
+						</table>
+					</th>
+				</tr>
+			</table>
+
+		</div>
+		<div style ="width: 98%;">
+
+		<table style = "width: 100%; border: 1px solid black; border-collapse: collapse; table-layout: fixed">
+			<tr style = "border: 1px solid black; border-collapse: collapse;">
+				<th style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					#
+				</th>  			
+				<th style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Product Information
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					Qty
+				</th> 
+
+				<aura:if isTrue="{!or(v.ITForm.ITF_Type__c == 'External Transfer (Customer to Customer)', v.ITForm.ITF_Type__c == 'Transfer to Customer')}">
+					<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Unit Price
+					</th>
+					<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						Extended Price
+					</th>
+				</aura:if>
+				<th style = "width: 30%; border: 1px solid black; border-collapse: collapse; text-align: center; background-color:#f0f0f0;">
+					SRM Customer Success Only
+				</th>
+				<aura:if isTrue="{!and(v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)', v.ITForm.To_Rep_TDS__c == 'FG (Trunk Stock Return)')}">
+					<th style = "width: 20%; border: 1px solid black; border-collapse: collapse; text-align: center; background-color:#e0f7d6;">
+						SRM Logistic Only
+					</th>
+				</aura:if>
+			</tr>
+
+			<aura:iteration items="{!v.ITFTransactions}" var="transaction" indexVar="index">
+				<tr style = "border: 1px solid black; border-collapse: collapse;">
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center;">
+						{!index+1}
+					</td>				
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: left; padding: 1vw;">	
+						<!-- General Infomation		 -->
+						<table style="width:100%;">
+							<td>
+								<table style = "width:98%; padding:0px">
+									<tr>
+										<td class="left6">
+											Lot #: 
+										</td>
+										<td class="right6">
+											<!-- {!transaction.Lot_number__c} -->
+											<ui:inputText 
+													value = "{!transaction.Lot_number__c}" 
+													change="{!c.onChangeITFTransaction}"
+													disabled="{!v.DisableDetailModify}"/>											
+										</td>
+									</tr>
+									<tr>
+										<td class="left6">
+											Product #:
+										</td>
+										<td class="right6">
+											<!-- {!transaction.Product_Number__c} -->
+											<ui:inputText 
+													value = "{!transaction.Product_Number__c}" 
+													change="{!c.onChangeITFTransaction}"
+													disabled="{!v.DisableDetailModify}"/>											
+										</td>
+									</tr>
+									<tr>
+										<td class="left6">
+											Inventory Owner:
+										</td>
+										<td class="right6">
+											{!transaction.Inventory_Owner__c} ({!transaction.OwnerID__c})
+										</td>
+									</tr>
+									<tr>
+										<td class="left6">
+											Replenish:
+										</td>
+										<td class="right6">
+											<aura:if isTrue="{!transaction.Replenish__c}">
+												Yes
+												<aura:set attribute="else">
+													No
+												</aura:set>
+											</aura:if>
+										</td>
+									</tr>									
+								</table>
+							</td>
+							<td style = "width: 40%; padding:0px">
+								Note: 
+								<ui:inputTextArea
+										value="{!transaction.Note__c}" 
+										class="inputTextAreaFormat"
+										rows="3"
+										change="{!c.onChangeITFTransaction}"
+										maxlength="250"/>
+								<aura:if isTrue="{!transaction.Note__c.length > 200}">
+		                            <span style="font-size:45%; margin: none; padding:none">
+		                                (Max: 250 chars, Left: {!(250-transaction.Note__c.length)} char(s))
+		                            </span>
+		                        </aura:if>
+							</td>
+						</table>
+					</td>
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center;" class="right6">
+						<ui:inputNumber 
+								value = "{!transaction.Quantity__c}" 
+								change="{!c.onChangeITFTransaction}"
+								class="inputNUmberCenter" 
+								disabled="{!v.DisableDetailModify}"/>
+						<!-- {!transaction.Quantity__c}  -->
+						({!transaction.UOM__c})
+					</td> 
+					<aura:if isTrue="{!or(v.ITForm.ITF_Type__c == 'External Transfer (Customer to Customer)', v.ITForm.ITF_Type__c == 'Transfer to Customer')}">
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center" class="right6">
+							<ui:inputCurrency 
+									value="{!transaction.Price__c}" 
+									format="$##,##,###,###.00" 
+									change="{!c.onChangeITFTransaction}"
+									disabled="{!v.DisableDetailModify}"/>
+							<!-- <ui:outputCurrency value="{!transaction.Price__c}" format="$##,##,###,###.00"/> -->
+						</td>
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center" class="right6">
+							<ui:outputCurrency value="{!transaction.Extended_Price__c}" format="$##,##,###,###.00"/>
+						</td>
+					</aura:if>
+		<!-- ==================== Customer Success Area Only ====================================== -->
+					<td style = "border: 1px solid black; border-collapse: collapse; text-align: center; background-color:#f0f0f0;">
+						<div style="width:98%; background-color:#f0f0f0; padding: 1vw">
+							<b>  </b>
+							<table style = "width:98%; table-layout: fixed;">
+								<tr>
+									<td class="left5">
+										Transacted by: 
+									</td>
+									<td class="right5">
+										<ui:inputSelect value="{!transaction.Transacted_By__c}" change="{!c.onChangeITFTransaction}">
+											<aura:if isTrue="{!and(transaction.Transacted_By__c != null, transaction.Transacted_By__c != '')}">
+												<ui:inputSelectOption text="{!transaction.Transacted_By__c}" label="{!transaction.Transacted_By__c}"/>
+											</aura:if>
+											<aura:iteration items="{!v.possibleCSList}" var="customerSuccess">
+												<ui:inputSelectOption text="{!customerSuccess}" label="{!customerSuccess}"/>
+											</aura:iteration>
+										</ui:inputSelect>
+									</td>
+								</tr>
+								<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)'}">
+									<tr>
+										<td class="left5">
+											Ref #:
+										</td>
+										<td class="right5">
+											<ui:inputText 
+													value="{!transaction.Bill_Only_Number__c}" 
+													change="{!c.onChangeITFTransaction}"
+													disabled="{!v.DisableDetailModify}" />
+										</td>
+									</tr>
+
+									<aura:set attribute="else">
+										<tr>
+											<td class="left5">
+												Sale Order Number:
+											</td>
+											<td class="right5">
+												<ui:inputText 
+														value="{!transaction.Bill_Only_Number__c}" 
+														change="{!c.onChangeITFTransaction}" />
+											</td>
+										</tr>
+									</aura:set>
+								</aura:if>
+								<tr>
+									<td class="left5">
+										Transacted Date:
+									</td>
+									<td class="right5">
+										<ui:inputDate 
+											value="{!transaction.Transfer_Date_System__c}"
+											format="MM/dd/yyyy"
+											change="{!c.onChangeITFTransaction}"
+											displayDatePicker="true"/>
+									</td>
+								</tr>
+								<tr>
+									<td class="left5">
+										Complete Transaction:
+									</td>
+									<td class="right5">
+										<ui:inputCheckbox 
+											class="checkbox" 
+											value="{!transaction.IsTransactionComplete__c}"
+											change="{!c.onChangeITFTransaction}"/>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+		<!-- ==================== End of Customer Success Area Only ====================================== -->
+
+		<!-- ==================== Logistic Only ====================================== -->
+					<aura:if isTrue="{!and(v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)', v.ITForm.To_Rep_TDS__c == 'FG (Trunk Stock Return)')}">
+						<td style = "border: 1px solid black; border-collapse: collapse; text-align: center; background-color:#e0f7d6;">
+							<div style="width:98%; background-color:#e0f7d6; padding: 1vw">
+								<b>  </b>
+								<table style = "width:98%; table-layout: fixed;">
+									<tr>
+										<td class="left5">
+											Received by:
+										</td>
+										<td class="right5">
+											<ui:inputText 
+													value="{!transaction.TSR_Received_By__c}" 
+													change="{!c.onChangeITFTransaction}"
+													disabled="{!v.DisableDetailModify}" />
+										</td>
+									</tr>
+									<tr>
+										<td class="left5">
+											Received Date:
+										</td>
+										<td class="right5">
+											<ui:inputDate 
+													value="{!transaction.TSR_Received_Date__c}"
+													format="MM/dd/yyyy"
+													change="{!c.onChangeITFTransaction}"
+													displayDatePicker="true"
+													disabled="{!v.DisableDetailModify}" />
+										</td>
+									</tr>
+									<tr>
+										<td class="left5">
+											Received Qty:
+										</td>
+										<td class="right5">
+											<ui:inputNumber 
+													value = "{!transaction.TSR_Received_Qty__c}" 
+													change="{!c.onChangeITFTransaction}"
+													disabled="{!v.DisableDetailModify}" />
+										</td>
+									</tr>
+									<tr>
+										<td class="left5">
+											Transaction ID#:
+										</td>
+										<td class="right5">
+											<ui:inputNumber
+													value = "{!transaction.TSR_Transaction_ID__r.QADTranasctionID__c}" 
+													change="{!c.onChangeITFTransaction}"
+													format="#,##0,000"
+													disabled="{!true}" />
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+					</aura:if>
+		<!-- ==================== End of Logistic Area Only ====================================== -->
+				</tr>
+			</aura:iteration>
+		</table>
+		</div>
+		<div style ="width: 98%; text-align: right;">
+			Total Price:
+			<b style="font-size: 110%;"> 
+				<ui:outputCurrency value="{!v.ITForm.Total_Price__c}" format="$##,##,###,###.00"/>
+			</b>
+		</div>
+		<br/>
+		<div style = "width: 100%; padding-left: 25%; padding-right: 25%">
+			<aura:if isTrue="{!v.ITForm.ITF_Type__c != 'Internal Transfer (AM/TDS to AM/TDS)'}">
+				<div style ="width: 98%; text-align: left;">
+					<b style="font-size: 125%;"> 
+						Customer Information
+					</b>
+				</div>
+				<div style ="width: 98%; border: dotted; padding-bottom: 1vw">
+					<!-- Displaying Missing Customer Signature message -->
+					<aura:if isTrue="{!and(v.ITForm.signAttachID__c == null,v.ITForm.CustomerSignViaDocumentID__c == null)}">
+						<br/>
+						<div style="width: 100%; color: red; font-size: 200%; font-weight:bold">
+							Missing Customer Info: Name, Signature, etc.
+						</div>	
+					</aura:if>
+
+					<!-- Display customer's signature if customer has signed -->
+					<aura:if isTrue="{!v.ITForm.signAttachID__c != null}">					
+						<table>
+							<tr>
+								<td class="left">
+									&nbsp;Name: {!v.ITForm.Recipient_Name__c}
+								</td>
+								<td class="left">								
+								</td>
+							</tr>
+							<aura:if isTrue="{!v.ITForm.Recipient_Title__c != null}">
+								<tr>
+									<td class="left">
+										&nbsp;Title: {!v.ITForm.Recipient_Title__c}
+									</td>
+									<td class="left">									
+									</td>
+								</tr>	
+							</aura:if>					
+						</table>
+						<center>					
+							<div style = "width:100%; text-align: left">
+								&nbsp;Customer Signature:
+							</div>
+							<div style="width: 98%; height:45%; overflow:hidden; border: 0.5vw solid">
+								<img src="{!'/servlet/servlet.FileDownload?file='+v.ITForm.signAttachID__c}" class="resize"/>
+							</div>
+							<b style="font-size: 150%"> Thank you for using our products</b>		
+						</center>
+					</aura:if>
+
+					<!-- Upload pdf file if neccessary -->
+					<center>
+						<br/>
+						<lightning:fileUpload
+							multiple="false" 
+							accept=".pdf, .png, .jpg, .jpeg"
+							recordId="{!v.ITForm.Id}" 
+							onuploadfinished="{!c.handleUploadFinished}" />
+						<br/>
+						<aura:if isTrue="{!v.ITForm.CustomerSignViaDocumentID__c != null}">
+							<lightning:button 	
+								label="Download an uploaded PDF file with customer's signature" 
+								class="slds-button2"
+								variant="brand"
+								onclick="{!c.downloadUploadCustomerSignature}"/>
+							<br/>
+						</aura:if>
+					</center>
+	<!-- 
+					<aura:if isTrue="{!and(v.ITForm.signAttachID__c == null,v.ITForm.CustomerSignViaDocumentID__c == null)}">
+						<aura:if isTrue="{!v.signInPerson}">
+							<table>
+								<tr>
+									<td class="rightRequire">
+										Name:
+									</td>
+									<td class="left">
+										<ui:inputText aura:id="recipientNameForm" value="{!v.ITForm.Recipient_Name__c}"/>
+									</td>
+								</tr>
+								<tr>
+									<td class="right">
+										Title:
+									</td>
+									<td class="left">
+										<ui:inputText aura:id="recipientTitleForm" value="{!v.ITForm.Recipient_Title__c}"/>
+									</td>
+								</tr>
+							</table>
+							<center>
+								<b style="font-size: 150%"> Please have customer sign space below:</b>
+							
+								<div style="width: 98%; height:45%; overflow:hidden">
+									<div style="text-align: center; width: 98%; height:98%; overflow: hidden; border: 1vw solid " ontouchmove="{!c.handleTouchMove}" aura:id="mainapp">
+										<canvas aura:id="can" width="1000" height="250" style="border:0; background-color: white;"></canvas>
+									</div>
+								</div>
+								<table style="background-color: white;">
+									<tr>
+										<td class="center" style="width: 45%; background-color: white">
+											<lightning:button class="slds-m-top-medium" onclick="{!c.erase}" label="Clear Signature"/>
+										</td>
+										<td class="center" style="width: 45%; background-color: white;">
+											<lightning:button class="slds-m-top-medium" onclick="{!c.save}" label="Save Signature"/>
+										</td>
+									</tr>
+								</table>	
+							</center>
+							<aura:set attribute="else">
+								<center>
+									<br/>
+									<div style="width: 100%; color: red; font-size: 200%; font-weight:bold">
+										Missing Customer Info: Name, Signature, etc.
+									</div>
+									<br/><br/>Or
+									<lightning:fileUpload
+										multiple="false" 
+										accept=".pdf, .png, .jpg, .jpeg"
+										recordId="{!v.ITForm.Id}" 
+										onuploadfinished="{!c.handleUploadFinished}" />
+								</center>						
+							</aura:set>
+						</aura:if>
+						<aura:set attribute="else">
+							<aura:if isTrue="{!v.ITForm.CustomerSignViaDocumentID__c == null}">
+								<table>
+									<tr>
+										<td class="left">
+											&nbsp;Name: {!v.ITForm.Recipient_Name__c}
+										</td>
+										<td class="left">								
+										</td>
+									</tr>
+									<aura:if isTrue="{!v.ITForm.Recipient_Title__c != null}">
+										<tr>
+											<td class="left">
+												&nbsp;Title: {!v.ITForm.Recipient_Title__c}
+											</td>
+											<td class="left">									
+											</td>
+										</tr>	
+									</aura:if>					
+								</table>
+								<center>					
+									<div style = "width:100%; text-align: left">
+										&nbsp;Customer Signature:
+									</div>
+									<div style="width: 98%; height:45%; overflow:hidden; border: 0.5vw solid">
+										<img src="{!'/servlet/servlet.FileDownload?file='+v.ITForm.signAttachID__c}" class="resize"/>
+									</div>
+									<b style="font-size: 150%"> Thank you for using our products</b>		
+								</center>
+								<aura:set attribute="else">
+									Customer Signed in The Hard Copy Document. <br/>
+									<center>
+										<lightning:button 	
+												label="Download a ITForm with Customer Signature" 
+												class="slds-button2"
+												variant="brand"
+												onclick="{!c.downloadUploadCustomerSignature}"/>
+									</center>
+								</aura:set>
+							</aura:if>
+						</aura:set>	
+					</aura:if> -->
+				</div>
+			</aura:if>
+		</div>
+<!-- ================User Actions + Shipping Info - for ITF Trunk Stock Return=================== -->
+<!-- 		<aura:if isTrue="{! v.ITForm.To_Rep_TDS__c == 'FG (Trunk Stock Return)'}">	
+			<c:SRM_ITF_51_ShippingInfo
+				ITForm = "{!v.ITForm}"/>
+		</aura:if> -->
+<!-- ================ End of User Actions + Shipping Info - for ITF Trunk Stock Return=================== -->
+		<br/>
+		<table>
+			<td style="width:50%; text-align: center">
+				<aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)'}">
+					<lightning:button 	
+						label="Download a PDF copy (MTF)" 
+						class="slds-button2"
+						variant="brand"
+						onclick="{!c.downloadMTFVersion}"/>
+					<aura:set attribute="else">
+						<lightning:button 	
+							label="Download a PDF copy (Customer Version)" 
+							class="slds-button2"
+							variant="brand"
+							onclick="{!c.downloadPDFCopyLightVersion}"/>				
+					</aura:set>
+				</aura:if>
+			</td>
+			<td style="width:50%; text-align: center">
+				<lightning:button 	
+					label="Download a PDF copy (Full Version)" 
+					class="slds-button2"
+					variant="brand"
+					onclick="{!c.downloadPDFCopyDetailVersion}"/>
+			</td>
+		</table>
+		<br/>
+		<center>
+			<div style ="width:80%">
+				<lightning:button 	
+					label="Delete the Inventory Transfer Form" 
+					class="slds-button2"
+					variant="brand"
+					onclick="{!c.deleteITF}"/>
+			</div>
+		</center>
+	</div>
+
+	<br/>
+
+	<!-- Loading Message -->
+	<aura:if isTrue="{!v.isLoading}">
+		<div style=" position:fixed;
+					 width:110vw;
+					 height: 100vh;
+					 text-align: center;
+					 top: 0vh;
+					 left: -10vw;
+					 padding-top: 50vh;
+					 background-color: white;
+					 color: black;
+					 opacity: 0.7;">
+			Please Wait. Server is processing your request...
+		</div>
+	</aura:if>
+
+	<!-- Floating Save button after changing ITform -->
+	<aura:if isTrue="{! or(v.isChangeonITForm,v.isChangeonITFTransaction)}">
+		<div style="position:fixed; width:100%; text-align: center; left:0px; top: 78vh; filter: alpha(opacity=80); background-color: #f0f0f0; color: black; opacity: 0.90;">
+			Please send the updated form to the customer if the prices, quantities and line items are changed.
+			<table>
+				<tr>
+<!-- 					<td style="text-align: right; width:35%; padding: 1vw;"> 
+						Status: 
+					</td>
+					<td style="text-align: left; width:30%; padding: 1vw;"> 
+						<ui:inputSelect 
+							class="slds-input"
+							value="{!v.ITForm.Status__c}"
+							change="{!c.onChangeITForm}">
+							<aura:iteration items="{!v.ITFsteps}" var="element" indexVar="index">
+								<ui:inputSelectOption text="{!element}" label="{!element}" />
+							</aura:iteration>
+						</ui:inputSelect>
+					</td>
+					<td style="text-align: left; width:35%; padding: 1vw;">
+						<div style="width:100%; text-align: left">
+							<lightning:button 	
+								label="Save" 
+								class="slds-button1"
+								variant="brand"
+								onclick="{!c.updateITFtoSFDC}"/>
+						</div>
+					</td> -->
+					<td style="text-align: center; width:100%; padding: 1vw;">
+						<lightning:button 	
+							label="Save" 
+							class="slds-button1"
+							variant="brand"
+							onclick="{!c.updateITFtoSFDC}"/>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div style="position:fixed; width:100%; text-align: center; filter: alpha(opacity=80); background-color: blue; color: white; left:0px; top: 88vh; opacity: 0.7;">
+			Please click a "Save" button above to save your work before you turn off the webpage.
+		</div>
+	</aura:if>
+</aura:component>

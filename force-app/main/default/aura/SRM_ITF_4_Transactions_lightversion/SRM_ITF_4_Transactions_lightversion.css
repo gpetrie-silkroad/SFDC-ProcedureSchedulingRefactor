@@ -1,0 +1,52 @@
+.THIS .uiInput--select{
+	display: inline;
+    width: 95%;
+}
+
+.THIS .uiInput--input{
+	display: inline;
+    width: 95%;
+}
+
+.THIS .input1{
+	display: inline;
+    width: 60%;
+}
+
+.THIS .td11{
+	padding-top: unset;
+	padding-bottom: unset;
+	width: 20%;
+}
+
+.THIS .td12{
+	padding-top: unset;
+	padding-bottom: unset;
+	width: 5%;
+}
+
+.THIS .td13{
+	padding-top: unset;
+	padding-bottom: unset;
+	width: 75%;
+}
+
+/*.THIS.scrollerSize {
+    height: 100%;
+    width: 100%;
+    border-radius: 1px;
+}
+
+.THIS .innerDivWrapper {
+    min-height: 101%;
+    padding-bottom: 20px;
+}*/
+
+.THIS.outerScroller {
+    /* fix scrolling in innerScroller */
+    border-radius: 1px;
+}
+.THIS.innerScroller {
+    /* make innerScroller rounded */
+    border-radius: 10px;
+}

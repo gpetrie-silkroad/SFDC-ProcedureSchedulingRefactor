@@ -1,0 +1,73 @@
+.THIS span.ExpiredStyle
+{
+	background-color: rgb(255, 97, 97);
+}
+
+.THIS span.ExpiringStyle
+{
+	background-color: rgb(255, 242, 58);
+}
+
+/*for DESKTOP/TABLET UI*/
+.THIS td.td1
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: center;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+/*for Phone ui*/
+.THIS td.td2
+{
+	width: 2%; 
+	border: 1px solid black; 
+	border-collapse: collapse; 
+	text-align: center;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}
+
+.THIS .slds-button_brand
+{
+	padding-left: 1vw;
+    padding-right: 1vw;
+}
+
+.THIS .uiInput--select.select
+{
+	/*max-width: 100%;*/
+	width: 90%;
+	text-align: center;
+}
+
+.THIS .uiInput--input.input
+{
+	/*max-width: 100%;*/
+	width: 50%;
+	text-align: center;
+}
+
+.THIS td.td3
+{
+	width: 10%; 
+/*	border: 1px solid black; 
+	border-collapse: collapse; */
+	text-align: center;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-left: 2vw;
+	padding-right: 2vw;
+}
+
+.THIS td.td4
+{
+	width: 70%; 
+/*	border: 1px solid black; 
+	border-collapse: collapse; */
+	text-align: center;
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+}

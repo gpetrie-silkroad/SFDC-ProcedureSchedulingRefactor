@@ -1,0 +1,59 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+    background-color: white;
+    color: black;
+}
+
+.THIS td.left{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 30%; 
+	text-align: left;
+	overflow: hidden;
+}
+
+.THIS td.right{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 20%; 
+	text-align: right;
+	/*overflow: hidden;*/
+}
+
+.THIS td.right1{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 20%; 
+	text-align: right;
+	/*overflow: hidden;*/
+}
+
+.THIS td.center{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-left: 	2vw;
+	width: 30%; 
+	text-align: left;
+	overflow: hidden;
+}
+
+
+.THIS td.Result{
+	vertical-align: text-bottom;
+	overflow: hidden;
+}
+
+.THIS .slds-button59{
+	font-size: 100%;
+	background-color: white;
+	color: black;
+	width: 100%;
+	line-height: 100%;
+	border: none;
+}

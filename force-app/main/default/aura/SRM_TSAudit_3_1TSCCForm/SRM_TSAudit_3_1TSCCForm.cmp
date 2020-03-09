@@ -1,0 +1,492 @@
+<aura:component controller="SRM_TSAudit_ServerController" access="global">
+
+<!-- =====================attributes from parent componnet============================ -->
+    <aura:attribute name="TSCCReport" type="Trunk_Stock_Cycle_Count_Report__c"/>
+<!-- ====================End attributes from parent componnet======================= -->
+
+
+<!-- =========================Local attributes================================== -->
+    <aura:attribute name="isReady" type="Integer" default="0"/>  <!-- 1,2: wait for get  -->
+    <aura:attribute name="steps" type="String[]"/>
+    <aura:attribute name="returnlist" type="String[]"/>
+    <aura:attribute name="lots" type="Lot_Information__c[]"/>
+    <aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+    <aura:attribute name="TotalNPS" type="Integer" default=""/>
+    <aura:attribute name="TotalStent" type="Integer" default=""/>
+    <aura:attribute name="TotalGW" type="Integer" default=""/>
+    <aura:attribute name="TotalMPK" type="Integer" default=""/>
+    <aura:attribute name="tempNPSItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+    <aura:attribute name="tempGWItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+    <aura:attribute name="tempMPKItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+    <aura:attribute name="tempStentItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+    <aura:attribute name="TSCCItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+    <aura:attribute name="lotinventory" type="Lot_Inventory__c[]"/>
+    <aura:attribute name="currentStepString" type="String" default="NPS"/>
+    <aura:attribute name="devicetype" type="String" default=""/> <!-- Process bar isn't worked well with phone device -->
+    <aura:attribute name="currentStep" type="Integer" default="0"/>
+    <aura:attribute name="isChildReady" type="Integer" default = "0" /> 
+    <aura:attribute name="timer" type="Integer"/>
+<!-- ====================end of Local attributes================================ -->
+
+
+<!-- =========================Calling controller================================== -->
+    <aura:handler name="init" value="{! this }" action="{! c.init}"/>
+    <aura:handler name="change" value="{!v.isReady}" action="{!c.ContInit}"/>
+    <aura:handler name="change" value="{!v.isChildReady}" action="{!c.updateChildChange}"/>
+
+<!-- ====================end of Local attributes================================ -->
+
+    <div aura:id="backgroundform" class = "DesktopBackground PhoneBackground" style = "text-align: center;">
+        <c:SRM_TSAudit_3_0Header
+                version = "v 0.8.9"
+                title = "Trunk Stock Audit Form"/>
+<!-- ==============================Phone UI ====================================================================-->
+        <aura:if isTrue="{!v.devicetype == 'PHONE'}">
+            <center>
+                <table style = "width: 100%; padding: 2vw">
+                    <tr>                   
+                        <br/>
+                        <td style = "width:15%; text-align:center">
+                            <lightning:button 
+                                    label="Back" 
+                                    class="slds-m-top-medium"
+                                    variant="brand"
+                                    disabled="{!or(v.currentStep == 0, v.isChildReady == false)}"
+                                    onclick="{!c.previousSteps}"/>  
+                        </td>
+                        <td style = "width:60%; text-align:center">
+                            Step {!v.currentStep +1}: {!v.currentStepString}
+                        </td>
+                        <td style = "width:15%; text-align:center">
+                            <lightning:button 
+                                    label="Next" 
+                                    class="slds-m-top-medium"
+                                    variant="brand"
+                                    disabled="{!or(v.currentStep == (v.steps.length-1), v.isChildReady == false)}"
+                                    onclick="{!c.nextSteps}"/>  
+                        </td>
+                        <br/><br/>                     
+                    </tr>
+                </table>
+            </center>
+
+            <aura:if isTrue="{!v.currentStep == 0}"> <!-- NPS -->
+                <center>
+                    <table class = "table2">
+                        <tr class = "tr2">
+                            <th class = "th2"> Product Info </th>
+                            <th class = "th2"> Qty # </th>
+                        </tr>
+                        <aura:iteration items="{!v.tempNPSItems}" var="element" indexVar="index">
+                            <tr class = "tr2">
+                                <c:SRM_TSAudit_3_11TSCCFormItem
+                                    TSCCItem = "{!element}"
+                                    lots ="{!v.lots}"
+                                    devicetype = "{!v.devicetype}"
+                                    displayMode = "0"
+                                    isChildReady = "{!v.isChildReady}"/>
+                            </tr>
+                        </aura:iteration>
+                    </table>
+                    <br/>  
+                    <lightning:button 
+                            label="Add a new NPS unit" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.AddNPSUnit}"/>   <br/>  
+                    <br/>  
+                </center>
+            </aura:if>
+
+            <aura:if isTrue="{!v.currentStep == 1}"> <!-- Stent -->
+                <center>
+                    <table class = "table2">
+                        <tr class = "tr2">
+                            <th class = "th2"> Product Info  </th>
+                            <th class = "th2"> Qty # </th>
+                        </tr>
+                        <aura:iteration items="{!v.tempStentItems}" var="element" indexVar="index">
+                            <tr class = "tr2">
+                                <c:SRM_TSAudit_3_11TSCCFormItem
+                                    TSCCItem = "{!element}"
+                                    lots ="{!v.lots}"
+                                    devicetype = "{!v.devicetype}"
+                                    displayMode = "1"
+                                    isChildReady = "{!v.isChildReady}"/>
+                            </tr>
+                        </aura:iteration>
+                    </table>
+                    <br/>  
+                    <lightning:button 
+                            label="Add a new Stent unit" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.AddStentUnit}"/>
+                    <br/><br/>   
+                </center>        
+            </aura:if>
+
+            <aura:if isTrue="{!v.currentStep == 2}"> <!-- GW -->
+                <center>
+                    <table class = "table2">
+                        <tr class = "tr2">
+                            <th class = "th2"> Product Info </th>
+                            <th class = "th2"> Qty # </th>
+                        </tr>
+                        <aura:iteration items="{!v.tempGWItems}" var="element" indexVar="index">
+                            <tr class = "tr2">
+                                <c:SRM_TSAudit_3_11TSCCFormItem
+                                    TSCCItem = "{!element}"
+                                    lots ="{!v.lots}"
+                                    devicetype = "{!v.devicetype}"
+                                    displayMode = "2"
+                                    isChildReady = "{!v.isChildReady}"/>
+                            </tr>
+                        </aura:iteration>
+                    </table>
+                    Note: 1 box = 5 each <br/>    
+                    <lightning:button 
+                            label="Add a new GW unit" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.AddGWUnit}"/>
+                    <br/><br/> 
+                </center>
+                 
+            </aura:if>
+            <aura:if isTrue="{!v.currentStep == 3}"> <!-- MPK -->
+                <center>
+                    <table class = "table2">
+                        <tr class = "tr2">
+                            <th class = "th2"> Product Info </th>
+                            <th class = "th2"> Qty # </th>
+                        </tr>
+                        <aura:iteration items="{!v.tempMPKItems}" var="element" indexVar="index">
+                            <tr class = "tr2">
+                                <c:SRM_TSAudit_3_11TSCCFormItem
+                                    TSCCItem = "{!element}"
+                                    lots ="{!v.lots}"
+                                    devicetype = "{!v.devicetype}"
+                                    displayMode = "3"
+                                    isChildReady = "{!v.isChildReady}"/>
+                            </tr>
+                        </aura:iteration>
+                    </table>
+                    Note: 1 box = 10 each <br/>  
+                    <lightning:button
+                            label="Add a new MPK unit" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.AddMPKUnit}"/>
+                    <br/><br/> 
+                </center>          
+            </aura:if>
+            <aura:if isTrue="{!v.currentStep == 4}"> <!-- Review -->
+                <center>
+                    <table class = "table1">
+                        <tr class = "tr1">
+                            <td class = "td1">Total NPS: </td>
+                            <td class = "td1">{!v.TotalNPS} (EA)</td>
+                        </tr>
+                        <tr class = "tr1">
+                            <td class = "td1">Total Stent: </td>
+                            <td class = "td1">{!v.TotalStent} (EA)</td>
+                        </tr>
+                        <tr class = "tr1">
+                            <td class = "td1">Total Guidewire: </td>
+                            <td class = "td1">{!v.TotalGW} (EA)</td>
+                        </tr>
+                        <tr class = "tr1">
+                            <td class = "td1">Total MPK (4D/7D): </td>
+                            <td class = "td1">{!v.TotalMPK} (EA)</td>
+                        </tr>
+                    </table>
+                    Note: GW: 1 box = 5 EA; MPK: 1 box = 10 EA <br/>
+                    <div style="text-align: left">
+                        <aura:if isTrue="{!v.returnlist.length > 0}">
+                        Please don't use the expiring/expired units with lots below:<br/>
+                            <aura:iteration items="{!v.returnlist}" var="element" indexVar="index">
+                                &nbsp;&nbsp;+&nbsp;{!element}<br/>
+                            </aura:iteration>
+                        <b>Please contact Customer Scuccess Team to remove the unit(s) out of your trunk</b>.<br/>
+                        </aura:if>
+                    </div>
+                    <br/>
+                    Note for Customer Success Team: <br/>
+                    <ui:inputTextArea aura:id="comments" value="{!v.TSCCReport.Note__c}" rows="5" maxlength="250"/>
+                    <aura:if isTrue="{!v.TSCCReport.Note__c.length > 200}">
+                        <span style="font-size:75%; margin: none; padding:none">
+                            (Max: 250 chars, Left: {!(250-v.TSCCReport.Note__c.length)} char(s))
+                        </span>
+                    </aura:if>
+                    <br/>  
+                    <lightning:button 
+                            label="Submit" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.SubmitTSCC}"/>  
+                    <br/><br/>  
+                </center>        
+            </aura:if>
+
+            <aura:if isTrue="{! or(or(and(v.currentStep == 0, v.tempNPSItems.length > 1), and(v.currentStep == 1, v.tempStentItems.length > 1)), or(and(v.currentStep == 2, v.tempGWItems.length > 1), and(v.currentStep == 3, v.tempMPKItems.length > 1)))}">
+                <center>
+                    <table style = "width: 100%; padding: 2vw">
+                        <tr>                   
+                            <br/>
+                            <td style = "width:15%; text-align:center">
+                                <lightning:button 
+                                        label="Back" 
+                                        class="slds-m-top-medium"
+                                        variant="brand"
+                                        disabled="{!or(v.currentStep == 0, v.isChildReady == false)}"
+                                        onclick="{!c.previousSteps}"/>  
+                            </td>
+                            <td style = "width:60%; text-align:center">
+                                Step {!v.currentStep +1}: {!v.currentStepString}
+                            </td>
+                            <td style = "width:15%; text-align:center">
+                                <lightning:button 
+                                        label="Next" 
+                                        class="slds-m-top-medium"
+                                        variant="brand"
+                                        disabled="{!or(v.currentStep == (v.steps.length-1), v.isChildReady == false)}"
+                                        onclick="{!c.nextSteps}"/>  
+                            </td>
+                            <br/><br/>                     
+                        </tr>
+                    </table>
+                </center>
+            </aura:if>
+<!-- ============================== End of Phone UI ====================================================================-->
+
+<!-- ============================== DESKTOP/TABLET UI ====================================================================-->
+            <aura:set attribute="else">
+                <lightning:progressIndicator currentStep="{!v.currentStep}" type="path" variant="base" class ="slds-region_small">
+                    <aura:iteration items="{! v.steps }" var="step" indexVar="index">
+                        <lightning:progressStep label="{! step}" value="{!index}" onclick = "{!c.updateSteps}" />
+                    </aura:iteration>
+                </lightning:progressIndicator>
+
+                <aura:if isTrue="{!v.currentStep == 0}"> <!-- NPS -->
+                    <center>
+                        <table class = "table1">
+                            <tr class = "tr1">
+                                <th class = "th1"> Item # </th>
+                                <th class = "th1"> Lot # </th>
+                                <th class = "th1"> Qty # </th>
+                            </tr>
+                            <aura:iteration items="{!v.tempNPSItems}" var="element" indexVar="index">
+                                <tr class = "tr1">
+                                    <c:SRM_TSAudit_3_11TSCCFormItem
+                                        TSCCItem = "{!element}"
+                                        lots ="{!v.lots}"
+                                        displayMode = "0"
+                                        isChildReady = "{!v.isChildReady}"/>
+                                </tr>
+                            </aura:iteration>
+                        </table>
+                        <br/>  
+                        <lightning:button 
+                                label="Add a new NPS unit" 
+                                class="slds-m-top-medium"
+                                variant="brand"
+                                onclick="{!c.AddNPSUnit}"/>  
+                        <br/><br/>   
+                    </center>
+                </aura:if>
+
+                <aura:if isTrue="{!v.currentStep == 1}"> <!-- Stent -->
+                    <center>
+                        <table class = "table1">
+                            <tr class = "tr1">
+                                <th class = "th1"> Item # </th>
+                                <th class = "th1"> Lot # </th>
+                                <th class = "th1"> Qty # </th>
+                            </tr>
+                            <aura:iteration items="{!v.tempStentItems}" var="element" indexVar="index">
+                                <tr class = "tr1">
+                                    <c:SRM_TSAudit_3_11TSCCFormItem
+                                        TSCCItem = "{!element}"
+                                        lots ="{!v.lots}"
+                                        displayMode = "1"
+                                        isChildReady = "{!v.isChildReady}"/>
+                                </tr>
+                            </aura:iteration>
+                        </table>
+                        <br/>  
+                        <lightning:button 
+                                label="Add a new Stent unit" 
+                                class="slds-m-top-medium"
+                                variant="brand"
+                                onclick="{!c.AddStentUnit}"/>
+                        <br/><br/>   
+                    </center>        
+                </aura:if>
+
+                <aura:if isTrue="{!v.currentStep == 2}"> <!-- GW -->
+                    <center>
+                        <table class = "table1">
+                            <tr class = "tr1">
+                                <th class = "th1"> Item # </th>
+                                <th class = "th1"> Lot # </th>
+                                <th class = "th1"> Qty # </th>
+                            </tr>
+                            <aura:iteration items="{!v.tempGWItems}" var="element" indexVar="index">
+                                <tr class = "tr1">
+                                    <c:SRM_TSAudit_3_11TSCCFormItem
+                                        TSCCItem = "{!element}"
+                                        lots ="{!v.lots}"
+                                        displayMode = "2"
+                                        isChildReady = "{!v.isChildReady}"/>
+                                </tr>
+                            </aura:iteration>
+                        </table>
+                        Note: 1 box = 5 each <br/>    
+                        <lightning:button 
+                                label="Add a new GW unit" 
+                                class="slds-m-top-medium"
+                                variant="brand"
+                                onclick="{!c.AddGWUnit}"/>
+                        <br/><br/> 
+                    </center>
+                     
+                </aura:if>
+                <aura:if isTrue="{!v.currentStep == 3}"> <!-- MPK -->
+                    <center>
+                        <table class = "table1">
+                            <tr class = "tr1">
+                                <th class = "th1"> Item # </th>
+                                <th class = "th1"> Lot # </th>
+                                <th class = "th1"> Qty # </th>
+                            </tr>
+                            <aura:iteration items="{!v.tempMPKItems}" var="element" indexVar="index">
+                                <tr class = "tr1">
+                                    <c:SRM_TSAudit_3_11TSCCFormItem
+                                        TSCCItem = "{!element}"
+                                        lots ="{!v.lots}"
+                                        displayMode = "3"
+                                        isChildReady = "{!v.isChildReady}"/>
+                                </tr>
+                            </aura:iteration>
+                        </table>
+                        Note: 1 box = 10 each <br/>  
+                        <lightning:button
+                                label="Add a new MPK unit" 
+                                class="slds-m-top-medium"
+                                variant="brand"
+                                onclick="{!c.AddMPKUnit}"/>
+                        <br/><br/>  
+                    </center>          
+                </aura:if>
+                <aura:if isTrue="{!v.currentStep == 4}"> <!-- Review -->
+                    <center>
+                        <table class = "table1">
+                            <tr class = "tr1">
+                                <td class = "td1">Total NPS: </td>
+                                <td class = "td1">{!v.TotalNPS} (EA)</td>
+                            </tr>
+                            <tr class = "tr1">
+                                <td class = "td1">Total Stent: </td>
+                                <td class = "td1">{!v.TotalStent} (EA)</td>
+                            </tr>
+                            <tr class = "tr1">
+                                <td class = "td1">Total Guidewire: </td>
+                                <td class = "td1">{!v.TotalGW} (EA)</td>
+                            </tr>
+                            <tr class = "tr1">
+                                <td class = "td1">Total MPK (4D/7D): </td>
+                                <td class = "td1">{!v.TotalMPK} (EA)</td>
+                            </tr>
+                        </table>
+                        Note: GW: 1 box = 5 EA; MPK: 1 box = 10 EA <br/>
+                        <div style="text-align: left">
+                            <aura:if isTrue="{!v.returnlist.length > 0}">
+                                Please don't use the expiring/expired units with lots below:<br/>
+                                <table>
+                                    <aura:iteration items="{!v.returnlist}" var="element" indexVar="index">
+                                        <tr>
+                                            <td style = "text-align: right; padding-right: 2vw; padding-left: 2vw"> + </td>
+                                            <td style = "text-align: left">
+                                                {!element}
+                                            </td>
+                                        </tr>
+                                    </aura:iteration>
+                                </table>
+                                Please contact Customer Scuccess Team to remove the unit(s) out of your trunk.<br/>
+                            </aura:if>
+                        </div>
+                        <br/>
+                        Note for Customer Success Team: <br/>
+                        <ui:inputTextArea aura:id="comments" value="{!v.TSCCReport.Note__c}" rows="5" maxlength="250"/>
+                        <aura:if isTrue="{!v.TSCCReport.Note__c.length > 200}">
+                            <span style="font-size:75%; margin: none; padding:none">
+                                (Max: 250 chars, Left: {!(250-v.TSCCReport.Note__c.length)} char(s))
+                            </span>
+                            <br/>
+                        </aura:if>
+
+                        <lightning:button 
+                                label="Submit" 
+                                class="slds-m-top-medium"
+                                variant="brand"
+                                onclick="{!c.SubmitTSCC}"/>
+                        <br/><br/>  
+                    </center>        
+                </aura:if>
+
+                <aura:if isTrue="{! or(or(and(v.currentStep == 0, v.tempNPSItems.length > 3), and(v.currentStep == 1, v.tempStentItems.length > 3)), or(and(v.currentStep == 2, v.tempGWItems.length > 2), and(v.currentStep == 3, v.tempMPKItems.length > 3)))}">
+                    <center>
+                        <lightning:progressIndicator currentStep="{!v.currentStep}" type="path" variant="base" class ="slds-region_small">
+                            <aura:iteration items="{! v.steps }" var="step" indexVar="index">
+                                <lightning:progressStep label="{! step}" value="{!index}" onclick = "{!c.updateSteps}" />
+                            </aura:iteration>
+                        </lightning:progressIndicator>
+                    </center>
+                </aura:if>
+            </aura:set>
+<!-- ============================== End of DESKTOP/TABLET UI ====================================================================-->
+        </aura:if>
+    </div>     
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                        {!v.waitingMessage}
+                    </p>
+
+                </div>
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->
+</aura:component>

@@ -1,0 +1,258 @@
+<aura:component controller = "SRM_DDLInventory_ServerController">
+	<!-- ================Global Attribute============================ -->
+	<aura:attribute name="LocationRepName" type="String" default=""/> <!-- read-only - only modify by Use Input component -->
+	<aura:attribute name="LotNo" type="String" default=""/>
+	<aura:attribute name="LocationID" type="String" default=""/>
+	<aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+	<aura:attribute name="devicetype" type="String" default="DESKTOP"/>
+
+	<!-- ==================Local Attribute============================ -->
+	<aura:attribute name="UserInputLotNo" type="String" default=""/>
+	<aura:attribute name="UserInputCustomerName" type="String" default=""/>
+	<aura:attribute name="ListProcedureResult" type="Procedure_Form__c[]" />
+	<aura:attribute name="ListProcedureResultDefault" type="Procedure_Form__c[]" />
+	<aura:attribute name="WaitingWindow" type="Boolean" default="False"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+	<aura:attribute name="searchtype" type="Boolean" default="false"/>
+				<!-- 	false: default search
+						true: search by user input -->
+
+	<!-- ================Trigger============================ -->
+	<aura:handler name="init" action="{!c.updateProceResult}" value="{!this}"/>
+    <aura:handler name="change" value="{!v.UpdateTrigger}" action="{!c.updateProceResult}"/>
+
+
+    <!-- UI -->
+    <div style="text-align: left; padding-left: 2vw; font-weight: bold">
+    	Note: Units can be used from both Customer trunk or SRM Trunk.
+    </div>
+
+    <!-- ======================Desktop/Tablet View======================= -->
+    <aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+    	<!-- Search Info -->
+    	<center style = "padding-top: 1vw; padding-bottom: 1vw;">
+    		<div style = "width: 80%; border: 1px solid black; border-collapse: collapse;">
+    			<table>
+    				<tr>
+    					<td style = "test-align: right;">
+    						Customer Name:
+    					</td>
+    					<td style = "test-align: left;">
+	    					<ui:inputText 
+	                        		value="{! v.UserInputCustomerName }" 
+	                          		class ="input"/>
+    					</td>
+    					<td style = "test-align: right;">
+    						Lot #:
+    					</td>
+    					<td style = "test-align: left;">
+	    					<ui:inputText 
+	                        		value="{! v.UserInputLotNo }"
+	                          		class ="input"/>    						
+    					</td>
+    					<td style = "test-align: Center;">
+		                    <lightning:button 
+		                        	label="Search"
+		                          	class="slds-button1"
+		                          	onclick="{!c.Search}"/>      						
+    					</td>
+    					<td style = "test-align: Center;">
+		                    <lightning:button 
+		                        	label="Reset"
+		                          	class="slds-button1"
+		                          	onclick="{!c.Reset}"/> 
+    					</td>
+    				</tr>
+    			</table>
+    		</div>
+    	</center>
+
+	    <div style="text-align: center; padding-left: 2vw; font-weight: bold">
+	    	<aura:if isTrue="{! v.searchtype }">
+	    		Account Name: "%{! v.UserInputCustomerName }%" &emsp;&emsp; Lot Number: "%{! v.UserInputLotNo }%"
+	    		<aura:set attribute="else">
+	    			Location ID: {! v.LocationID } &emsp;&emsp; Lot Number: "%{! v.LotNo }%"
+	    		</aura:set>
+	    	</aura:if>
+	    </div>
+
+		<table style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+			<tr style = "width: 100%; border: 1px solid black; border-collapse: collapse;">
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					Procedure Date
+				</th>
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Customer Info
+				</th>  			
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Attendee(s)
+				</th>
+				<th style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+					NPS Lot #
+				</th> 
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Stent 1 Info
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					Stent 2 Info
+				</th>
+				<th style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+					GW lot #
+				</th>
+				<th style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+					MPK Info
+				</th>
+			</tr>
+
+			<aura:iteration items="{!v.ListProcedureResult}" var="element" indexVar="index">
+				<tr>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center;">
+						<ui:outputDAte value = "{!element.Procedure_Date__c}" format="MM/dd/yyyy"/>
+					</td>  			
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						{!element.Account__r.Name}
+					</td>
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!element.AD_Present__r != null}">
+							{!element.AD_Present__r.Name} <br/>
+						</aura:if>
+						<aura:if isTrue="{!Other_Qualified_SRM_Present__r != null}">
+							{!element.Other_Qualified_SRM_Present__r.Name} <br/>
+						</aura:if>
+						<aura:if isTrue="{!element.AM_Present__r != null}">
+							{!element.AM_Present__r.Name} <br/>
+						</aura:if>
+						<aura:if isTrue="{!element.TDS_Present__r != null}">
+							{!element.TDS_Present__r.Name} <br/>
+						</aura:if>
+						<aura:if isTrue="{!element.Other_SRM_Personnel_Present__c != null}">
+							{!element.Other_SRM_Personnel_Present__c}
+						</aura:if>
+					</td> 
+					<td style = "width: 3%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						{!element.NPS_Lot_No__c}
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!element.Stent_1_Size__c != null}">
+							Size: {!element.Stent_1_Size__c}<br/>
+							Lot: {!element.Stint_1_Lot_Number__c}
+						</aura:if>
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!element.Stint_2_Lot_Number__c != null}">
+							Size: {!element.Stint_2_Size__c}<br/>
+							Lot: {!element.Stint_2_Lot_Number__c}
+						</aura:if>
+					</td>
+					<td style = "width: 5%; border: 1px solid black; border-collapse: collapse; text-align: center">
+						{!element.Guidewire_Lot_Number__c}					
+					</td>
+					<td style = "width: 7%; border: 1px solid black; border-collapse: collapse; text-align: left; padding-left: 1vw;">
+						<aura:if isTrue="{!element.MPK_Lot_Number__c != null}">
+							Size: {!element.MPK_Size__c} <br/>
+							Lot: {!element.MPK_Lot_Number__c}
+						</aura:if>
+					</td>
+				</tr>
+			</aura:iteration>
+		</table>
+
+		<!-- ===========================Phone View========================================== -->
+		<aura:set attribute="else">
+			<table>
+				<tr>
+					<th style = "width: 50%;">
+						General Info
+					</th>
+					<th style = "width: 50%;">
+						Used Items
+					</th>
+
+					<aura:iteration items="{!v.ListProcedureResult}" var="element" indexVar="index">
+						<tr>
+							<td>
+								Procedure Date: <ui:outputDAte value = "{!element.Procedure_Date__c}" format="MM/dd/yyyy"/> <br/>
+								SRM Attendants: <br/>
+								<div style ="padding-right: 1vw">
+									<aura:if isTrue="{!element.AD_Present__r != null}">
+										+ {!element.AD_Present__r.Name} <br/>
+									</aura:if>
+									<aura:if isTrue="{!Other_Qualified_SRM_Present__r != null}">
+										+ {!element.Other_Qualified_SRM_Present__r.Name} <br/>
+									</aura:if>
+									<aura:if isTrue="{!element.AM_Present__r != null}">
+										+ {!element.AM_Present__r.Name} <br/>
+									</aura:if>
+									<aura:if isTrue="{!element.TDS_Present__r != null}">
+										+ {!element.TDS_Present__r.Name} <br/>
+									</aura:if>
+									<aura:if isTrue="{!element.Other_SRM_Personnel_Present__c != null}">
+										+ {!element.Other_SRM_Personnel_Present__c}
+									</aura:if>									
+								</div>
+							</td>
+							<td>
+								NPS Lot #: {!element.NPS_Lot_No__c}<br/>
+								<aura:if isTrue="{!element.Stent_1_Size__c != null}">
+									Stent 1 Size: {!element.Stent_1_Size__c}<br/>
+									Stent 1 Lot: {!element.Stint_1_Lot_Number__c}<br/>
+								</aura:if>
+								<aura:if isTrue="{!element.Stint_2_Lot_Number__c != null}">
+									Stent 2 Size: {!element.Stint_2_Size__c}<br/>
+									Stent 2 Lot: {!element.Stint_2_Lot_Number__c} <br/>
+								</aura:if>
+								<aura:if isTrue="{!element.Guidewire_Lot_Number__c != null}">
+									GW lot#: {!element.Guidewire_Lot_Number__c}<br/>
+								</aura:if>
+								<aura:if isTrue="{!element.MPK_Lot_Number__c != null}">
+									Size: {!element.MPK_Size__c} <br/>
+									Lot: {!element.MPK_Lot_Number__c}<br/>
+								</aura:if>
+							</td>
+						</tr>
+					</aura:iteration>
+				</tr>
+			</table>
+		</aura:set>
+	</aura:if>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      class="slds-button1"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->  
+</aura:component>

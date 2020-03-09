@@ -1,0 +1,66 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 150%;
+    background-color: white;
+    color: black;
+}
+
+.THIS .slds-truncate{
+    font-size: 155%;
+    font-weight: bold;
+    color: blue;
+}
+
+.THIS td.right{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 15%; 
+	text-align: right;
+	/*overflow: hidden;*/
+}
+
+.THIS td.left{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 35%; 
+	text-align: left;
+	overflow: hidden;
+}
+
+.THIS td.center{
+	padding-top: 1vw;
+	padding-bottom: 1vw;
+	padding-right: 	2vw;
+	width: 70%; 
+	text-align: center;
+	overflow: hidden;
+}
+
+.THIS .slds-rich-text-area__content {
+    min-height: 60vh;
+    max-height: 60vh;
+}
+
+.THIS th.th1
+{
+	text-align: right;
+    padding: 1vw;
+    vertical-align: bottom;
+}
+
+.THIS th.th2
+{
+	text-align: left;
+    padding: 1vw;
+    vertical-align: bottom;
+    font-weight: normal;
+}
+
+.THIS tr:nth-child(even) {
+    background-color: #dddddd;
+    width: 100%;
+}

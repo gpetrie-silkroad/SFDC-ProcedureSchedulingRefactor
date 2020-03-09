@@ -1,0 +1,255 @@
+<aura:component>
+<!-- =====================attributes from parent component============================ -->
+	<aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]" />
+	<aura:attribute name="Index" type="Integer" />
+	<aura:attribute name="PossibleItemPickList" type="String[]"/>
+	<aura:attribute name="userInventoryPickList" type="Inventory_Transfer_Form_Transaction__c[]"/>
+	<aura:attribute name="TriggerDisableProductLotChoice" type="Boolean" />
+<!-- ====================End attributes from parent component======================== -->
+
+<!-- =========================Local attributes================================== -->
+	<aura:attribute name="Transaction" type="Inventory_Transfer_Form_Transaction__c" default="{ 'sobjectType': 'Inventory_Transfer_Form_Transaction__c'}"/>
+	<aura:attribute name="PossibleLotPickList" type="String[]" default="['Please select product # first']"/>
+	<aura:attribute name="PossibleQtyPickList" type="String[]" default="['Please select lot # first']"/>
+	<aura:attribute name="SelectedQty" type="String"/>
+	<aura:attribute name="DisableLotItemChoice" type="Boolean" default = "False"/>
+	<aura:attribute name="device" type="String" default=""/>
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="init" action="{!c.initialvalues}" value="{!this}"/>
+	<aura:handler name="change" value="{!v.TriggerDisableProductLotChoice}" action="{!c.updateDisableChoice}"/>
+<!-- ====================end of Calling controller================================ -->
+
+<!-- ============================UI for Desktop and Tablet=================================== -->
+	<aura:if isTrue="{!or(v.device == 'DESKTOP', v.device == 'TABLET')}">
+		<tr>
+			<td style = "vertical-align: middle;">
+				<b>Item #{! v.Index+1}</b>
+			</td>
+			<td style = "text-align: right;">
+				<aura:if isTrue="{! v.DisableLotItemChoice}">
+					<lightning:button 
+				      		label="Remove"
+				      		variant="brand"
+				      		onclick="{!c.RemoveTransaction}"/> 	
+			    </aura:if>		
+			</td>
+		</tr>
+		<tr style = "border-bottom: dashed;">
+			<td style = "width: 60%; padding: 1px">
+				<table style = "table-layout: fixed;">
+					<tr>
+						<td class = "td11">
+							Product #
+						</td>
+						<td class = "td12">
+							<span style="color:red">*</span>:
+						</td>
+						<td class = "td13">
+	            			<aura:if isTrue="{!v.DisableLotItemChoice}">
+	            				<ui:inputText
+	            					value="{!v.Transaction.Product_Number__c}"
+	            					disabled="True"/>
+
+	            				<aura:set attribute="else">						
+						            <ui:inputSelect 
+						                  	aura:id="SelectItemID"  
+						                  	value="{!v.Transaction.Product_Number__c}"
+						                  	disabled="{!v.DisableLotItemChoice}"
+						                  	change = "{!c.UpdatePossibleLotPickList}">
+						                <ui:inputSelectOption text='{!v.Transaction.Product_Number__c}' label="{!v.Transaction.Product_Number__c}"/>
+						                <aura:iteration items="{!v.PossibleItemPickList}" var="element">
+						                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+						                </aura:iteration>
+
+						            </ui:inputSelect>
+						        </aura:set>
+						    </aura:if>
+				        </td>
+				    </tr>
+				    <tr>
+				    	<td class = "td11">
+	            			Lot #
+	            		</td>
+	            		<td class = "td12">
+							<span style="color:red">*</span>:
+						</td>
+	            		<td class = "td13">
+	            			<aura:if isTrue="{!v.DisableLotItemChoice}">
+	            				<ui:inputText
+	            					value="{!v.Transaction.Lot_number__c}"
+	            					disabled="True"/>
+
+	            				<aura:set attribute="else">
+						            <ui:inputSelect 
+						                  	aura:id="SelectLotID"  
+						                  	value="{!v.Transaction.Lot_number__c}"
+						                  	disabled="{!or(or(v.Transaction.Product_Number__c == undefined, v.DisableLotItemChoice), v.Transaction.Product_Number__c == '=== Choose Product # ====')}"
+						                  	change = "{!c.UpdatePossibleQtyPickList}">
+						                <ui:inputSelectOption text='{!v.Transaction.Lot_number__c}' label="{!v.Transaction.Lot_number__c}"/>
+						                <aura:iteration items="{!v.PossibleLotPickList}" var="element">
+						                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+						                </aura:iteration>
+						            </ui:inputSelect>
+						        </aura:set>
+						    </aura:if>
+				        </td>
+				    </tr>
+				    <tr>
+				    	<td class = "td11">
+				    		Qty
+				    	</td>
+				    	<td class = "td12">
+				    		<span style="color:red">*</span>:
+				    	</td>
+				    	<td class = "td13">
+				            <ui:inputSelect 
+				                  	aura:id = "SelectQuantityID"  
+				                  	value = "{!v.SelectedQty}"
+				                  	disabled = "{! or(v.Transaction.Lot_number__c =='Please select product # first', v.Transaction.Lot_number__c == '===Choose Lot #===')}"
+				                  	change = "{!c.UpdateTransactions}"
+				                  	class = "input1">
+				                <aura:iteration items="{!v.PossibleQtyPickList}" var="element">
+				                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+				                </aura:iteration>
+				            </ui:inputSelect>
+				            (UOM: EA)
+				            <aura:if isTrue="{! v.Transaction.Product_Number__c == 'SR-014-GW'}">
+				            	<br/>Note: 1 BOX = 5 EA
+				            </aura:if>
+				            <aura:if isTrue="{! or(v.Transaction.Product_Number__c == 'SR-4F21G7D-MP',v.Transaction.Product_Number__c == 'SR-4F21G4D-MP')}">
+				            	<br/>Note: 1 BOX = 10 EA
+				            </aura:if>
+
+				    	</td>
+				    </tr>
+				</table>			
+			</td>
+			<td style = "width: 40%; padding: 1px">
+				Comment: <br/>
+				<ui:inputTextArea aura:id="comments" value="{!v.Transaction.Note__c}" rows="2" maxlength="99"/>
+
+				<aura:if isTrue="{!v.Transaction.Note__c.length > 85}">
+				    <span style="font-size:75%; margin: none; padding:none">
+				          (Max: 100 chars, Left: {!(99-v.Transaction.Note__c.length)} char(s))
+				    </span>
+				</aura:if>
+			</td>
+		</tr>
+<!-- ============================End of UI for Desktop and Tablet=================================== -->
+
+<!-- ============================UI for Phone=================================== -->
+		<aura:set attribute="else">
+			<tr style = "border-width:1px; border-style:dashed; ">
+				<!-- <td style = "width: 60%; padding: 1px"> -->
+					<b>Item #{! v.Index+1}</b>
+					<table style = "table-layout: fixed;">
+						<tr>
+							<td class = "td11">
+								Product #
+							</td>
+							<td class = "td12">
+								<span style="color:red">*</span>:
+							</td>
+							<td class = "td13">
+		            			<aura:if isTrue="{!v.DisableLotItemChoice}">
+		            				<ui:inputText
+		            					value="{!v.Transaction.Product_Number__c}"
+		            					disabled="True"/>
+
+		            				<aura:set attribute="else">						
+							            <ui:inputSelect 
+							                  	aura:id="SelectItemID"  
+							                  	value="{!v.Transaction.Product_Number__c}"
+							                  	disabled="{!v.DisableLotItemChoice}"
+							                  	change = "{!c.UpdatePossibleLotPickList}">
+							                <ui:inputSelectOption text='{!v.Transaction.Product_Number__c}' label="{!v.Transaction.Product_Number__c}"/>
+							                <aura:iteration items="{!v.PossibleItemPickList}" var="element">
+							                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+							                </aura:iteration>
+
+							            </ui:inputSelect>
+							        </aura:set>
+							    </aura:if>
+					        </td>
+					    </tr>
+					    <tr>
+					    	<td class = "td11">
+		            			Lot #
+		            		</td>
+		            		<td class = "td12">
+								<span style="color:red">*</span>:
+							</td>
+		            		<td class = "td13">
+		            			<aura:if isTrue="{!v.DisableLotItemChoice}">
+		            				<ui:inputText
+		            					value="{!v.Transaction.Lot_number__c}"
+		            					disabled="True"/>
+
+		            				<aura:set attribute="else">
+							            <ui:inputSelect 
+							                  	aura:id="SelectLotID"  
+							                  	value="{!v.Transaction.Lot_number__c}"
+							                  	disabled="{!or(or(v.Transaction.Product_Number__c == undefined, v.DisableLotItemChoice), v.Transaction.Product_Number__c == '=== Choose Product # ====')}"
+							                  	change = "{!c.UpdatePossibleQtyPickList}">
+							                <ui:inputSelectOption text='{!v.Transaction.Lot_number__c}' label="{!v.Transaction.Lot_number__c}"/>
+							                <aura:iteration items="{!v.PossibleLotPickList}" var="element">
+							                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+							                </aura:iteration>
+							            </ui:inputSelect>
+							        </aura:set>
+							    </aura:if>
+					        </td>
+					    </tr>
+					    <tr>
+					    	<td class = "td11">
+					    		Qty
+					    	</td>
+					    	<td class = "td12">
+					    		<span style="color:red">*</span>:
+					    	</td>
+					    	<td class = "td13">
+					            <ui:inputSelect 
+					                  	aura:id = "SelectQuantityID"  
+					                  	value = "{!v.SelectedQty}"
+					                  	disabled = "{! or(v.Transaction.Lot_number__c =='Please select product # first', v.Transaction.Lot_number__c == '===Choose Lot #===')}"
+					                  	change = "{!c.UpdateTransactions}"
+					                  	class = "input1">
+					                <aura:iteration items="{!v.PossibleQtyPickList}" var="element">
+					                    <ui:inputSelectOption text='{!element}' label="{!element}"/>
+					                </aura:iteration>
+					            </ui:inputSelect>
+					            (UOM: EA)
+					            <aura:if isTrue="{! v.Transaction.Product_Number__c == 'SR-014-GW'}">
+					            	<br/>Note: 1 BOX = 5 EA
+					            </aura:if>
+					            <aura:if isTrue="{! or(v.Transaction.Product_Number__c == 'SR-4F21G7D-MP',v.Transaction.Product_Number__c == 'SR-4F21G4D-MP')}">
+					            	<br/>Note: 1 BOX = 10 EA
+					            </aura:if>
+
+					    	</td>
+					    </tr>
+					    <tr>
+					    	<td class = "td11">
+					    		Comment
+					    	</td>
+					    	<td class = "td12">
+					    		:
+					    	</td>
+					    	<td class = "td13">
+								<ui:inputTextArea aura:id="comments" value="{!v.Transaction.Note__c}" rows="2" maxlength="99"/>
+
+								<aura:if isTrue="{!v.Transaction.Note__c.length > 85}">
+								    <span style="font-size:75%; margin: none; padding:none">
+								          (Max: 100 chars, Left: {!(99-v.Transaction.Note__c.length)} char(s))
+								    </span>
+								</aura:if>						    		
+					    	</td>
+					    </tr>
+					</table>			
+			</tr>
+		</aura:set>
+	</aura:if>
+<!-- ============================End of UI for Phone=================================== -->
+</aura:component>

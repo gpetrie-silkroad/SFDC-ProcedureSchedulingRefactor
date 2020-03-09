@@ -1,0 +1,9 @@
+.THIS .slds-button_neutral
+{
+	font-weight: bold;
+}
+
+.THIS .slds-button
+{
+	line-height: unset;
+}

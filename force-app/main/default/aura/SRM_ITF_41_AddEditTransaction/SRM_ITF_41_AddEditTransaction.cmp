@@ -1,0 +1,301 @@
+<aura:component controller="SRM_ITF_ServerController">  
+    <aura:attribute name="possibleOwnerList" type="String[]"/>
+    <aura:attribute name="tempITFTransaction" type="Inventory_Transfer_Form_Transaction__c"/>
+    <aura:attribute name="ITForm" type="Inventory_Transfer_Form__c"/>
+
+    <aura:attribute name="ITFormID" type="String"/>
+    <aura:attribute name="DisplayAddNewEditTransaction" type="Boolean"/>
+
+    <!-- Global Attribute - Lot Inventory Info - update at the main componnet -->
+    <aura:attribute name="listItemNumForCustomerName" type="String" />
+    <aura:attribute name="listItemNumForCustomer" type="String[]" />    
+    <aura:attribute name="amLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="amLotInvenName" type="String" />
+    <aura:attribute name="tdsLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="tdsLotInvenName" type="String" />
+    <aura:attribute name="otherLotInven" type="Lot_Inventory__c[]" />
+    <aura:attribute name="otherLotInvenName" type="String" />
+    <aura:attribute name="customerPriceBook" type="PricebookEntry[]" />
+
+    <!-- Local attribute -->
+    <aura:attribute name="workingITFTransaction" type="Inventory_Transfer_Form_Transaction__c" default="{ 'sobjectType': 'Inventory_Transfer_Form_Transaction__c'}"/>
+    <aura:attribute name="tempLotInven" type="Lot_Inventory__c" default="{ 'sobjectType': 'Lot_Inventory__c'}"/>
+    <aura:attribute name="productNumberPickList" type="String[]" default="" />
+    <aura:attribute name="lotNumberPickList" type="String[]" default=""/>
+    <aura:attribute name="qtyString" type="String" default="0"/>
+    <aura:attribute name="expiringStatus" type="String" default="0"/>
+    <aura:attribute name="qtyPickList" type="String[]" default=""/>
+    <aura:attribute name="manualInput" type="Boolean" default="false"/>
+    <aura:attribute name="isGWMPK" type="Boolean" default="false"/>
+    <aura:attribute name="warningSuggestedPrice" type="String" default="0"/>
+
+    <aura:handler name="change" value="{!v.workingITFTransaction.Lot_number__c}" action="{!c.updatingExpiringStatus}"/>
+    <aura:handler name="change" value="{!v.workingITFTransaction.Product_Number__c}" action="{!c.updatingUOM}"/>
+
+    <aura:attribute name="WaitingWindow" type="Boolean" default="false"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+
+    <!-- Initialze value based on user info -->
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+
+    <aura:registerEvent name="ITFormTransactions" type="c:UpdateITForm"/>
+    
+        <div style="font-weight: bold; font-size:100%; width:100%; text-align: left"> 
+            Transaction Detail
+        </div>
+
+        <div style="background-color : #F2F2F2; text-align:center">
+            <table style = "table-layout:fixed;">
+                <tr>
+                    <td class="leftRequire">
+                        <span style="color:red">*</span> Inventory Owner
+                    </td>
+                    <td class="right">
+                        <ui:inputSelect 
+                            aura:id="invenOwnForm"  
+                            value="{!v.workingITFTransaction.Inventory_Owner__c}"
+                            disabled="false"
+                            change = "{!c.updateAfterChoosingInventory}">
+                            <aura:iteration items="{!v.possibleOwnerList}" var="User">
+                                <ui:inputSelectOption text='{!User}' label="{!User}"/>
+                            </aura:iteration>
+                        </ui:inputSelect>                       
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="left">
+                        <aura:if isTrue="{!and (v.ITForm.ITF_Type__c == 'External Transfer (Customer to Customer)',v.manualInput)}">
+                            <span style="color:red">*</span> Product
+                            <aura:set attribute="else">
+                                Product
+                            </aura:set>
+                        </aura:if>
+                        
+                    </td>
+                    <td class="right">
+                        <ui:inputSelect 
+                            aura:id="productNumForm"  
+                            value="{!v.workingITFTransaction.Product_Number__c}"
+                            disabled="false"
+                            change = "{!c.updateAfterChoosingProduct}">
+                            <aura:iteration items="{!v.productNumberPickList}" var="productItem">
+                                <ui:inputSelectOption text='{!productItem}' label="{!productItem}"/>
+                            </aura:iteration>
+                        </ui:inputSelect> 
+                    </td>
+                </tr>                 
+                <tr>
+                    <td class="leftRequire">
+                        <span style="color:red">*</span> Lot Number
+                    </td>
+                    <td class="right">
+                        <aura:if isTrue="{!v.manualInput}">
+                            <ui:inputText
+                                    aura:id="manualLotForm"
+                                    value="{!v.workingITFTransaction.Lot_number__c}"/>
+                            <aura:set attribute="else">
+                                <ui:inputSelect 
+                                    aura:id="lotForm"  
+                                    value="{!v.workingITFTransaction.Lot_number__c}"
+                                    disabled="false"
+                                    change = "{!c.updateAfterChoosingLot}">
+                                    <aura:iteration items="{!v.lotNumberPickList}" var="lotItem">
+                                        <ui:inputSelectOption text='{!lotItem}' label="{!lotItem}"/>
+                                    </aura:iteration>
+                                </ui:inputSelect>
+                                <aura:if isTrue="{!v.expiringStatus == '1'}">
+                                    &nbsp;Not expired
+                                </aura:if>
+                                <aura:if isTrue="{!v.expiringStatus == '2'}">
+                                    &nbsp;<span style="background-color: red; color: white; font-weight: bold">Expired</span>
+                                </aura:if>
+                                <aura:if isTrue="{!v.expiringStatus == '3'}">
+                                   &nbsp;Unknown expired date - please check expired date on box before using
+                                </aura:if>
+                            </aura:set>
+                        </aura:if>
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="leftRequire">
+                        <span style="color:red">*</span> Quantity
+                    </td>
+                    <td class="right">
+                        <aura:if isTrue="{!v.manualInput}">
+                                <ui:inputNumber 
+                                    aura:id="QuantityForm"  
+                                    value="{!v.workingITFTransaction.Quantity__c}"                         
+                                    disabled="false"/>
+
+                            <aura:set attribute="else">    
+                                <ui:inputSelect 
+                                    aura:id="qtyForm"  
+                                    value="{!v.qtyString}"
+                                    disabled="false"
+                                    change = "{!c.updateAfterChoosingQty}">
+                                    <aura:iteration items="{!v.qtyPickList}" var="qtyItem">
+                                        <ui:inputSelectOption text='{!qtyItem}' label="{!qtyItem}"/>
+                                    </aura:iteration>
+                                </ui:inputSelect> 
+                            </aura:set>
+                        </aura:if>
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="leftRequire">
+                        <span style="color:red">*</span> Unit of Measure
+                    </td>
+                    <td class="right">
+                        <ui:inputSelect 
+                            aura:id="UOMForm"  
+                            value="{!v.workingITFTransaction.UOM__c}"
+                            disabled="false"
+                            change = "{!c.updateAfterChoosingUOM}">
+                            <ui:inputSelectOption text="EA" label="EA"/>
+                            <aura:if isTrue="{!v.isGWMPK}">
+                                <ui:inputSelectOption text="BX" label="BX"/>
+                            </aura:if>
+                        </ui:inputSelect> 
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="leftRequire">
+                        <span style="color:red">*</span> Unit Price
+
+                        <aura:if isTrue="{!v.warningSuggestedPrice == 1}">
+                            <aura:if isTrue="{!v.ITForm.ITF_Type__c == 'Internal Transfer (AM/TDS to AM/TDS)'}">
+                                <lightning:helptext
+                                        content="Don't need a unit price for internal transfer." 
+                                />
+                                <aura:set attribute="else"> 
+                                    <lightning:helptext
+                                            content="The hospital has a pricing contract. If you want to change the price, please contact SRM Customer Success." 
+                                    />                                    
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+
+                        <aura:if isTrue="{!v.warningSuggestedPrice == 2}">
+                            <lightning:helptext
+                                    content="a unit price is zero for evaluation." 
+                            />                            
+                        </aura:if>
+                    </td>
+                    <td class="right">
+                        <ui:inputCurrency
+                                aura:id="PriceForm"  
+                                value="{!v.workingITFTransaction.Price__c}"
+                                change = "{!c.changePrice}"
+                                disabled = "{!or(v.warningSuggestedPrice != 0, v.workingITFTransaction.Lot_number__c == '')}"/>
+                    </td>
+                </tr> 
+                <tr>
+                    <td class="left">
+                        Replenish
+                    </td>
+                    <td class="right">
+                        <ui:inputCheckbox 
+                            aura:id="ReplenishCheckbox"
+                            value="{!v.workingITFTransaction.Replenish__c}"/>
+                    </td>
+                </tr>  
+                <tr>
+                    <td class="left">
+                        Note<br/>
+                        <aura:if isTrue="{!v.workingITFTransaction.Note__c.length > 200}">
+                            <span style="font-size:45%; margin: none; padding:none">
+                                (Max: 250 chars, Left: {!(250-v.workingITFTransaction.Note__c.length)} char(s))
+                            </span>
+                        </aura:if>
+                    </td>
+                    <td class="right">
+                        <ui:inputTextArea 
+                            aura:id="NoteField"
+                            value="{!v.workingITFTransaction.Note__c}" 
+                            rows="2"
+                            maxlength="250"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="center1">
+                        <lightning:button 
+                            label="Cancel" 
+                            class="slds-m-top--medium"
+                            variant="brand"
+                            onclick="{!c.cancelITFTransaction}"/>
+                    </td>
+                    <td class="center1">
+                        <aura:if isTrue="{!v.workingITFTransaction.Id == null}">
+                            <lightning:button 
+                                    label="Add" 
+                                    class="slds-m-top--medium"
+                                    variant="brand"
+                                    onclick="{!c.saveITFTransaction}"/>
+                            <aura:set attribute="else"> 
+                                <lightning:button 
+                                    label="Save" 
+                                    class="slds-m-top--medium"
+                                    variant="brand"
+                                    onclick="{!c.saveITFTransaction}"/>
+                            </aura:set>       
+                        </aura:if>
+                    </td>
+                </tr>                 
+            </table>
+            <div style ="text-align: left; padding-left: 2vw">
+                NOTE: <br/>
+                <table>
+                    <tr>
+                        <td style = "vertical-align: top; text-align: right; padding-right: 2px; color: blue; padding-left: 2vw"> 
+                            Demo:
+                        </td>
+                        <td>
+                            Not For Human Use. Products <b>not</b> used in Procedures.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style = "vertical-align: top; text-align: right; padding-right: 2px; color: blue; padding-left: 2vw"> 
+                            Evaluation:
+                        </td>
+                        <td>
+                            Products <b>used</b> in a procedure but customer is not billed for using the product.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    
+    <!--Use aura:if tag to display Model Box, on the bese of conditions. [isOpen boolean attribute] -->   
+    <aura:if isTrue="{!v.WaitingWindow}">        
+        <!--###### MODAL BOX Start######--> 
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ###### MODAL BOX HEADER Start ######-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+                <!--###### MODAL BOX BODY Part Start######-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                        {!v.waitingMessage}
+                    </p>
+                </div>
+                <!--###### MODAL BOX FOOTER Part Start ######-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+        <!--###### MODAL BOX Part END Here ######-->        
+    </aura:if>
+</aura:component>

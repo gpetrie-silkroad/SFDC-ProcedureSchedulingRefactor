@@ -1,0 +1,932 @@
+<aura:component controller="SRM_TSAudit_ServerController" implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction" access="global">
+<!-- =====================attributes from parent componnet============================ -->
+	<aura:attribute name="TSCCReport" type="Trunk_Stock_Cycle_Count_Report__c"/>
+	<aura:attribute name="TSCCItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+	<aura:attribute name="viewType" type="Integer" default="0"/> 
+          <!-- 0: rep/tds view;
+               1: cs view; -->
+<!-- ====================End attributes from parent componnet======================= -->
+
+<!-- =========================Local attributes================================== -->
+  <aura:attribute name="repTDSUser" type="User"/>
+	<aura:attribute name="WaitingWindow" type="Boolean" default="False"/>
+  <aura:attribute name="DisplayDeepDive" type="Boolean" default="False"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+  <aura:attribute name="selectedTabId" type="String" default="TSResult"/>
+  <aura:attribute name="SelectedTSCCItem" type="Trunk_Stock_Cycle_Count_Item__c"/>
+  <aura:attribute name="PreviousTSCCItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+  <!-- <aura:attribute name="activeSections" type="List" default="['D','I','T','P','H']" /> -->
+  <aura:attribute name="activeSections" type="List" default="['D', 'T']" />
+  <aura:attribute name="activeHeaderTSCCSections" type="List" default="['HCS','HTSCC', 'HTSCCD']" />
+  <aura:attribute name="activeReasonSections" type="List" default="[]" />
+  <aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+  <aura:attribute name="IsChangeSelectedTSCCItem" type="Boolean" default="false"/>
+  <aura:attribute name="IschangeTSCCHeader" type="Boolean" default="false"/>
+  <aura:attribute name="IschangeTSCCDetail" type="Boolean" default="false"/>
+  <aura:attribute name="IsCSListReady" type="Boolean" default="false"/>
+  <aura:attribute name="possibleCSList" type="String[]"/>
+  <aura:attribute name="possibleUnderReason" type="String[]"/>
+  <aura:attribute name="possibleOverReason" type="String[]"/>
+  <aura:attribute name="devicetype" type="String" default="DESKTOP"/> 
+          <!-- DESKTOP for a desktop client
+               PHONE for a phone including a mobile phone with a browser and a smartphone
+               TABLET for a tablet client (for which isTablet returns true)-->
+  <aura:attribute name="EmailTemplate" type="EmailTemplate"  default="{ 'sobjectType': 'EmailTemplate'}"/>
+  <aura:attribute name="ToEmailAddress" type="String" default=""/>
+  <aura:attribute name="CCEmailAddress" type="String" default=""/>
+  <aura:attribute name="displayPreviousCounts" type="Boolean" default="False"/>
+
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+  <aura:handler name="change" value="{!v.TSCCItems}" action="{!c.doInit}"/>
+  <aura:handler name="change" value="{!v.SelectedTSCCItem}" action="{!c.changedSelectedTSCCItem}"/>
+  <aura:handler name="change" value="{!v.displayPreviousCount}" action="{!c.changedDisplayPreviousCount}"/>
+<!-- ====================end of Local attributes================================ -->
+  <div style = "width: 100%; background-color: white; padding: 1vw">
+
+
+<!-- ========================CS/Admin View========================================= -->
+    <aura:if isTrue="{!v.viewType == 1}">
+      <lightning:path 
+          aura:id="path" 
+          recordId="{!v.TSCCReport.Id}"
+          variant="linear"
+          hideUpdateButton="true"
+          onselect="{!c.handleSelect}"
+      />
+      <lightning:tabset onselect = "{!c.changeSelectedTab}" selectedTabId ="{!v.selectedTabId}">
+        <lightning:tab label="Trunk Stock Audit Result" id = "TSResult">
+
+<!-- <table>
+  <tr>
+    <td style = "width: 70%"> -->
+
+          <lightning:accordion
+              allowMultipleSectionsOpen="true"
+              activeSectionName="{! v.activeHeaderTSCCSections }">
+            <lightning:accordionSection name="HTSCC" label="Trunk Stock Audit Information">
+              <table>
+                <tr>Name: {!v.TSCCReport.Name}</tr>
+                <tr>Rep/TDS Name: {!v.TSCCReport.Name__c}</tr>
+                <tr>Submited Date: <ui:outputDate value="{!v.TSCCReport.Count_Date__c}"/></tr>
+                <tr>Note:</tr>
+                <tr>
+                  <ui:inputTextArea 
+                      value="{!v.TSCCReport.Note__c}"
+                      rows="2"
+                      change = "{!c.changeTSCCHeader}"
+                      maxlength="250"/> 
+                </tr> 
+              </table>
+            </lightning:accordionSection>
+
+            <lightning:accordionSection name="HCS" label="Customer Success Information">
+              <table style = "border: none">
+                <tr style = "border: none">
+                  <th style = "text-align: right; border: none"> CS Name: </th>
+                  <td style = "border: none">
+                    <aura:if isTrue="{!v.IsCSListReady}">
+                      <ui:inputSelect value="{!v.TSCCReport.Reviewer__c}" change = "{!c.changeTSCCHeader}">
+                        <aura:iteration items="{!v.possibleCSList}" var="customerSuccess">
+                          <ui:inputSelectOption text="{!customerSuccess}" label="{!customerSuccess}"/>
+                        </aura:iteration>
+                      </ui:inputSelect>
+                    </aura:if>
+                  </td>
+                  <th style = "text-align: right; border: none">
+                    Review Date:
+                  </th>
+                  <td style = "border: none">
+                    <ui:inputDate 
+                          value="{!v.TSCCReport.Review_Date__c}"
+                          format="MM/dd/yyyy"
+                          displayDatePicker="true"
+                          change = "{!c.changeTSCCHeader}"/>
+                  </td>
+                </tr>
+              </table>
+            </lightning:accordionSection>
+
+            <lightning:accordionSection name="HTSCCD" label="Trunk Stock Audit Detail">
+              Total Discrepancies: {!v.TSCCReport.Total_Unit_Discrepancies__c} (EA) / {!v.TSCCReport.Total_Lot_Discrepancies__c} (Lot)
+              <table class = "tableTransaction">
+                <tr>
+                  <th style = "width: 15%"> Product # </th>
+                  <th style = "width: 15%"> Lot # </th>
+                  <th style = "width: 10%"> Counted Qty </th>
+                  <th style = "width: 10%"> System Qty </th>                  
+                  <th style = "width: 13%"> Delta </th>
+                  <th style = "width: 10%"> Period </th>
+                  <th style = "width: 25%"> Expiring Status </th>
+                  <th style = "width: 35%"> Note </th>
+                  <th style = "width: 15%"> </th> <!-- view deep dive button -->
+                </tr>
+
+                <aura:iteration  items="{!v.TSCCItems}" var="element" indexVar="index">
+                  <tr>
+                    <td style = "width: 10%">
+                      {!element.Product_No__c} 
+                    </td>
+                    <td style = "width: 10%">
+                      {!element.Lot_Number__c}
+                    </td>
+                    <td style = "width: 10%">
+                      {!element.Counted_Qty__c} (EA)
+                    </td>
+                    <td style = "width: 10%">
+                      {!element.Qty_on_system__c} (EA)
+                    </td>
+                    <aura:if isTrue="{! element.Different_Type__c == 'Under'}">
+                      <td style = "background-color: red; width: 15%;">
+                        {!element.difference__c} ({!element.Different_Type__c})
+                      </td>
+                    </aura:if>
+
+                    <aura:if isTrue="{! element.Different_Type__c == 'Over'}">
+                      <td style = "background-color: red; width: 15%">
+                        {!element.difference__c} ({!element.Different_Type__c})
+                      </td>
+                    </aura:if>
+
+                    <aura:if isTrue="{! and(element.Different_Type__c != 'Over', element.Different_Type__c != 'Under')}">
+                      <td style = "width: 10%">
+                        {!element.difference__c}
+                      </td>
+                    </aura:if>
+
+                    <td>
+                      {!element.period_discrepancy__c} 
+                    </td>
+                    <aura:if isTrue="{! and(element.Expiring_Status__c != 'OK', element.Counted_Qty__c != 0)}">
+                      <td style = "background-color: orange; width: 30%">
+                        <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                      </td>
+                      <aura:set attribute="else">
+                        <td style = "width: 30%">
+                          <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                        </td>
+                      </aura:set>                        
+                    </aura:if>            
+                    <td style = "width: 40%">
+                      <ui:inputTextArea 
+                        value="{!element.Note__c}"
+                        maxlength="250"
+                        rows="3"
+                        change = "{!c.changeTSCCLineitems}"/>                        
+                    </td>
+                    <td style = "width: 25%">
+                      <lightning:button 
+                          label="View Deep Dive"
+                          class="slds-button1"
+                          variant="brand"
+                          value ="{!index}"
+                          onclick="{!c.viewDeepDive}"/>
+                    </td>
+                  </tr>
+                </aura:iteration>
+              </table> 
+              <center>
+                End of Trunk Stock Audit Detail
+              </center>
+            </lightning:accordionSection>
+          </lightning:accordion>
+
+<!--     </td>
+
+    <td style = "width: 30%">
+      <div style = "border-style: ridge;">
+          <forceChatter:feed 
+            type="Record" 
+            subjectId = "{!v.TSCCReport.Location__c}"
+            feedDesign = "DEFAULT"/>
+      </div>
+    </td>
+  </tr>
+</table> -->
+
+        </lightning:tab>
+
+        <aura:if isTrue="{!v.DisplayDeepDive}">
+          <lightning:tab label="Deep Dive" id = "TSDeepDive">
+            <lightning:accordion
+                allowMultipleSectionsOpen="true"
+                activeSectionName="{! v.activeSections }">
+              <lightning:accordionSection name="D" label="Trunk Stock Item Information">
+                <table>
+                  <tr>
+                    <th style = "width: 7%"> Product # </th>
+                    <th style = "width: 7%"> Lot # </th>
+                    <th style = "width: 10%"> Counted Qty </th>
+                    <th style = "width: 10%"> System Qty </th>
+                    <th style = "width: 10%"> Delta (Type) </th>
+                    <th style = "width: 12%"> Period </th>
+                    <th style = "width: 45%"> Note </th>
+                  </tr>
+                  <tr>
+                    <td>
+                      {!v.SelectedTSCCItem.Product_No__c} 
+                    </td>
+                    <td>
+                      {!v.SelectedTSCCItem.Lot_Number__c}
+                    </td>
+                    <td>
+                      <ui:inputNumber 
+                          value="{!v.SelectedTSCCItem.Counted_Qty__c}"
+                          class = "inputsize"
+                          updateOn="keyup"
+                          change="{!c.onChangeSelectedTSCCItem}"/>
+                      (EA)
+                      <br/>
+                      Note: Please do not change counted quantity except rep/tds confirms that he/she miscount.
+                    </td>
+                    <td>
+                      <ui:inputNumber 
+                          value="{!v.SelectedTSCCItem.Qty_on_system__c}"
+                          class = "inputsize"
+                          updateOn="keyup"
+                          change="{!c.onChangeSelectedTSCCItem}"/>
+                      (EA)
+                    </td>
+
+                    <aura:if isTrue="{! v.SelectedTSCCItem.Different_Type__c == 'Under'}">
+                      <td style = "background-color: red">
+                        {!v.SelectedTSCCItem.difference__c} ({!v.SelectedTSCCItem.Different_Type__c})
+                      </td>
+                    </aura:if>
+
+                    <aura:if isTrue="{! v.SelectedTSCCItem.Different_Type__c == 'Over'}">
+                      <td style = "background-color: red">
+                        {!v.SelectedTSCCItem.difference__c} ({!v.SelectedTSCCItem.Different_Type__c})
+                      </td>
+                    </aura:if>
+
+                    <aura:if isTrue="{! and(v.SelectedTSCCItem.Different_Type__c != 'Over', v.SelectedTSCCItem.Different_Type__c != 'Under')}">
+                      <td>
+                        {!v.SelectedTSCCItem.difference__c}
+                      </td>
+                    </aura:if>
+                    <td>
+                      <ui:inputText 
+                          value="{!v.SelectedTSCCItem.period_discrepancy__c}" 
+                          change="{!c.onChangeSelectedTSCCItem}"
+                          class ="input"
+                          maxlength="18"/>                     
+                    </td>
+                    <td>
+                      <ui:inputTextArea
+                          value="{!v.SelectedTSCCItem.Note__c}" 
+                          change="{!c.onChangeSelectedTSCCItem}"
+                          rows = "3"
+                          class ="input"
+                          maxlength="250"/>                     
+                    </td>
+                  </tr>
+                </table>
+                <aura:if isTrue="{! v.IsChangeSelectedTSCCItem}">
+                  <center>
+                    <div style = "width:100%; padding: 1vw">
+                      <lightning:button 
+                          label="Update Trunk Stock Audit"
+                          class="slds-button1"
+                          variant="brand"
+                          value ="{!index}"
+                          onclick="{!c.updateTSCCItem}"/>     
+                    </div>             
+                  </center>
+                </aura:if>
+
+                <aura:if isTrue="{! v.SelectedTSCCItem.Different_Type__c == 'Under'}">
+                  <center>
+                    <div style ="width: 85%;">
+                      <lightning:accordion                        
+                          allowMultipleSectionsOpen="true"
+                          activeSectionName="{! v.activeReasonSections }">
+                        <lightning:accordionSection name="H" label="Possible 'Under' Reasons">
+                          <table>
+                            <aura:iteration items="{!v.possibleUnderReason}" var="element" indexVar="index">
+                              <tr>
+                                {!element}
+                              </tr>
+                            </aura:iteration>
+                          </table>
+                        </lightning:accordionSection>
+                      </lightning:accordion>                    
+                    </div>
+                  </center>
+                </aura:if>
+
+                <aura:if isTrue="{! v.SelectedTSCCItem.Different_Type__c == 'Over'}">
+                  <center>
+                    <div style ="width: 85%;">
+                      <lightning:accordion                        
+                          allowMultipleSectionsOpen="true"
+                          activeSectionName="{! v.activeReasonSections }">
+                        <lightning:accordionSection name="H" label="Possible 'Over' Reasons">
+                          <table>
+                            <aura:iteration items="{!v.possibleOverReason}" var="element" indexVar="index">
+                              <tr>
+                                {!element}
+                              </tr>
+                            </aura:iteration>
+                          </table>
+                        </lightning:accordionSection>
+                      </lightning:accordion>                    
+                    </div>
+                  </center>
+                </aura:if>
+
+              </lightning:accordionSection>
+
+              <lightning:accordionSection name="H" label="Previous Trunk Stock Audits">
+                <table>
+                  <tr>
+                    <th style = "width: 10%"> Count Date </th>
+                    <th style = "width: 5%"> Product # </th>
+                    <th style = "width: 5%"> Lot # </th>
+                    <th style = "width: 9%"> Counted Qty </th>
+                    <th style = "width: 9%"> System Qty </th>
+                    <th style = "width: 10%"> Delta (Type) </th>
+                    <th style = "width: 9%"> Period </th>
+                    <th style = "width: 45%"> Note </th>                      
+                  </tr>
+                  <aura:iteration  items="{!v.PreviousTSCCItems}" var="element">
+                    <tr>
+                      <td>
+                        <ui:outputDate value="{!element.Trunk_Stock_report__r.Count_Date__c}" format="MM/DD/YYYY"/>                          
+                      </td>
+                      <td>
+                        {!element.Product_No__c} 
+                      </td>
+                      <td>
+                        {!element.Lot_Number__c}
+                      </td>
+                      <td>
+                        {!element.Counted_Qty__c} (EA)
+                      </td>
+                      <td>
+                        {!element.Qty_on_system__c} (EA)
+                      </td>
+                      <aura:if isTrue="{! element.Different_Type__c == 'Under'}">
+                        <td style = "background-color: red;">
+                          {!element.difference__c} ({!element.Different_Type__c})
+                        </td>
+                      </aura:if>
+
+                      <aura:if isTrue="{! element.Different_Type__c == 'Over'}">
+                        <td style = "background-color: red;">
+                          {!element.difference__c} ({!element.Different_Type__c})
+                        </td>
+                      </aura:if>
+
+                      <aura:if isTrue="{! and(element.Different_Type__c != 'Over', element.Different_Type__c != 'Under')}">
+                        <td>
+                          {!element.difference__c}
+                        </td>
+                      </aura:if>
+                      <td>
+                        {!element.period_discrepancy__c}
+                      </td>
+                      <td>
+                        {!element.Note__c}
+                      </td>
+                    </tr>
+                  </aura:iteration>
+                </table>
+              </lightning:accordionSection>
+
+              <lightning:accordionSection name="T" label="Transactions Log">
+                <div style ="width: 98%; padding-bottom: 2vw">
+                  <c:SRM_DDLInventory_TransactionsResult
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      TranReason = ""
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      Viewmode = "1"
+                      UpdateTrigger = "{!v.UpdateTrigger}"
+                      submittedDate = "{!v.TSCCReport.Count_Date__c}"/>
+                </div>
+              </lightning:accordionSection>
+              <lightning:accordionSection name="I" label="Inventory Transfer Forms">
+                <div style ="width: 98%; padding-bottom: 2vw">
+                  <c:SRM_DDLInventory_ITFResult
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      UpdateTrigger = "{!v.UpdateTrigger}"
+                      activeSections = "{!v.activeSections}"/>
+                </div>
+              </lightning:accordionSection>
+              <lightning:accordionSection name="P" label="Procedures Log">
+                <div style ="width: 98%; padding-bottom: 2vw">
+                  <c:SRM_DDLInventory_ProcedureFormResult
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      UpdateTrigger = "{!v.UpdateTrigger}"/>
+                </div>
+              </lightning:accordionSection>
+            </lightning:accordion>
+          </lightning:tab>
+        </aura:if>
+        <lightning:tab label="Send a Notified Email to Rep/TDS" id = "SendEmailToRepTDS">
+          <div style = "width: 98%; vertical-align: top; background-color: white">
+            <center>
+              <table>
+                  <tr>
+                    <th class = 'th21'> 
+                      To
+                    </th>
+                    <th class = 'th22'> 
+                      <lightning:input name="input1" value ="{!v.ToEmailAddress}"/>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th class = 'th21'> 
+                      CC<br/> 
+                    </th>
+                    <th class = 'th22'> 
+                      <lightning:input name="input1" value ="{!v.CCEmailAddress}"/>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th style = "text-align: right; vertical-align: bottom; width: 10%; padding: 1vw; border: none">
+                      Subject:
+                    </th>
+                    <th style = "text-align: left; vertical-align: bottom; width: 90%; padding: 1vw; border: none">
+                      <lightning:input name="input1" value ="{!v.EmailTemplate.Subject}"/>
+                    </th>
+                  </tr>
+              </table>
+            </center>
+          
+            <lightning:inputRichText value="{!v.EmailTemplate.HtmlValue}" placeholder="Email Body"/>
+            
+            <center>
+              <aura:if isTrue="{! v.TSCCReport.Sent_reconciled_email__c}">
+                <div style = "font-weight: bold; font-size: 150%; color: rgb(17, 132, 4); padding-top: 1vw; background-color: yellow;">
+                  A congratulation email for 100% reconciled trunk has been sent to submitter.
+                </div>
+              </aura:if>
+              <lightning:button 
+                  label="Send Email" 
+                  class="slds-m-top--medium"
+                  variant="brand"
+                  onclick="{!c.sendEmail}"/> 
+            </center>           
+          </div>
+        </lightning:tab>
+        <lightning:tab label="Other Trunk Stock Audit Reports" id='TSREports'>
+          <lightning:listView 
+              aura:id="listViewTSReport"
+              objectApiName="Trunk_Stock_Cycle_Count_Report__c"
+              listName="TSCCReportApp_CS"
+              rows="500"
+              showActionBar="true"
+              enableInlineEdit="true"
+              showRowLevelActions="true"
+          />
+        </lightning:tab>
+        
+      </lightning:tabset>
+<!-- ====================End of CS/Admin View====================================== -->
+
+
+
+
+
+<!-- ========================Rep View========================================= -->
+      <aura:set attribute="else">
+        <lightning:path 
+            aura:id="path"
+            recordId="{!v.TSCCReport.Id}"
+            variant="linear"
+            hideUpdateButton="true"
+        />
+        <lightning:tabset onselect = "{!c.changeSelectedTab}" selectedTabId ="{!v.selectedTabId}">
+          <lightning:tab label="Trunk Stock Audit Result" id = "TSResult">
+            <table>
+              <tr>Name: {!v.TSCCReport.Name}</tr>
+              <tr>Rep/TDS Name: {!v.TSCCReport.Name__c}</tr>
+              <tr>Submited Date: <ui:outputDate value="{!v.TSCCReport.Count_Date__c}"/></tr>
+              <tr>Reviewer: {!v.TSCCReport.Reviewer__c} </tr>
+              <tr>Review Date: {!v.TSCCReport.Review_Date__c} </tr>
+              <tr>Note:</tr>
+              <tr>
+                <ui:inputTextArea 
+                    value="{!v.TSCCReport.Note__c}"
+                    rows="2"
+                    change = "{!c.changeTSCCHeader}"
+                    maxlength="250"/> 
+              </tr>
+            </table>
+            <br/>
+
+            <aura:if isTrue="{! or(v.TSCCReport.Status__c == 'Reconciling', v.TSCCReport.Status__c == 'Completed')}">
+              <aura:if isTrue="{! v.TSCCReport.Status__c == 'Completed'}">
+                <center>
+                  <span style = "background-color: yellow; color: black; font-weight: bold; font-size:125%">
+                    Congratulation!! your trunk stock has 100% reconcilation. Your meticulousness is greatly appreciated! Keep up the great work!
+                  </span>
+                </center>
+                <br/>
+              </aura:if>
+              Total Discrepancies: {!v.TSCCReport.Total_Unit_Discrepancies__c} (EA) / {!v.TSCCReport.Total_Lot_Discrepancies__c} (Lot)
+              <!-- ============== Desktop/Tablet View========================= -->
+              <aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+                <table class = "tableTransaction">
+                  <tr>
+                    <th style = "width: 15%"> Product # </th>
+                    <th style = "width: 18%"> Lot # </th>
+                    <th style = "width: 15%"> Counted Qty </th>
+                    <th style = "width: 12%"> System Qty </th>                  
+                    <th style = "width: 13%"> Delta </th>
+                    <th style = "width: 20%"> Expiring Status </th>
+                    <th style = "width: 13%"> Period </th>
+                    <th style = "width: 18%"> Note </th>
+                    <th style = "width: 15%"> </th> <!-- view deep dive button -->
+                  </tr>
+                  <aura:iteration  items="{!v.TSCCItems}" var="element" indexVar="index">
+                    <tr>
+                      <td>
+                        {!element.Product_No__c} 
+                      </td>
+                      <td>
+                        {!element.Lot_Number__c}
+                      </td>
+                      <td>
+                        {!element.Counted_Qty__c} (EA)
+                      </td>
+                      <td>
+                        {!element.Qty_on_system__c} (EA)
+                      </td>
+
+                      <aura:if isTrue="{! element.Different_Type__c == 'Under'}">
+                        <td style = "background-color: red">
+                          {!element.difference__c} ({!element.Different_Type__c})
+                        </td>
+                      </aura:if>
+
+                      <aura:if isTrue="{! element.Different_Type__c == 'Over'}">
+                        <td style = "background-color: red">
+                          {!element.difference__c} ({!element.Different_Type__c})
+                        </td>
+                      </aura:if>
+
+                      <aura:if isTrue="{! and(element.Different_Type__c != 'Over', element.Different_Type__c != 'Under')}">
+                        <td>
+                          {!element.difference__c}
+                        </td>
+                      </aura:if>
+                      <aura:if isTrue="{! and(element.Expiring_Status__c != 'OK', element.Counted_Qty__c != 0)}">
+                        <td style = "background-color: orange">
+                          <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                        </td>
+                        <aura:set attribute="else">
+                          <td>
+                            <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                          </td>
+                        </aura:set>                        
+                      </aura:if> 
+
+                      <td>
+                        {!element.period_discrepancy__c}
+                      </td>
+                      <td>
+                        <ui:inputTextArea 
+                          value="{!element.Note__c}"
+                          rows="3"
+                          change = "{!c.changeTSCCLineitems}"
+                          maxlength="250"/>                        
+                      </td>
+                      <td>
+                        <center>
+                          <aura:if isTrue="{! element.difference__c > 0}">
+                            <lightning:button 
+                                label="View Deep Dive"
+                                class="slds-button1"
+                                variant="brand"
+                                value ="{!index}"
+                                onclick="{!c.viewDeepDive}"/>
+                          </aura:if>
+                        </center>
+                      </td>
+                    </tr>
+                  </aura:iteration>
+                </table>
+                <!-- ======================Phone View============================ -->
+                <aura:set attribute="else">
+                  <table class = "tableTransaction">
+                    <tr>
+                      <th style = "width: 55%"> Lot Info </th>
+                      <th style = "width: 45%"> Count Info </th>
+                    </tr>
+                    <aura:iteration  items="{!v.TSCCItems}" var="element" indexVar="index">
+                      <tr>
+                        <td>
+                          Product#: {!element.Product_No__c} <br/>
+                          Lot#: {!element.Lot_Number__c} <br/>
+                          Lot Status: 
+                          <aura:if isTrue="{! and(element.Expiring_Status__c != 'OK', element.Counted_Qty__c != 0)}">
+                            <span style = "background-color: orange">
+                              <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                            </span>
+                            <aura:set attribute="else">
+                              <span>
+                                <ui:outputDate value="{!element.Expired_Date__c}" format="MM/DD/YYYY"/> - {!element.Expiring_Status__c}
+                              </span>
+                            </aura:set>                        
+                          </aura:if> 
+                          <br/>
+                          Note:
+                          <ui:inputTextArea 
+                            value="{!element.Note__c}"
+                            rows="3"
+                            change = "{!c.changeTSCCLineitems}"
+                            maxlength="250"/> 
+                        </td>
+                        <td>
+                          Qty Count: {!element.Counted_Qty__c} (EA) <br/>
+                          Qty System: {!element.Qty_on_system__c} (EA) <br/>
+
+                          Delta: 
+                          <aura:if isTrue="{! element.Different_Type__c == 'Under'}">
+                            <span style = "background-color: red">
+                              {!element.difference__c} ({!element.Different_Type__c})
+                            </span>
+                          </aura:if>
+                          <aura:if isTrue="{! element.Different_Type__c == 'Over'}">
+                            <span style = "background-color: red">
+                              {!element.difference__c} ({!element.Different_Type__c})
+                            </span>
+                          </aura:if>
+                          <aura:if isTrue="{! and(element.Different_Type__c != 'Over', element.Different_Type__c != 'Under')}">
+                            <span>
+                              {!element.difference__c}
+                            </span>
+                          </aura:if>
+                          <br/>
+                          Period: {!element.period_discrepancy__c} <br/>
+                          <aura:if isTrue="{! element.difference__c > 0}">
+                            <lightning:button 
+                                label="View Deep Dive"
+                                class="slds-button1 slds-button_brand"
+                                variant="brand"
+                                value ="{!index}"
+                                onclick="{!c.viewDeepDive}"/>
+                          </aura:if>
+                        </td>
+                      </tr>
+                    </aura:iteration>
+                  </table>                    
+                </aura:set>
+              </aura:if>
+
+              <aura:set attribute="else">
+                <center style = "font-size: 120%; padding: 2vw">
+                  Thank you for submitting your trunk stock. SRM Customer Success is reviewing your trunk stock report. Please contact customer success if you have any problems about this trunk stock report.
+                </center>
+              </aura:set>
+            </aura:if>
+          </lightning:tab>
+
+          <aura:if isTrue="{!v.DisplayDeepDive}">
+            <lightning:tab label="Deep Dive" id = "TSDeepDive">
+              <lightning:accordion
+                  allowMultipleSectionsOpen="true"
+                  activeSectionName="{! v.activeSections }">
+                <lightning:accordionSection name="D" label="Trunk Stock Item Information">
+                  <!-- ======================Desktop/Tablet View======================= -->
+                  <aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+                    <table>
+                      <tr>
+                        <th> Product # </th>
+                        <th> Lot # </th>
+                        <th> Counted Qty </th>
+                        <th> System Qty </th>
+                        <th> Delta (Type) </th>
+                        <th> Period </th>
+                        <th> Note </th>
+                      </tr>
+                      <tr>
+                        <td>
+                          {!v.SelectedTSCCItem.Product_No__c} 
+                        </td>
+                        <td>
+                          {!v.SelectedTSCCItem.Lot_Number__c}
+                        </td>
+                        <td>
+                          {!v.SelectedTSCCItem.Counted_Qty__c} (EA)
+                        </td>
+                        <td>
+                          {!v.SelectedTSCCItem.Qty_on_system__c} (EA)
+                        </td>
+                        <td>
+                          {!v.SelectedTSCCItem.difference__c}
+                          <aura:if isTrue="{!v.SelectedTSCCItem.difference__c!=0}">
+                            ({!v.SelectedTSCCItem.Different_Type__c})
+                          </aura:if>
+                        </td>
+                        <td>
+                          {!v.SelectedTSCCItem.period_discrepancy__c}
+                        </td>
+                        <td>
+                          <ui:inputTextArea
+                              value = "{!v.SelectedTSCCItem.Note__c}" 
+                              change = "{!c.onChangeSelectedTSCCItem}"
+                              class = "input"
+                              rows = "2"
+                              maxlength="250"/>                     
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- =============================Phone View============================= -->
+                    <aura:set attribute="else">
+                      <table class = "tableTransaction">
+                        <tr>
+                          <th style = "width: 50%"> Lot Info </th>
+                          <th style = "width: 50%"> Count Info </th>
+                        </tr>
+                        <tr>
+                          <td>
+                            {!v.SelectedTSCCItem.Product_No__c} <br/>
+                            Lot #: {!v.SelectedTSCCItem.Lot_Number__c} <br/>
+                            Period: {!v.SelectedTSCCItem.period_discrepancy__c}<br/>
+                            Note:
+                            <ui:inputTextArea 
+                                value="{!v.SelectedTSCCItem.Note__c}" 
+                                change="{!c.onChangeSelectedTSCCItem}"
+                                class ="input"
+                                rows="3"
+                                maxlength="250"/> 
+                          </td>
+                          <td>
+                            Counted Qty: {!v.SelectedTSCCItem.Counted_Qty__c} (EA)<br/>
+                            System Qty: {!v.SelectedTSCCItem.Qty_on_system__c} (EA)<br/>
+                            Delta:                          
+                            {!v.SelectedTSCCItem.difference__c}
+                            <aura:if isTrue="{!v.SelectedTSCCItem.difference__c!=0}">
+                              ({!v.SelectedTSCCItem.Different_Type__c})
+                            </aura:if>                          
+                          </td>
+                        </tr>
+                      </table>
+                    </aura:set>
+                  </aura:if>
+
+                  <aura:if isTrue="{! v.IsChangeSelectedTSCCItem}">
+                    <center>
+                      <div style = "width:100%; padding: 1vw">
+                        <lightning:button 
+                            label="Update Trunk Stock Audit"
+                            value ="{!index}"
+                            class="slds-button1"
+                            variant="brand"
+                            onclick="{!c.updateTSCCItem}"/>     
+                      </div>             
+                    </center>
+                  </aura:if>
+                </lightning:accordionSection>
+
+                <lightning:accordionSection name="T" label="Transactions Log">
+                  <div style ="width: 98%; padding-bottom: 2vw">
+                    <c:SRM_DDLInventory_TransactionsResult
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      TranReason = ""
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      Viewmode = "2"
+                      UpdateTrigger = "{!v.UpdateTrigger}"
+                      submittedDate = "{!v.TSCCReport.Count_Date__c}"
+                      devicetype = "{!v.devicetype}"/>
+                  </div>
+                </lightning:accordionSection>
+                <lightning:accordionSection name="I" label="Inventory Transfer Forms">
+                  <div style ="width: 98%; padding-bottom: 2vw">
+                    <c:SRM_DDLInventory_ITFResult
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      UpdateTrigger = "{!v.UpdateTrigger}"
+                      activeSections = "{!v.activeSections}"
+                      devicetype = "{!v.devicetype}"/>
+                  </div>
+                </lightning:accordionSection>
+                <lightning:accordionSection name="P" label="Procedures Log">
+                  <div style ="width: 98%; padding-bottom: 2vw">
+                    <c:SRM_DDLInventory_ProcedureFormResult
+                      LocationRepName = "{!v.repTDSUser.Name}"
+                      LocationID = "{!v.repTDSUser.Employee_ID__c}"
+                      LotNo = "{!v.SelectedTSCCItem.Lot_Number__c}"
+                      UpdateTrigger = "{!v.UpdateTrigger}"
+                      devicetype = "{!v.devicetype}"/>
+                  </div>
+                </lightning:accordionSection>
+              </lightning:accordion>
+            </lightning:tab>
+          </aura:if>
+          <lightning:tab label="Previous Trunk Stock Audit Reports" id='TSREports'>
+              <lightning:listView 
+                      aura:id="listViewTSReport"
+                      objectApiName="Trunk_Stock_Cycle_Count_Report__c"
+                      listName="TSCCReportApp_Rep"
+                      rows="12"
+                      showActionBar="false"
+                      enableInlineEdit="false"
+                      showRowLevelActions="false"
+              />
+          </lightning:tab>
+        </lightning:tabset>
+<!-- ====================End Of Rep View====================================== -->
+      </aura:set>
+    </aura:if>
+  </div>
+
+<!-- <forceChatter:feed /> -->
+
+<!-- type ="a0p1h000000ErIxAAK" -->
+	
+<!-- 	=================UI for Rep/TDS============
+	<aura:if isTrue="{!v.viewType == 0}">
+
+	=================End of UI for Rep/TDS============
+	=================UI for CS ============
+		<aura:set attribute="else">
+
+		</aura:set>
+	</aura:if>
+
+Welcome to new part!!!!!! -->
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      class="slds-button1"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->  
+
+<!--============================= Floating Save button after changing TSCC ===============================-->
+  <aura:if isTrue="{! or(v.IschangeTSCCDetail, v.IschangeTSCCHeader)}">
+    <!-- ============== Desktop View========================= -->
+    <aura:if isTrue="{! or (v.devicetype == 'DESKTOP', v.devicetype == 'TABLET')}">
+      <div style="position:fixed; width:100%; text-align: center; left:0px; top: 90vh; filter: alpha(opacity=80); background-color: #f0f0f0; color: black; opacity: 0.90;">
+        <center>
+          <lightning:button   
+              label="Save" 
+              class="slds-button1"
+              variant="brand"
+              onclick="{!c.saveTSCCReport}"/>
+        </center>
+      </div>
+
+      <div style="position:fixed; width:100%; text-align: center; filter: alpha(opacity=80); background-color: blue; color: white; left:0px; top: 95vh; opacity: 0.7;">
+        Please click a "Save" button above to save your work before you turn off the webpage.
+      </div>
+      <aura:set attribute="else">
+        <center>
+          <lightning:button   
+              label="Save" 
+              class="slds-button1"
+              variant="brand"
+              onclick="{!c.saveTSCCReport}"/>
+        </center>        
+      </aura:set>
+    </aura:if>
+  </aura:if>
+<!--=========================End of Floating Save button after changing TSCC==============================-->
+</aura:component>

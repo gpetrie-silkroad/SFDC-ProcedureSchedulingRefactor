@@ -1,0 +1,257 @@
+<aura:component controller="SRM_TSAudit_ServerController">
+	<aura:attribute name="TSCCount" type="Trunk_Stock_Cycle_Count__c"  default="{'sobjectType': 'Trunk_Stock_Cycle_Count__c'}"/>
+    <aura:attribute name="TSCCReports" type="Trunk_Stock_Cycle_Count_Report__c[]"/>
+    <aura:attribute name="TSCCReportsOption" type="Trunk_Stock_Cycle_Count_Report__c[]"/>
+    <aura:attribute name="EmailTemplate" type="EmailTemplate"  default="{ 'sobjectType': 'EmailTemplate'}"/>
+    <aura:attribute name="selectedList" type="Boolean[]"/>
+    <aura:attribute name="CCEmailAddress" type="String" default=""/>
+  	<aura:attribute name="totalSelectedUser" type="Integer" default="0"/>
+  	<aura:attribute name="listAMTDSADUsers" type="User[]"/>
+  	<aura:attribute name="updatedselectedList" type="Boolean" default ="false"/>
+
+	<aura:attribute name="WaitingWindow" type="Boolean" default="true"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+	<aura:attribute name="URLOrigin" type="String" default=""/>
+    <aura:attribute name="activeSections" type="List" default="['H','TSARR']" />
+	<aura:attribute name="activeSectionsTSARR" type="List"/>
+
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+    <aura:handler name="change" value="{!v.selectedList}" action="{!c.updateTotalSelectedUSers}"/>
+
+	<div style ="width: 100%; padding-left: 1vw; padding-right: 1vw; background-color: white;">
+		<lightning:accordion
+	        allowMultipleSectionsOpen="true"
+	        activeSectionName="{! v.activeSections }">
+	        <lightning:accordionSection name="H" label="1.1 Trunk Stock Audit Info">
+				<center>
+					<div style="padding-left: 2vw; background-color: white; text-align: center;">
+				        <table style = "table-layout:fixed;">
+				            <tr>
+				               	<td class="right" >
+				                    Name:
+				                </td>
+				                <td class="left">
+				                	{!v.TSCCount.Trunk_Stock_Cycle_Count_ID__c}
+				                </td>
+				                <td class="right">
+				                    Start Date:
+				                </td>
+				                <td class="left">
+				                	<ui:outputDate value="{!v.TSCCount.Start_Date__c}"/>
+				                </td>
+				            </tr>
+				            <tr>
+				                <td class="right">
+				                    End Date:
+				                </td>
+				                <td class="left">
+				                	<ui:outputDate value="{!v.TSCCount.End_Date__c}"/>
+				                </td>					            	
+				                <td class="right">
+				                    Due Date:
+				                </td>
+				                <td class="left">
+				                	<ui:outputDate value="{!v.TSCCount.Due_Date__c}"/>
+				                </td>
+				            </tr>
+				            <tr>
+				                <td class="right">
+				                    Total Reports:
+				                </td>
+				                <td class="left">
+				                	{!v.TSCCount.Total_Trunk_Stock_Reports__c}
+				                </td>					            	
+				                <td class="right">
+				                    Total Submitted Reports:
+				                </td>
+				                <td class="left">
+				                	{!v.TSCCount.Total_Submited_TS_Report__c}
+				                </td>
+				            </tr>		            
+				        </table>
+				        <table>
+				        	<tr>
+				        		<td style = "width: 15%; text-align:right; border: none; vertical-align: top">
+				        			Progress:
+				        		</td>
+				        		<td style = "width: 70%; text-align:center; border: none; vertical-align: top">
+				        			<lightning:progressBar value="{!v.TSCCount.Completed_Percentage__c}" size="large" />
+				        			<center>
+				        				<lightning:button 
+									            label="Refresh" 
+									            class="slds-m-top--medium"
+									            variant="brand"
+									            onclick="{!c.updateProgress}"/>
+				        			</center>
+				        		</td>
+				        		<td style = "width: 15%; text-align:left; border: none; vertical-align: top">
+				        			<ui:outputNumber value="{!v.TSCCount.Completed_Percentage__c}" format = "0.00"/> %
+				        		</td>
+				        	</tr>
+				        </table>
+					</div>
+				</center>	        	
+	        </lightning:accordionSection>
+	        <lightning:accordionSection name="TSARR" label="1.2 Trunk Stock Audit Reports (required/submitted reports)">
+	        	<div style="max-height:70vh; overflow:auto;">
+	       			<table style ="width: 100%;  table-layout: fixed; ">
+	       				<tr style="color:white;background-color:grey;">
+		         			<th style = "padding-left: 1vw; text-align: center; width:3%"></th> <!-- select -->
+		         			<th style = "padding-left: 1vw; text-align: center; width:10%"></th> <!-- Action list -->
+		            		<th style = "padding-left: 1vw; text-align: left; width:10%">Rep/TDS name</th>
+		            		<th style = "text-align: center; width:7%">Status</th>
+		            		<th style = "text-align: center; width:6%">Completed %</th>
+		            		<th style = "text-align: center; width:10%">Count Date</th>
+		            		<th style = "padding-left: 1vw; text-align: left; width:10%">Reviewer</th>
+		            		<th style = "text-align: center; width:10%">Review Date</th>
+		            		<th style = "text-align: center; width:11%">Total Discrepancies (UOM: Lot#)</th>
+		            		<th style = "text-align: center; width:11%">Total Discrepancies (UOM: EA)</th>
+		            		<th style = "padding-left: 1vw; text-align: left; width: 33%; word-wrap: break-word;">Note</th>
+		            		
+		         		</tr>
+		         	
+			          	<aura:iteration items="{!v.TSCCReports}" var="element" indexVar="index">
+			            	<c:SRM_TSAudit_2_1DisplayTSreport 
+				                selectedList = "{!v.selectedList}"
+				                TSCCReport = "{!element}"
+				                index = "{!index}"
+								updatedselectedList ="{!v.updatedselectedList}"
+								URLOrigin = "{!v.URLOrigin}"
+			            	/>
+			          	</aura:iteration>         		
+	         		</table>
+	       		</div>
+	        </lightning:accordionSection>
+			<lightning:accordionSection name="SRE" label="1.3 Send A Remind Email to Selected Rep/Tds in Section 1.2">
+				<center>
+					<lightning:buttonGroup>
+						<lightning:button 
+							label="Deselect all" 
+							class="slds-m-top--medium"
+							variant="brand"
+							onclick="{!c.RemoveSelectedUsers}"/>
+						<lightning:button 
+							label="Select Rep/TDS Who has not submitted cycle count" 
+							class="slds-m-top--medium"
+							variant="brand"
+							onclick="{!c.SelectRepTDSnotSubmitted}"/>
+					</lightning:buttonGroup>       			
+				</center>
+				<br/>
+				<table>
+					<tr>
+						<th class ="th1">
+							To:
+						</th>
+						<th class ="th2">
+							Selected {!v.totalSelectedUser} users on the top, the "Trunk Stock Cycle Count Reports" section.
+						</th>
+					</tr>
+					<tr>
+					<th class ="th1">
+						Bcc:
+					</th>
+					<th class ="th2">
+						<ui:inputtext value ="{!v.CCEmailAddress}"/>
+					</th>
+					</tr>
+
+					<tr>
+					<th class ="th1">
+						Subject:
+					</th>
+					<th class ="th1">
+						<ui:inputtext value ="{!v.EmailTemplate.Subject}"/>
+					</th>
+					</tr>
+				</table>
+				<lightning:inputRichText value="{!v.EmailTemplate.HtmlValue}" placeholder="Email Body"/>
+				<center>
+					<table>
+						<tr>
+							<td style = "width: 50%; text-align: center; border: none;">
+								<lightning:button 
+									label="Save Email Template" 
+									class="slds-m-top--medium"
+									variant="brand"
+									onclick="{!c.saveEmailTemplate}"/>
+							</td>
+							<td style = "width: 50%; text-align: center; border: none;">
+								<lightning:button 
+									label="Send Email to Selected Reps/TDSs" 
+									class="slds-m-top--medium"
+									variant="brand"
+									onclick="{!c.sendEmailToSelectedUser}"/>
+							</td>
+						</tr>
+					</table>
+				</center>
+			</lightning:accordionSection>
+	        <lightning:accordionSection name="TSARO" label="1.4 Trunk Stock Audit Reports (optional - not submited report)">
+	        	<div style="max-height:70vh; overflow:auto;">
+	       			<table style ="width: 100%;  table-layout: fixed; ">
+	       				<tr style="color:white;background-color:grey;">
+		         			<th style = "padding-left: 1vw; text-align: center; width:3%"></th> <!-- select -->
+		         			<th style = "padding-left: 1vw; text-align: center; width:10%"></th> <!-- Action-->
+		            		<th style = "padding-left: 1vw; text-align: left; width:10%">Rep/TDS name</th>
+		            		<th style = "text-align: center; width:7%">Status</th>
+		            		<th style = "text-align: center; width:6%">Completed %</th>
+		            		<th style = "text-align: center; width:10%">Count Date</th>
+		            		<th style = "padding-left: 1vw; text-align: left; width:10%">Reviewer</th>
+		            		<th style = "text-align: center; width:10%">Review Date</th>
+		            		<th style = "text-align: center; width:11%">Total Discrepancies (UOM: Lot#)</th>
+		            		<th style = "text-align: center; width:11%">Total Discrepancies (UOM: EA)</th>
+		            		<th style = "padding-left: 1vw; text-align: left; width: 33%; word-wrap: break-word;">Note</th>		            		
+		         		</tr>
+		         	
+			          	<aura:iteration items="{!v.TSCCReportsOption}" var="element" indexVar="index">
+			            	<c:SRM_TSAudit_2_1DisplayTSreport
+				                TSCCReport = "{!element}"
+				                index = "{!index}"
+				                updatedselectedList ="{!v.updatedselectedList}"
+			            	/>
+			          	</aura:iteration>         		
+	         		</table>
+	       		</div>
+	        </lightning:accordionSection>
+
+	    </lightning:accordion>
+	</div>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->       
+</aura:component>

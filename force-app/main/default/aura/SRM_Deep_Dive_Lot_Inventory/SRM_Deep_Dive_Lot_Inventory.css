@@ -1,0 +1,26 @@
+.THIS {
+	font-family: "Times New Roman", Aria, Architect;
+	padding:0; 
+    margin:0;
+    font-size: 18px;
+    background-color: white;
+    color: black;
+}
+
+.THIS.header{
+    font-size: 220%;
+    padding-left: 2vw;
+    font-weight: bold;
+    color: blue;
+    width: 100%;
+    text-align: center;
+}
+
+.THIS .slds-truncate {
+    max-width: 100%;
+    font-size: 200%;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

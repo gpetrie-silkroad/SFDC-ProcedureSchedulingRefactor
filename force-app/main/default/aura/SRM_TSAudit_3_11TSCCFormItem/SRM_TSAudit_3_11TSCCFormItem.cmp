@@ -1,0 +1,770 @@
+<aura:component controller="SRM_TSAudit_ServerController" implements="flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable" access="global">
+<!-- =====================attributes from parent componnet============================ -->
+    <aura:attribute name="TSCCItem" type="Trunk_Stock_Cycle_Count_Item__c"/>
+    <aura:attribute name="lots" type="Lot_Information__c[]"/>
+    <aura:attribute name="displayMode" type="Integer"/> <!-- 0: NPS; 1:Stent; 2: GW; 3:MPK -->
+    <aura:attribute name="devicetype" type="String" default=""/>
+    <aura:attribute name="isChildReady" type="Integer"/>
+<!-- ====================End attributes from parent componnet======================= -->
+
+
+<!-- =========================Local attributes================================== -->
+    <aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+    <aura:attribute name="QtyEA" type="Integer" default="0"/>
+    <aura:attribute name="QtyBX" type="Integer" default="0"/>
+    <aura:attribute name="ListLot" type="String[]"/>
+    <aura:attribute name="LotStatus" type="String"/>
+    <aura:attribute name="ListItemNo" type="String[]"/>
+<!-- ====================end of Local attributes================================ -->
+
+
+<!-- =========================Calling controller================================== -->
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =================UI for Phone========================================= -->
+  <aura:if isTrue="{!v.devicetype == 'PHONE'}">
+      <!-- UI for NPS -->
+      <aura:if isTrue="{!v.displayMode == 0}">
+        <td class = "td2"> 
+          SR-200-NPS <br/>
+          <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+            Lot#: {!v.TSCCItem.Lot_Number__c}<br/>
+            <aura:set attribute="else">
+              <ui:inputSelect 
+                  aura:id="NPSLotID"  
+                  value="{!v.TSCCItem.Lot_Number__c}"
+                  disabled="false"
+                  change = "{!c.ChangeLotNo}">
+                  <aura:iteration items="{!v.ListLot}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+            </aura:set>
+          </aura:if>
+          Expired Date: 
+          <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+          <aura:if isTrue="{!v.LotStatus == 'OK'}">
+            Status: {!v.TSCCItem.Expiring_Status__c}
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+            Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+            Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+        </td>
+        <td class = "td2">
+          <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+              <center>
+                <table>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.TSCCItem.Counted_Qty__c == 0}"
+                          onclick="{!c.decreaseQty}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm"  
+                          value="{!v.TSCCItem.Counted_Qty__c}"                         
+                          disabled="false"/>
+                      &nbsp;(EA)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQty}"/>
+                    </td>
+                  </tr>
+                </table>
+              </center>
+              <aura:set attribute="else">
+                {!v.TSCCItem.Counted_Qty__c}&nbsp;(EA)
+              </aura:set>
+          </aura:if>
+
+        </td>
+      </aura:if>
+
+      <!-- UI for Stent -->
+      <aura:if isTrue="{!v.displayMode == 1}">
+        <td class = "td2">
+          <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+            {!v.TSCCItem.Product_No__c}<br/>
+            Lot#: {!v.TSCCItem.Lot_Number__c}<br/>
+            <aura:set attribute="else">
+              <ui:inputSelect 
+                  aura:id="StentSizeID"  
+                  value="{!v.TSCCItem.Product_No__c}"
+                  disabled="false"
+                  change = "{!c.ChangeProductNo}">
+                  <aura:iteration items="{!v.ListItemNo}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+
+              Lot#: 
+              <ui:inputSelect 
+                  aura:id="StentLotID"  
+                  value="{!v.TSCCItem.Lot_Number__c}"
+                  disabled="false"
+                  change = "{!c.ChangeLotNo}">
+                  <aura:iteration items="{!v.ListLot}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+            </aura:set>
+          </aura:if>
+          Expired Date: 
+          <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+          <aura:if isTrue="{!v.LotStatus == 'OK'}">
+            Status: {!v.TSCCItem.Expiring_Status__c}
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+            Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+            Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>          
+        </td>
+        <td class = "td2">
+          <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+              <center>
+                <table>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.TSCCItem.Counted_Qty__c == 0}"
+                          onclick="{!c.decreaseQty}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm"  
+                          value="{!v.TSCCItem.Counted_Qty__c}"                         
+                          disabled="false"/>
+                      &nbsp;(EA)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQty}"/>
+                    </td>
+                  </tr>
+                </table>
+              </center>
+              <aura:set attribute="else">
+                {!v.TSCCItem.Counted_Qty__c}&nbsp;(EA)
+              </aura:set>
+          </aura:if>          
+        </td>
+      </aura:if>
+
+      <!-- UI for GW -->
+      <aura:if isTrue="{!v.displayMode == 2}">
+        <td class = "td2">
+          SR-014-GW <br/>
+          <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+            Lot#: {!v.TSCCItem.Lot_Number__c}<br/>
+            <aura:set attribute="else">
+              Lot#:
+              <ui:inputSelect 
+                  aura:id="GWLotID"  
+                  value="{!v.TSCCItem.Lot_Number__c}"
+                  disabled="false"
+                  change = "{!c.ChangeLotNo}">
+                  <aura:iteration items="{!v.ListLot}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+            </aura:set>
+          </aura:if>
+          Expired Date: 
+          <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+          <aura:if isTrue="{!v.LotStatus == 'OK'}">
+            Status: {!v.TSCCItem.Expiring_Status__c}
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+            Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+            Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+        </td>
+        <td class = "td2">
+          <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+              <table>
+                <tr>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="-" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        disabled="{!v.QtyEA == 0}"
+                        onclick="{!c.decreaseQtyEA}"/>
+                  </td>
+                  <td class = "td4">
+                    &nbsp;
+                    <ui:inputNumber 
+                        aura:id="QuantityForm1"  
+                        value="{!v.QtyEA}"                         
+                        disabled="false"
+                        change = "{!c.ChangeQty}"/> &nbsp;(EA)
+                  </td>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="+" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        onclick="{!c.increaseQtyEA}"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="-" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        disabled="{!v.QtyBX == 0}"
+                        onclick="{!c.decreaseQtyBX}"/>
+                  </td>
+                  <td class = "td4">
+                    &nbsp;
+                    <ui:inputNumber 
+                        aura:id="QuantityForm2"  
+                        value="{!v.QtyBX}"                         
+                        disabled="false"
+                        change = "{!c.ChangeQty}"/> &nbsp;(BX)
+                  </td>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="+" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        onclick="{!c.increaseQtyBX}"/>
+                  </td>
+                </tr>
+              </table>
+              <aura:set attribute="else">
+                {!v.QtyEA} &nbsp;(EA) <br/>
+                {!v.QtyBX} &nbsp;(BX) <br/>
+              </aura:set>
+          </aura:if>
+          Total Qty: {!v.TSCCItem.Counted_Qty__c} &nbsp;(EA)
+        </td>
+      </aura:if>
+
+      <!-- UI for MPK/KIT -->
+      <aura:if isTrue="{!v.displayMode == 3}">
+        <td class = "td2">
+          <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+            {!v.TSCCItem.Product_No__c}<br/>
+            Lot#: {!v.TSCCItem.Lot_Number__c}<br/>
+            <aura:set attribute="else"> 
+              <ui:inputSelect 
+                  aura:id="MPKSizeID"
+                  value="{!v.TSCCItem.Product_No__c}"
+                  disabled="false"
+                  change = "{!c.ChangeProductNo}">
+                  <aura:iteration items="{!v.ListItemNo}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+              Lot#: 
+              <ui:inputSelect 
+                  aura:id="GWLotID"  
+                  value="{!v.TSCCItem.Lot_Number__c}"
+                  disabled="false"
+                  change = "{!c.ChangeLotNo}">
+                  <aura:iteration items="{!v.ListLot}" var="element">
+                      <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                  </aura:iteration>
+              </ui:inputSelect> <br/>
+            </aura:set>
+          </aura:if>
+          Expired Date: 
+          <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+          <aura:if isTrue="{!v.LotStatus == 'OK'}">
+            Status: {!v.TSCCItem.Expiring_Status__c}
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+            Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>
+          <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+            Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+          </aura:if>          
+        </td>
+        <td class = "td1">
+          <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+              <table>
+                <tr>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="-" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        disabled="{!v.QtyEA == 0}"
+                        onclick="{!c.decreaseQtyEA}"/>
+                  </td>
+                  <td class = "td4">
+                    &nbsp;
+                    <ui:inputNumber 
+                        aura:id="QuantityForm1"  
+                        value="{!v.QtyEA}"                         
+                        disabled="false"
+                        change = "{!c.ChangeQty}"/> &nbsp;(EA)
+                  </td>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="+" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        onclick="{!c.increaseQtyEA}"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="-" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        disabled="{!v.QtyBX == 0}"
+                        onclick="{!c.decreaseQtyBX}"/>
+                  </td>
+                  <td class = "td4">
+                    &nbsp;
+                    <ui:inputNumber 
+                        aura:id="QuantityForm2"  
+                        value="{!v.QtyBX}"                         
+                        disabled="false"
+                        change = "{!c.ChangeQty}"/> &nbsp;(BX)
+                  </td>
+                  <td class = "td3">
+                    <lightning:button 
+                        label="+" 
+                        class="slds-m-top-medium"
+                        variant="brand"
+                        onclick="{!c.increaseQtyBX}"/>
+                  </td>
+                </tr>
+              </table>
+              <aura:set attribute="else">
+                {!v.QtyEA} &nbsp;(EA) <br/>
+                {!v.QtyBX} &nbsp;(BX) <br/>
+              </aura:set>
+          </aura:if>
+          Total Qty: {!v.TSCCItem.Counted_Qty__c} &nbsp;(EA)
+        </td>
+      </aura:if>
+<!-- =================End of UI for Phone========================================= -->
+
+ <!-- =================UI for Destop/Tablet========================================= -->
+      <aura:set attribute="else">
+        <!-- UI for NPS -->
+        <aura:if isTrue="{!v.displayMode == 0}">
+          <td class = "td1"> SR-200-NPS </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Lot_Number__c}<br/>
+              <aura:set attribute="else">
+                <ui:inputSelect 
+                    aura:id="NPSLotID"  
+                    value="{!v.TSCCItem.Lot_Number__c}"
+                    disabled="false"
+                    change = "{!c.ChangeLotNo}">
+                    <aura:iteration items="{!v.ListLot}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect> <br/>
+              </aura:set>
+            </aura:if>
+            Expired Date: 
+            <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+            <aura:if isTrue="{!v.LotStatus == 'OK'}">
+              Status: {!v.TSCCItem.Expiring_Status__c}
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+              Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+              Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+                <center>
+                  <table>
+                    <tr>
+                      <td class = "td3">
+                        <lightning:button 
+                            label="-" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            disabled="{!v.TSCCItem.Counted_Qty__c == 0}"
+                            onclick="{!c.decreaseQty}"/>
+                      </td>
+                      <td class = "td4">
+                        &nbsp;
+                        <ui:inputNumber 
+                            aura:id="QuantityForm"  
+                            value="{!v.TSCCItem.Counted_Qty__c}"                         
+                            disabled="false"/>
+                        &nbsp;(EA)
+                      </td>
+                      <td class = "td3">
+                        <lightning:button 
+                            label="+" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.increaseQty}"/>
+                      </td>
+                    </tr>
+                  </table>
+                </center>
+                <aura:set attribute="else">
+                  {!v.TSCCItem.Counted_Qty__c}&nbsp;(EA)
+                </aura:set>
+            </aura:if>
+          </td>
+        </aura:if>
+
+        <!-- UI for Stent -->
+        <aura:if isTrue="{!v.displayMode == 1}">
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Product_No__c}
+              <aura:set attribute="else">             
+                <ui:inputSelect 
+                    aura:id="StentSizeID"  
+                    value="{!v.TSCCItem.Product_No__c}"
+                    disabled="false"
+                    change = "{!c.ChangeProductNo}">
+                    <aura:iteration items="{!v.ListItemNo}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect>
+              </aura:set>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Lot_Number__c}<br/>
+              <aura:set attribute="else">
+                <ui:inputSelect 
+                    aura:id="StentLotID"  
+                    value="{!v.TSCCItem.Lot_Number__c}"
+                    disabled="false"
+                    change = "{!c.ChangeLotNo}">
+                    <aura:iteration items="{!v.ListLot}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect> <br/>
+              </aura:set>
+            </aura:if>
+            Expired Date: 
+            <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+            <aura:if isTrue="{!v.LotStatus == 'OK'}">
+              Status: {!v.TSCCItem.Expiring_Status__c}
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+              Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+              Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+              <center>
+                  <table>
+                    <tr>
+                      <td class = "td3">
+                        <lightning:button 
+                            label="-" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            disabled="{!v.TSCCItem.Counted_Qty__c == 0}"
+                            onclick="{!c.decreaseQty}"/>
+                      </td>
+                      <td class = "td4">
+                        &nbsp;
+                        <ui:inputNumber 
+                            aura:id="QuantityForm"  
+                            value="{!v.TSCCItem.Counted_Qty__c}"                         
+                            disabled="false"/>
+                        &nbsp;(EA)
+                      </td>
+                      <td class = "td3">
+                        <lightning:button 
+                            label="+" 
+                            class="slds-m-top-medium"
+                            variant="brand"
+                            onclick="{!c.increaseQty}"/>
+                      </td>
+                    </tr>
+                  </table>
+                </center>
+                <aura:set attribute="else">
+                  {!v.TSCCItem.Counted_Qty__c}&nbsp;(EA)
+                </aura:set>
+            </aura:if>
+          </td>
+        </aura:if>
+
+        <!-- UI for GW -->
+        <aura:if isTrue="{!v.displayMode == 2}">
+          <td class = "td1"> SR-014-GW </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Lot_Number__c}<br/>
+              <aura:set attribute="else">
+                <ui:inputSelect 
+                    aura:id="GWLotID"  
+                    value="{!v.TSCCItem.Lot_Number__c}"
+                    disabled="false"
+                    change = "{!c.ChangeLotNo}">
+                    <aura:iteration items="{!v.ListLot}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect> <br/>
+              </aura:set>
+            </aura:if>
+            Expired Date: 
+            <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+            <aura:if isTrue="{!v.LotStatus == 'OK'}">
+              Status: {!v.TSCCItem.Expiring_Status__c}
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+              Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+              Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+                <table>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.QtyEA == 0}"
+                          onclick="{!c.decreaseQtyEA}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm1"  
+                          value="{!v.QtyEA}"                         
+                          disabled="false"
+                          change = "{!c.ChangeQty}"/> &nbsp;(EA)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQtyEA}"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.QtyBX == 0}"
+                          onclick="{!c.decreaseQtyBX}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm2"  
+                          value="{!v.QtyBX}"                         
+                          disabled="false"
+                          change = "{!c.ChangeQty}"/> &nbsp;(BX)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQtyBX}"/>
+                    </td>
+                  </tr>
+                </table>
+                <aura:set attribute="else">
+                  {!v.QtyEA} &nbsp;(EA) <br/>
+                  {!v.QtyBX} &nbsp;(BX) <br/>
+                </aura:set>
+            </aura:if>
+            Total Qty: {!v.TSCCItem.Counted_Qty__c} &nbsp;(EA)
+          </td>
+        </aura:if>
+
+        <!-- UI for MPK/KIT -->
+        <aura:if isTrue="{!v.displayMode == 3}">
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Product_No__c}
+              <aura:set attribute="else">            
+                <ui:inputSelect 
+                    aura:id="MPKSizeID"  
+                    value="{!v.TSCCItem.Product_No__c}"
+                    disabled="false"
+                    change = "{!c.ChangeProductNo}">
+                    <aura:iteration items="{!v.ListItemNo}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect>
+              </aura:set>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Confirmed__c}">
+              {!v.TSCCItem.Lot_Number__c}<br/>
+              <aura:set attribute="else">
+                <ui:inputSelect 
+                    aura:id="GWLotID"  
+                    value="{!v.TSCCItem.Lot_Number__c}"
+                    disabled="false"
+                    change = "{!c.ChangeLotNo}">
+                    <aura:iteration items="{!v.ListLot}" var="element">
+                        <ui:inputSelectOption text='{!element}' label="{!element}"/>
+                    </aura:iteration>
+                </ui:inputSelect> <br/>
+              </aura:set>
+            </aura:if>
+            Expired Date: 
+            <lightning:formattedDateTime value="{!v.TSCCItem.Expired_Date__c}" year="numeric" month="numeric" day="numeric"/><br/>
+            <aura:if isTrue="{!v.LotStatus == 'OK'}">
+              Status: {!v.TSCCItem.Expiring_Status__c}
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expired'}">
+              Status: <span class = "ExpiredStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+            <aura:if isTrue="{!v.LotStatus == 'Expiring'}">
+              Status: <span class = "ExpiringStyle">{!v.TSCCItem.Expiring_Status__c}</span>
+            </aura:if>
+          </td>
+          <td class = "td1">
+            <aura:if isTrue="{!v.TSCCItem.Lot_Number__c != 'Lot #: N/A'}">
+                <table>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.QtyEA == 0}"
+                          onclick="{!c.decreaseQtyEA}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm1"  
+                          value="{!v.QtyEA}"                         
+                          disabled="false"
+                          change = "{!c.ChangeQty}"/> &nbsp;(EA)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQtyEA}"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="-" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          disabled="{!v.QtyBX == 0}"
+                          onclick="{!c.decreaseQtyBX}"/>
+                    </td>
+                    <td class = "td4">
+                      &nbsp;
+                      <ui:inputNumber 
+                          aura:id="QuantityForm2"  
+                          value="{!v.QtyBX}"                         
+                          disabled="false"
+                          change = "{!c.ChangeQty}"/> &nbsp;(BX)
+                    </td>
+                    <td class = "td3">
+                      <lightning:button 
+                          label="+" 
+                          class="slds-m-top-medium"
+                          variant="brand"
+                          onclick="{!c.increaseQtyBX}"/>
+                    </td>
+                  </tr>
+                </table>
+                <aura:set attribute="else">
+                  {!v.QtyEA} &nbsp;(EA) <br/>
+                  {!v.QtyBX} &nbsp;(BX) <br/>
+                </aura:set>
+            </aura:if>
+            Total Qty: {!v.TSCCItem.Counted_Qty__c} &nbsp;(EA)
+          </td>
+        </aura:if>
+<!-- =================End of UI for Destop/Tablet========================================= -->
+      </aura:set>
+    </aura:if>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->  
+    
+</aura:component>

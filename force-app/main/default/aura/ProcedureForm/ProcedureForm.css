@@ -1,0 +1,64 @@
+.THIS{
+     
+}
+
+.THIS .slds-section__title{
+    background-color: YellowGreen;
+    color: white
+}
+
+
+.THIS .slds-modal__header{
+    background-color: purple;
+    color: white
+}
+.THIS hr{
+            border-color: black;
+        	border-width: 1px;
+            border-style: solid;
+    		height: 2px;
+}
+.THIS h1{
+    font-weight: 900;
+    color: black;
+}
+
+
+.s.THIS {
+   background-color: yellow;
+}
+
+.THIS .red {
+    color: red;
+}
+
+.THIS .redsmall {
+    color: red;
+    font-size: 12px;
+}
+
+
+
+.THIS .redBGColor{
+    background-color: red;
+    color: black;
+    font-weight: bold;
+}
+
+.THIS .whiteBGColor{
+    background-color: white;
+    color: black;
+    font-weight: normal;
+}
+
+
+.THIS .slds-textarea {
+    height:100px !important;
+}
+
+
+
+
+.selectwide.THIS {
+   width: 200px;
+}

@@ -1,0 +1,31 @@
+<aura:component controller="SRM_TSAudit_ServerController" implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction" access="global">
+
+    <lightning:tabset>
+        <lightning:tab label="Trunk Stock Detail">
+        	<div style="width: 98%; padding-left: 1vw; padding-right: 1vw; background-color: white">
+				<lightning:listView 
+						aura:id="listViewInventory"
+					    objectApiName="Lot_Inventory__c"
+					    listName="All1"
+					    rows="500"
+					    showActionBar="false"
+					    enableInlineEdit="false"
+					    showRowLevelActions="false"
+				/>
+			</div>
+        </lightning:tab>
+
+    	<lightning:tab label="Monthly Audit">
+            <lightning:listView 
+                	aura:id="listViewTSReport"
+                	objectApiName="Trunk_Stock_Cycle_Count_Report__c"
+                	listName="TSCCReportApp_Rep"
+                	rows="12"
+                	showActionBar="false"
+                	enableInlineEdit="false"
+                	showRowLevelActions="false"
+             />
+        </lightning:tab>
+    </lightning:tabset>
+		
+</aura:component>

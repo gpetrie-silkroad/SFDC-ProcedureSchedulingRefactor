@@ -1,0 +1,83 @@
+<aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global">
+
+	<aura:attribute name="ITFID" type="String" />
+	<aura:attribute name="ITFType" type="String" default="Inventory Transfer Form"/>
+	<aura:attribute name="version" type="String" />
+	<aura:attribute name="isDesktop" type="Boolean" />
+
+	<div style="width:100%; background-color: black; text-align: center">
+
+		<!-- Customize Header for Desktop view -->
+		<aura:if isTrue="{!v.isDesktop=='True'}">
+		
+			<div class = "space">
+				<br/>
+			</div>
+
+        	<img class="resize" 
+        		 id="SRMLogo"
+        		 src="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png"
+        		 alt="Silkroad Medical Logo" /> 
+
+        	<b class = "h1">
+        		{!v.ITFType}
+       		</b>
+
+       		<br/>
+       			<center>
+					<div class ="flexibleScreen">
+						<table>
+							<tr>
+								<td class = "p2" style = "width: 50%; text-align: center"> 
+									<!-- &nbsp;&nbsp;&nbsp;ITFID: &nbsp; {!v.ITFID} -->
+								</td>  
+								<td class = "p2" style = "width: 50%; text-align: center"> {!v.version}</td>	    		  	
+							</tr>
+						</table>
+					</div>
+				</center>
+
+			<div class = "space">
+				<br/>
+			</div>
+			<hr/>
+
+			<!-- customize Header for Phone view -->
+			<aura:set attribute="else">
+				<div class = "space">
+					<br/>
+				</div>
+
+				<div style="width:100%">
+					<div class="column left">
+						<img class="resize2" 
+							 id="SRMLogo"
+							 src="http://www.silkroadmedical.com/wp-content/uploads/2016/07/sr_main_logo_178x45.png"
+							 alt="Silkroad Medical Logo" /> 
+					</div>
+
+					<div class="column right">
+						<b class = "h2">
+							{!v.ITFType}
+						</b>
+					</div>
+
+					<div class ="flexibleScreen">
+						<table>
+							<tr>
+								<td class = "p2" style = "width: 70%; text-align: center"> <!-- &nbsp;&nbsp;&nbsp;ITFID: &nbsp; {!v.ITFID} --></td>  
+								<td class = "p2" style = "width: 30%; text-align: center"> {!v.version}</td>	    		  	
+							</tr>
+						</table>
+					</div>
+
+				</div>
+				
+				<div class = "space">
+					<br/>
+				</div>			
+				<hr/>
+			</aura:set>
+		</aura:if>
+	</div>
+</aura:component>

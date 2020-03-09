@@ -1,0 +1,97 @@
+.THIS {
+    font-family: Architect,"Times New Roman", Arial;
+    background-color: black;
+    font-size: 1vw;
+    border: 0px;
+    padding:0; 
+    margin:0;
+    border-collapse: collapse;
+}
+
+.THIS .h1{
+	font-size: 200%;
+	color: #ff6347;
+	text-align: center;
+	padding-top:1vw;
+	padding-bottom:1vw;
+}
+
+.THIS .h2{
+	font-size: 300%;
+	color: #ff6347;
+	text-align: center;
+	padding-top:1vw;
+	padding-bottom:1vw;
+}
+
+.THIS .space{
+	font-size: 25%;
+}
+
+.THIS .p{
+	font-size: 80%;
+	color: white;
+	padding-top:0vw;
+	padding-bottom:0vw;
+}
+
+.THIS .p1{
+	font-size: 60%;
+	color: white;
+	padding-top:none;
+	padding-bottom:none;
+}
+
+.THIS .p2{
+	font-size: 90%;
+	color: white;
+	padding-top:none;
+	padding-bottom:none;
+}
+
+.THIS hr {
+	border-color:#ff6347;
+	border-width:0.5vh;
+    border-style:solid;
+    background-color: #ff6347;
+    padding:0; 
+    margin:0;
+}
+
+.THIS img.resize {
+  width:9vw;
+  max-width: 100%;
+}
+
+.THIS img.resize2 {
+  /*width:30vw;*/
+  max-width: 100%;
+}
+
+.THIS .column {
+    padding: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.THIS .left {
+    width: 100%;
+    align-content: center;
+}
+
+.THIS .right {
+    width: 100%;
+}
+
+.THIS .flexibleScreen{
+	width: 70%;
+}
+
+@media (max-aspect-ratio: 15/16) {
+	.THIS {
+    	font-size: 2vw;
+	}
+	.THIS .flexibleScreen{
+		width: 100%;
+	}
+}

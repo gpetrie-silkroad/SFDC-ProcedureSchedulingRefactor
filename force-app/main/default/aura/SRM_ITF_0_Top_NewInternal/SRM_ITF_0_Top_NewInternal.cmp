@@ -1,0 +1,132 @@
+<aura:component controller="SRM_ITF_ServerController" implements="lightning:isUrlAddressable">
+	<aura:attribute name="ITForm" type="Inventory_Transfer_Form__c" default="{ 'sobjectType': 'Inventory_Transfer_Form__c'}"/>
+    <aura:attribute name="ITFTransactions" type="Inventory_Transfer_Form_Transaction__c[]" /> <!-- Get user lot inputs from ITF_4_lightversion -->
+    <aura:attribute name="currentUser" type="User" default="{ 'sobjectType': 'User'}"/>
+    <aura:attribute name="userInventory" type="Lot_Inventory__c[]"/>
+    <aura:attribute name="ITFType" type="String" default=""/>
+    <aura:attribute name="ITFHeader" type="String" default="Trunk Stock Return"/>
+    <aura:attribute name="Reset" type="Boolean" default="False"/> <!-- the component is not reset when it is call the 2nd time (manually reset after recall) -->
+
+    <aura:attribute name="version" type="String" default="v0.4.5"/>
+	<aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+	<aura:attribute name="device" type="String" default=""/>
+	<aura:attribute name="isDesktop" type="Boolean" />
+
+    <aura:dependency resource="markup://force:navigateToSObject" type="EVENT"/>
+
+    <aura:handler name="change" value="{!v.pageReference}" action="{!c.doInit}"/>
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+
+	<center>
+		<div style = "width: 100%; background-color: rgb(232, 247, 240)">
+			<!-- Header Section -->
+			<c:SRM_ITF_1_Header
+				ITFID="{!v.ITFID}"
+				version="{!v.version}"
+				isDesktop="{!v.isDesktop}"
+				ITFType="{!v.ITFHeader}"/>
+			<div 
+					class="{!if(v.isDesktop == 'True', 'flexibleScreen', 'flexibleScreenMobile')}" 
+					style="text-align: left; padding-left: 2vw; padding-bottom: 2vw; padding-right: 2vw; background-color: rgb(232, 247, 240);">
+				<span style="color:red">*</span> Required Fields
+
+				<fieldset class="slds-box slds-theme--default slds-container--large">
+	<!--             	<legend id="newprocedureform" class="slds-text-heading-large">
+						ITF Demo - Header
+	            	</legend> -->
+
+					<table>
+						<tr>
+							<td> ID</td>
+							<td><span style="color:red">*</span>:</td>
+							<td>
+								<ui:inputText value="{!v.ITForm.ITF_ID__c}" disabled="True"/>
+							</td>
+						</tr>
+
+						<tr>
+							<td> Requested date</td>
+							<td><span style="color:red">*</span>:</td>
+							<td>
+								<ui:inputDate value="{!v.ITForm.Transfer_Date__c}" disabled="True"/>
+							</td>
+						</tr>
+
+						<tr>
+							<td>Requested By</td>
+							<td><span style="color:red">*</span>:</td>
+							<td>
+								<ui:inputText value="{!v.currentUser.LastName + ', ' + v.currentUser.FirstName}" disabled="True"/>
+							</td>
+						</tr>
+					</table>
+				</fieldset>
+
+				<fieldset class="slds-box slds-theme--default slds-container--large">
+	            	<legend id="newprocedureform" class="slds-text-heading--large">
+						Returned Items
+	            	</legend>
+
+	            	<c:SRM_ITF_4_Transactions_lightversion
+	            			userInventory="{!v.userInventory}"
+	            			currentUser="{!v.currentUser}"
+	            			ITFTransactions="{!v.ITFTransactions}"
+	            			isDesktop="{!v.isDesktop}"
+	            			Reset="{!v.Reset}"/>
+				</fieldset>
+
+			
+				<fieldset class="slds-box slds-theme--default slds-container--large" style = "padding-top: 3px; padding-bottom: 3px">
+					<center>
+					  	<lightning:button 
+					      		label="Submit" 
+					      		variant="brand"
+					      		onclick="{!c.submit}"/>
+					</center>
+				</fieldset>
+			</div>
+		</div>
+	</center>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+	<aura:if isTrue="{!v.WaitingWindow}">
+		<section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+			<div class="slds-modal__container">
+				<!-- ================Header Message============================-->
+				<header class="slds-modal__header">
+					<lightning:buttonIcon iconName="utility:close"
+							onclick="{!c.closeWaitingPopUp}"
+							alternativeText="close"
+							variant="bare-inverse"
+							class="slds-modal__close"/>
+					<h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+				</header>
+
+
+				<!-- ================Body Message============================-->
+				<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+					<p>
+						{!v.waitingMessage}
+					</p>
+
+				</div>
+				<div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+					<div class="slds-spinner__dot-a"></div>
+					<div class="slds-spinner__dot-b"></div>
+				</div>
+
+				<!-- ================Footer Message============================-->
+				<footer class="slds-modal__footer">
+					<lightning:button 
+							variant="neutral" 
+							label="Cancel"
+							title="Cancel"
+							onclick="{!c.closeWaitingPopUp}"/>
+				</footer>
+			</div>
+		</section>
+		<div class="slds-backdrop slds-backdrop_open"></div>
+	</aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->
+</aura:component>

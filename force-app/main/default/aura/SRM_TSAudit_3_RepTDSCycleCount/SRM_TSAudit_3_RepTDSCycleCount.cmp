@@ -1,0 +1,106 @@
+<aura:component controller="SRM_TSAudit_ServerController" implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable,force:lightningQuickAction,lightning:isUrlAddressable" access="global">
+
+<!-- =========================Local attributes================================== -->
+  <aura:attribute name="version" type="String" default ="v 1.0.0"/>
+  <aura:attribute name="currentUser" type="User" default="{ 'sobjectType': 'User'}"/>
+  <aura:attribute name="TSCCReport" type="Trunk_Stock_Cycle_Count_Report__c"/>
+  <aura:attribute name="TSCCItems" type="Trunk_Stock_Cycle_Count_Item__c[]"/>
+  <aura:attribute name="lotinventory" type="Lot_Inventory__c[]"/>
+  <aura:attribute name="status" type="Integer" /> 
+          <!-- 0: no TSCycle Count for this month;
+               1: have 1 pending TSCC;
+               2: have 1 submitted TSCC -->
+  <aura:attribute name="viewType" type="Integer" default="0"/> 
+          <!-- 0: rep/tds view;
+               1: cs view; -->
+	<aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+  <aura:attribute name="IsAdministration" type="Boolean" default="False"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+<!-- ====================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================== -->
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+  <aura:handler name="change" value="{!v.status}" action="{!c.updateStatus}"/>
+  <aura:handler name="change" value="{!v.currentUser}" action="{!c.updateUser}"/>
+<!-- ====================end of Calling controller================================ -->
+
+  <aura:if isTrue="{!v.status != 1}">
+    <c:SRM_TSAudit_3_0Header
+      version = "{!v.version}"
+      IsAdministration = "{!v.IsAdministration}"
+      viewType = "{!v.viewType}"
+      title = "Trunk Stock Audit Report"/>
+  </aura:if>
+
+  <aura:if isTrue="{!v.status == 0}">
+    <center>
+      <div style = "background-color: white; width: 100%; padding: 2vw; font-size: 120%">
+        You don't have an opening trunk stock audit report at this time.<br/>
+        Please review your previous trunk stock audits.<br/>
+      </div>
+      
+      <lightning:listView 
+              aura:id="listViewTSReport"
+              objectApiName="Trunk_Stock_Cycle_Count_Report__c"
+              listName="TSCCReportApp_Rep"
+              rows="12"
+              showActionBar="false"
+              enableInlineEdit="false"
+              showRowLevelActions="false"
+      />
+    </center>
+  </aura:if>
+
+  <aura:if isTrue="{!v.status == 1}">
+    <center>
+      <c:SRM_TSAudit_3_1TSCCForm 
+        TSCCReport = "{!v.TSCCReport}"/>
+    </center>
+  </aura:if>
+
+  <aura:if isTrue="{!v.status == 2}">
+    <center>
+      <c:SRM_TSAudit_3_2Review
+          TSCCReport = "{!v.TSCCReport}"
+          TSCCItems = "{!v.TSCCItems}"
+          viewType = "{!v.viewType}"/>
+    </center>
+  </aura:if>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================--> 
+</aura:component>

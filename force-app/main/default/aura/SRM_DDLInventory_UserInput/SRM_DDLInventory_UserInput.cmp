@@ -1,0 +1,108 @@
+<aura:component controller = "SRM_DDLInventory_ServerController">
+	<!-- ================Global Attribute============================ -->
+	<aura:attribute name="LocationID" type="String" default=""/>
+	<aura:attribute name="LotNo" type="String" default=""/>
+    <aura:attribute name="TranReason" type="String" default=""/>
+    <aura:attribute name="LocationSearchName" type="String" default=""/>
+    <aura:attribute name="UpdateTrigger" type="Boolean" default="false"/>
+
+	<!-- ==================Local Attribute============================ -->
+	<aura:attribute name="ListLocation" type="Location__c[]" />
+	<aura:attribute name="ListLocationTemp" type="Location__c[]" />
+    <aura:attribute name="TranReasonInput" type="String" default=""/>
+	<aura:attribute name="displaySearchLocationList" type="Boolean" default="false"/>
+
+	<aura:attribute name="SelectedItemNo" type="String" />
+    <aura:attribute name="ListLot" type="Lot_Information__c" />
+    <aura:attribute name="ListLotTemp" type="Lot_Information__c" />
+    <aura:attribute name="LotSearchName" type="String" default=""/>
+    <aura:attribute name="displaySearchLotList" type="Boolean" default="false"/>   
+
+	<!-- ================Trigger============================ -->
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/><!-- Get lists of item and Location from Salesforce Server  -->
+    <!-- <aura:handler name="change" value="{!v.ListLot}" action="{!c.updateListLotNo}"/> -->
+    <aura:handler name="change" value="{!v.ListLocation}" action="{!c.continueInital}"/>
+
+    <form>
+        <table style = "table-layout:fixed;">
+            <tr>
+               	<td class="right" >
+                    Location Name
+                </td>
+                <td class="left">
+                    <ui:inputText
+                        aura:id="SearchLocationInput"
+                        keyup="{!c.SearchLocation}" updateOn="keyup"            
+                        value="{!v.LocationSearchName}">
+                    </ui:inputText>
+                </td>
+                <td class="right1">
+                    Lot #
+                </td>
+                <td class="left">
+                    <ui:inputText
+                        aura:id="SearchLotInput"
+                        updateOn="change"
+                        keyup = "{!c.SearchLotNo}" 
+                        change = "{!c.SearchLotNo}"
+                        value = "{!v.LotSearchName}">
+                    </ui:inputText>
+                </td>
+                <td class="right1">
+                    Transaction Reason
+                </td>
+                <td class="left">
+                    <ui:inputText
+                        aura:id="ReasonInput"
+                        keyup= "{!c.updateReason}" 
+                        updateOn = "change"            
+                        value="{!v.TranReasonInput}"
+                        change = "{!c.updateReason}">
+                    </ui:inputText>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                </td>
+                <td class="Result">
+                    <aura:if isTrue="{!v.displaySearchLocationList}">
+                        <table style="border-style: ridge; padding:0px">
+                            <aura:iteration items="{!v.ListLocationTemp}" var="Location" indexVar="index">
+                              <tr style = "width: 100%; border-collapse: collapse; padding:0px; border: 1px solid">
+                                <lightning:button label="{!Location.Rep_Name__c}"
+                                name="{!index}"
+                                class="slds-button59"
+                                variant="brand"
+                                onclick="{!c.SelectLocation}"/>
+                              </tr>
+                        	</aura:iteration>
+                        </table>
+                    </aura:if>
+                </td>
+                <td>
+                </td>
+                <td class="Result">
+                    <aura:if isTrue="{!v.displaySearchLotList}">
+                        <table style="border-style: ridge; padding:0px">
+                            <aura:iteration items="{!v.ListLotTemp}" var="element" indexVar="index">
+                              <tr style = "width: 100%; border-collapse: collapse; padding:0px; border: 1px solid">
+                                <lightning:button label="{!element.Lot_Number__c + ' - ' + element.Item_No__c}"
+                                name="{!index}"
+                                class="slds-button59"
+                                variant="brand"
+                                onclick="{!c.SelectLotNo}"/>
+                              </tr>
+                            </aura:iteration>
+                        </table>
+                    </aura:if>
+                </td>
+            </tr>
+        </table>
+        <center>
+            <lightning:button   
+                    label="Search"
+                    class="slds-button slds-button--brand"
+                    onclick="{!c.StartSearch}"/>
+        </center>
+    </form>
+</aura:component>

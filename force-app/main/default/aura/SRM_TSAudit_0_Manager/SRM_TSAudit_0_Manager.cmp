@@ -1,0 +1,100 @@
+<aura:component controller="SRM_TSAudit_ServerController" implements="flexipage:availableForRecordHome,lightning:actionOverride,force:hasRecordId,force:appHostable" access="global">
+	<aura:attribute name="TSCCount" type="Trunk_Stock_Cycle_Count__c"  default="{ 'sobjectType': 'Trunk_Stock_Cycle_Count__c'}"/>
+    <aura:attribute name="version" type="String" default ="v 1.5.0"/>
+    <aura:attribute name="TSCCReports" type="Trunk_Stock_Cycle_Count_Report__c[]"/>
+    <aura:attribute name="TSCCReportsOption" type="Trunk_Stock_Cycle_Count_Report__c[]"/>
+    <aura:attribute name="currentUser" type="User" default="{ 'sobjectType': 'User'}"/>
+    <aura:attribute name="viewType" type="Integer" default="0"/> 
+          <!-- 0: rep/tds view;
+               1: cs view; -->
+
+	<aura:attribute name="WaitingWindow" type="Boolean" default="false"/>
+    <aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+    <aura:attribute name="selectedTabId" type="String" default="NewTS"/>
+
+    <aura:handler name="change" value="{!v.status}" action="{!c.updateStatus}"/>
+	<aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+
+    <aura:if isTrue="{!v.viewType == 1}">
+        <c:SRM_TSAudit_3_0Header
+                version = "{!v.version}"
+                IsAdministration = "false"
+                title = "Trunk Stock Audit Management"/>
+
+        <lightning:tabset selectedTabId="{!v.selectedTabId}">
+            <lightning:tab label="Current Trunk Stock Audit" id='CurrentTS'>
+                <aura:if isTrue ="{!v.TSCCReports.length > 0}">
+                    <c:SRM_TSAudit_2Preview
+                        TSCCount = "{!v.TSCCount}"
+                        TSCCReports = "{!v.TSCCReports}"
+                        TSCCReportsOption = "{!v.TSCCReportsOption}"
+                    />
+                    <aura:set attribute="else">
+                        <center> 
+                            Sorry we can't find any trunk stock cycle count reports for this trunk stock audit.
+                            It is an unsual trunk stock audit. Please contact with your administrator.
+                        </center> 
+                    </aura:set>
+                </aura:if>
+            </lightning:tab>
+            <lightning:tab label="Create a New Trunk Stock Audit" id='NewTS'>
+                <c:SRM_TSAudit_1CreateANewTSAudit/>
+            </lightning:tab>
+            <lightning:tab label="Previous Trunk Stock Audits" id='OldTS'>
+                <lightning:listView 
+                        aura:id="listViewTSAudit"
+                        objectApiName="Trunk_Stock_Cycle_Count__c"
+                        listName="TSAuditManager"
+                        rows="500"
+                        showActionBar="false"
+                        enableInlineEdit="true"
+                        showRowLevelActions="true"
+                />
+            </lightning:tab>
+         </lightning:tabset>
+         <aura:set attribute="else">
+            <center style ="background-color: white; margin: 2px; padding:2px">
+                If you are not a member of customer success team, please use a trunk stock audit report to have an overview of the trunk stock audit. Thanks.
+            </center>
+         </aura:set>
+     </aura:if>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+                <div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+                    <div class="slds-spinner__dot-a"></div>
+                    <div class="slds-spinner__dot-b"></div>
+                </div>
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral" 
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->    
+
+
+</aura:component>

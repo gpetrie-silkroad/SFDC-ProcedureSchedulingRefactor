@@ -1,0 +1,153 @@
+<aura:component controller="SRM_ITF_ServerController">
+<!-- =====================attributes from parent component============================ -->
+    <aura:attribute name="ITForm" type="Inventory_Transfer_Form__c" default="{ 'sobjectType': 'Inventory_Transfer_Form__c'}"/>
+<!-- ====================End attributes from parent component======================== -->
+
+<!-- =========================Local attributes================================== -->
+    <aura:attribute name="WaitingWindow" type="Boolean" default="True"/>
+	<aura:attribute name="waitingMessage" type="String" default="Please Wait."/>
+	<aura:attribute name="IsShipDateBlank" type="Boolean" default="True"/>
+
+<!-- =======================end of Local attributes================================ -->
+
+<!-- =========================Calling controller================================ -->
+    <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
+<!-- ====================end of Calling controller================================ -->
+	<br/>
+	<div style ="width: 100%; text-align: left;">			
+		<table class="tablefixed">
+			<th class="noteColumn">
+				Shipment Information
+			</th>
+			<th class = "editcolumn">
+			</th>
+		</table>
+	</div>
+	<aura:if isTrue="{!v.IsShipDateBlank}">
+		<!-- Shipping Info Input Section -->
+		<div style ="width: 98%; border: dotted;">
+			<table class="tablefixed">
+				<tr>
+					<td class="right">
+						Return date <span style="color:red">*</span>:
+<!-- 				        <lightning:helptext
+                                content="A date when you dropped the returning package in the Fedex." 
+                        /> -->
+					</td>
+					<td class="left">
+						<ui:inputDate
+					            aura:id="ShipDate"  
+					            value="{!v.ITForm.Ship_Date__c}"
+					            disabled="false"
+					            displayDatePicker="true"/>
+					</td>
+				</tr>
+
+<!-- 				<tr>
+					<td class="right">
+						Tracking Number:
+					</td>
+					<td class="left">
+						<ui:inputTextArea 
+								aura:id="TrackingNumber" 
+								value="{!v.ITForm.Tracking_Number__c}" 
+								rows="1" 
+								maxlength="98"/>
+						OR
+						<lightning:fileUpload
+								aura:id = "TrackingNumberUploadfile"
+								multiple = "false" 
+								accept = ".pdf, .png, .jpg, .jpeg"
+								recordId = "{!v.ITForm.Id}" 
+								onuploadfinished="{!c.handleUploadFinished}" />
+					</td>
+				</tr> -->
+			</table>
+			<div style="width:100%; text-align: center; padding-top: 1vw; padding-bottom: 1vw">
+				<lightning:button 	
+						label="Update Return Date"
+						class="slds-button2"
+						variant="brand"
+						onclick="{!c.submitShippingInfo}"/>
+				<br/>
+				<b>
+					Please only update return date after the returned package has been dropped off at Fedex.
+				</b>
+			</div>
+
+		</div>
+
+		<!-- Shipping Info output Section -->
+        <aura:set attribute="else">
+			<div style ="width: 98%; border: dotted;">
+				<table class="tablefixed">
+					<tr>
+						<td class="right">
+							Return date:
+						</td>
+						<td class="left">
+							<ui:outputDate value="{!v.ITForm.Ship_Date__c}"/>
+						</td>
+					</tr>
+
+<!-- 					<tr>
+						<td class="right">
+							Tracking Number:
+						</td>
+						<td class="left">
+							{!v.ITForm.Tracking_Number__c}
+						</td>
+					</tr> -->			
+				</table>
+
+<!-- 				<aura:if isTrue="{! and(v.ITForm.TrackingNumberPictureID__c != null, v.ITForm.TrackingNumberPictureID__c != undefined)}">
+					<center>
+						<div style="max-width: 98%; max-height:45%; overflow:hidden;">
+							<img 
+									src="{!'/sfc/servlet.shepherd/document/download/'+v.ITForm.TrackingNumberPictureID__c}"
+									class="resize2"/>
+						</div>
+					</center>
+				</aura:if> -->
+
+			</div>                               	
+        </aura:set>
+	</aura:if>
+
+<!--==========================Waiting/error pop-up message =================================================-->   
+    <aura:if isTrue="{!v.WaitingWindow}">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- ================Header Message============================-->
+                <header class="slds-modal__header">
+                    <lightning:buttonIcon iconName="utility:close"
+                                          onclick="{!c.closeWaitingPopUp}"
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          class="slds-modal__close"/>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">You're too fast. Please wait for the system to catch up.</h2>
+                </header>
+
+                <!-- ================Body Message============================-->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p>
+                    {!v.waitingMessage}
+                    </p>
+                </div>
+				<div class="slds-spinner--brand  slds-spinner slds-spinner--large" role="alert">          
+					<div class="slds-spinner__dot-a"></div>
+					<div class="slds-spinner__dot-b"></div>
+				</div>
+                <!-- ================Footer Message============================-->
+                <footer class="slds-modal__footer">
+                    <lightning:button variant="neutral"
+                                      label="Cancel"
+                                      title="Cancel"
+                                      onclick="{!c.closeWaitingPopUp}"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+<!--==============End of Waiting/error pop-up message =================================================-->  
+</aura:component>

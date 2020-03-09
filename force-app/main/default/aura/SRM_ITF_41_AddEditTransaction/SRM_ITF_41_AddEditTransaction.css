@@ -1,0 +1,88 @@
+.THIS {
+	padding:0; 
+    margin:0;
+    color: black;
+}
+
+.THIS .form-element__help{
+	font-size: 80%;
+	margin: 0vw;
+}
+
+/*Class style user input*/
+.THIS .slds-form--horizontal{
+	padding:0; 
+    margin:0;
+    font-size: 100%;
+}
+
+/*Class style header*/
+.THIS .slds-text-heading--medium{
+	padding-bottom: 2vw; 
+    margin:0;
+    font-size: 100%;
+    font-weight: bold;
+}
+
+
+.THIS td.left{
+	padding-bottom: 0.5vw; 
+    margin:0;
+	padding-right: 	1vw;
+	width: 45%; 
+	text-align: right;
+	vertical-align: top;
+}
+
+.THIS td.leftRequire{
+	padding-bottom: 0.5vw; 
+    margin:0;
+	padding-right: 	1vw;
+	width: 45%; 
+	text-align: right;
+	color:black;
+	vertical-align: top;
+}
+
+.THIS td.center1{
+    margin:0;
+	padding-bottom: 0.5vw;
+	width: 55%; 
+	text-align: center;
+}
+
+.THIS td.right{
+	padding-bottom: 0.5vw;
+	width: 55%; 
+	text-align: left;
+	overflow: hidden;
+}
+
+.THIS .slds-button{
+	font-size: 100%;
+	line-height: 100%;
+}
+
+.THIS .smallbox{
+    font-size: 110%;
+    font-weight: bold;
+    text-align: left;
+    width: 95%;
+    max-width: 95%;
+}
+
+.THIS .smalfont{
+    font-size: 80%;
+    width: 85%;
+}
+.THIS .uiInput--checkbox {
+  	padding-left: 2vw;
+  	width: 2vw;
+  	height: 2vw;
+  	line-height: 100%;
+}
+
+.THIS .uiInput--select.select{
+	height: 100%;
+    line-height: 100%;
+}
